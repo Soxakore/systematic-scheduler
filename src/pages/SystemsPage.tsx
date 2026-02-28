@@ -8,7 +8,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Zap, ZapOff } from 'lucide-react';
+import { Plus, Pencil, Trash2, Zap, ZapOff, Sparkles } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import type { System } from '@/types';
 
 const DAY_NAMES = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
@@ -31,6 +32,10 @@ export default function SystemsPage() {
   const [recurrenceDays, setRecurrenceDays] = useState<number[]>([1, 2, 3, 4, 5]);
   const [startTime, setStartTime] = useState('09:00');
   const [showDeactivateDialog, setShowDeactivateDialog] = useState<string | null>(null);
+
+  // Filter out weekly_review systems — they're managed on the Review page
+  const routineSystems = systems?.filter(s => s.system_type !== 'weekly_review');
+  const hasWeeklyReview = systems?.some(s => s.system_type === 'weekly_review');
 
   const openNew = () => {
     setEditing(null);
@@ -133,16 +138,33 @@ export default function SystemsPage() {
         </Button>
       </div>
 
+      {/* Weekly Review link */}
+      {hasWeeklyReview && (
+        <Link to="/review" className="block mb-4">
+          <Card className="p-4 hover:bg-accent/50 transition-colors cursor-pointer">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
+                <Sparkles className="h-5 w-5 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <h3 className="font-medium text-foreground">Weekly Review</h3>
+                <p className="text-xs text-muted-foreground">Managed on the Review page</p>
+              </div>
+            </div>
+          </Card>
+        </Link>
+      )}
+
       {isLoading ? (
         <div className="text-muted-foreground text-center py-12">Loading…</div>
-      ) : systems?.length === 0 ? (
+      ) : routineSystems?.length === 0 ? (
         <div className="text-center py-12">
           <p className="text-muted-foreground mb-4">No systems yet. Create a recurring routine to auto-populate your calendar.</p>
           <Button onClick={openNew}>Create your first system</Button>
         </div>
       ) : (
         <div className="space-y-3">
-          {systems?.map(system => (
+          {routineSystems?.map(system => (
             <Card key={system.id} className="p-4">
               <div className="flex items-start justify-between gap-3">
                 <div className="flex-1 min-w-0">

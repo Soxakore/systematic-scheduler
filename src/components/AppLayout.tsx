@@ -2,7 +2,7 @@ import { ReactNode, useState, createContext, useContext } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile, useCalendars, useTags } from '@/hooks/useData';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { CalendarDays, LayoutGrid, Settings, ListTodo, Plus, Search, ChevronLeft, ChevronRight, LogOut, Menu, Tag } from 'lucide-react';
+import { CalendarDays, LayoutGrid, Settings, ListTodo, Plus, Search, ChevronLeft, ChevronRight, LogOut, Menu, Tag, Sparkles } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -189,6 +189,22 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <Link to="/systems" className="text-xs text-primary hover:underline block">Manage systems</Link>
               </div>
 
+              {/* Weekly Review entry point */}
+              <div className="px-3 pb-2">
+                <Link
+                  to="/review"
+                  className={cn(
+                    "flex items-center gap-2 py-2 px-2 rounded-md text-sm transition-colors",
+                    location.pathname === '/review'
+                      ? 'bg-primary/10 text-primary font-medium'
+                      : 'text-sidebar-foreground hover:bg-accent/50'
+                  )}
+                >
+                  <Sparkles className="h-4 w-4" />
+                  Weekly Review
+                </Link>
+              </div>
+
               <div className="mt-auto p-3 border-t">
                 <Link to="/settings" className="flex items-center gap-2 text-sm text-sidebar-foreground hover:text-foreground">
                   <Settings className="h-4 w-4" /> Settings
@@ -210,9 +226,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <CalendarDays className="h-5 w-5" />
               Calendar
             </Link>
-            <Link to="/systems" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/systems' ? 'text-primary' : 'text-muted-foreground')}>
-              <LayoutGrid className="h-5 w-5" />
-              Systems
+            <Link to="/review" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/review' ? 'text-primary' : 'text-muted-foreground')}>
+              <Sparkles className="h-5 w-5" />
+              Review
             </Link>
             <button
               onClick={() => { setSelectedDate(new Date()); setEditingEventId(null); setShowEventDialog(true); }}
@@ -222,9 +238,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <Plus className="h-5 w-5 text-primary-foreground" />
               </div>
             </button>
-            <Link to="/agenda" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/agenda' ? 'text-primary' : 'text-muted-foreground')}>
-              <ListTodo className="h-5 w-5" />
-              Agenda
+            <Link to="/systems" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/systems' ? 'text-primary' : 'text-muted-foreground')}>
+              <LayoutGrid className="h-5 w-5" />
+              Systems
             </Link>
             <Link to="/settings" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/settings' ? 'text-primary' : 'text-muted-foreground')}>
               <Settings className="h-5 w-5" />

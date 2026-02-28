@@ -14,6 +14,7 @@ import SignupPage from "@/pages/Signup";
 import ForgotPasswordPage from "@/pages/ForgotPassword";
 import ResetPasswordPage from "@/pages/ResetPassword";
 import AgendaView from "@/components/calendar/AgendaView";
+import WeeklyReviewPage from "@/pages/WeeklyReviewPage";
 import EventDialog from "@/components/EventDialog";
 import NotFound from "./pages/NotFound";
 
@@ -44,6 +45,7 @@ function AppRoutes() {
       <Route path="/systems" element={<ProtectedRoute><AppLayout><SystemsPage /></AppLayout></ProtectedRoute>} />
       <Route path="/calendars" element={<ProtectedRoute><AppLayout><CalendarsPage /></AppLayout></ProtectedRoute>} />
       <Route path="/agenda" element={<ProtectedRoute><AppLayout><AgendaView /></AppLayout></ProtectedRoute>} />
+      <Route path="/review" element={<ProtectedRoute><AppLayout><WeeklyReviewPage /></AppLayout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>

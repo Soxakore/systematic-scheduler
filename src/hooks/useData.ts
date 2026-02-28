@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Json } from '@/integrations/supabase/types';
-import type { Profile, Calendar, CalendarEvent, Tag, System } from '@/types';
+import type { Profile, Calendar, CalendarEvent, Tag, System, EventChecklistItem } from '@/types';
 
 // Profile
 export function useProfile() {
@@ -238,12 +238,19 @@ export function useSystems() {
       if (error) throw error;
       return (data || []).map(s => ({
         ...s,
+        system_type: (s as any).system_type || 'routine',
         checklist_items: Array.isArray(s.checklist_items) ? s.checklist_items : [],
         recurrence_days: s.recurrence_days || [],
       })) as unknown as System[];
     },
     enabled: !!user,
   });
+}
+
+// Get specifically the weekly review system
+export function useWeeklyReviewSystem() {
+  const { data: systems } = useSystems();
+  return systems?.find(s => s.system_type === 'weekly_review') || null;
 }
 
 export function useCreateSystem() {
@@ -293,7 +300,7 @@ export function useGenerateSystemEvents() {
   return useMutation({
     mutationFn: async (system: System) => {
       if (!system.is_active || !user) return;
-      
+
       const today = new Date();
       const horizon = new Date(today);
       horizon.setDate(horizon.getDate() + system.generation_horizon_days);
@@ -350,11 +357,34 @@ export function useGenerateSystemEvents() {
       }
 
       if (eventsToCreate.length > 0) {
-        const { error } = await supabase.from('events').insert(eventsToCreate);
+        const { data: createdEvents, error } = await supabase.from('events').insert(eventsToCreate).select();
         if (error) throw error;
+
+        // For weekly_review systems, seed checklist items per event
+        if (system.system_type === 'weekly_review' && createdEvents && system.checklist_items.length > 0) {
+          const checklistRows: any[] = [];
+          for (const event of createdEvents) {
+            system.checklist_items.forEach((item, idx) => {
+              checklistRows.push({
+                event_id: event.id,
+                checklist_item_id: item.id,
+                text: item.text,
+                is_completed: false,
+                sort_order: idx,
+              });
+            });
+          }
+          if (checklistRows.length > 0) {
+            const { error: clErr } = await supabase.from('event_checklist_items').insert(checklistRows);
+            if (clErr) console.error('Failed to seed checklist items:', clErr);
+          }
+        }
       }
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: ['events'] }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['events'] });
+      qc.invalidateQueries({ queryKey: ['event_checklist_items'] });
+    },
   });
 }
 
@@ -374,5 +404,66 @@ export function useDeleteFutureSystemEvents() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['events'] }),
+  });
+}
+
+// Event Checklist Items
+export function useEventChecklistItems(eventId: string | null) {
+  return useQuery({
+    queryKey: ['event_checklist_items', eventId],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('event_checklist_items')
+        .select('*')
+        .eq('event_id', eventId!)
+        .order('sort_order');
+      if (error) throw error;
+      return data as EventChecklistItem[];
+    },
+    enabled: !!eventId,
+  });
+}
+
+export function useToggleChecklistItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, is_completed }: { id: string; is_completed: boolean }) => {
+      const { error } = await supabase
+        .from('event_checklist_items')
+        .update({
+          is_completed,
+          completed_at: is_completed ? new Date().toISOString() : null,
+        })
+        .eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['event_checklist_items'] }),
+  });
+}
+
+// Get next upcoming weekly review event
+export function useNextWeeklyReviewEvent() {
+  const { user } = useAuth();
+  const { data: systems } = useSystems();
+  const weeklyReview = systems?.find(s => s.system_type === 'weekly_review');
+
+  return useQuery({
+    queryKey: ['next_weekly_review', user?.id, weeklyReview?.id],
+    queryFn: async () => {
+      if (!weeklyReview) return null;
+      const now = new Date().toISOString();
+      const { data, error } = await supabase
+        .from('events')
+        .select('*')
+        .eq('system_id', weeklyReview.id)
+        .eq('is_system_generated', true)
+        .gte('start_time', now)
+        .order('start_time')
+        .limit(1)
+        .single();
+      if (error) return null;
+      return data as CalendarEvent;
+    },
+    enabled: !!user && !!weeklyReview,
   });
 }
