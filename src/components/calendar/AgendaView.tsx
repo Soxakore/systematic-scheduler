@@ -1,11 +1,12 @@
 import { useMemo } from 'react';
 import { useAppContext } from '@/components/AppLayout';
-import { useEvents, useCalendars } from '@/hooks/useData';
+import { useEvents, useCalendars, useAllEventTags } from '@/hooks/useData';
 import { format, isToday, isTomorrow, addDays, startOfDay } from 'date-fns';
 
 export default function AgendaView() {
-  const { setShowEventDialog, setEditingEventId, searchQuery } = useAppContext();
+  const { setShowEventDialog, setEditingEventId, searchQuery, selectedTagIds } = useAppContext();
   const { data: calendars } = useCalendars();
+  const { data: eventTagsMap } = useAllEventTags();
 
   const start = startOfDay(new Date());
   const end = addDays(start, 30);
@@ -18,8 +19,14 @@ export default function AgendaView() {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(e => e.title.toLowerCase().includes(q) || e.description?.toLowerCase().includes(q));
     }
+    if (selectedTagIds.length > 0 && eventTagsMap) {
+      filtered = filtered.filter(e => {
+        const eTags = eventTagsMap.get(e.id) || [];
+        return selectedTagIds.some(tid => eTags.includes(tid));
+      });
+    }
     return filtered.sort((a, b) => new Date(a.start_time).getTime() - new Date(b.start_time).getTime());
-  }, [events, searchQuery]);
+  }, [events, searchQuery, selectedTagIds, eventTagsMap]);
 
   const calMap = useMemo(() => {
     const m = new Map<string, { color: string; name: string }>();

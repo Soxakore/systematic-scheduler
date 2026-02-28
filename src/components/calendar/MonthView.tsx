@@ -1,13 +1,14 @@
 import { useMemo } from 'react';
 import { useAppContext } from '@/components/AppLayout';
-import { useEvents, useCalendars } from '@/hooks/useData';
+import { useEvents, useCalendars, useAllEventTags } from '@/hooks/useData';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { Plus } from 'lucide-react';
 
 export default function MonthView() {
-  const { currentDate, setCurrentDate, setCurrentView, setShowEventDialog, setSelectedDate, setEditingEventId, searchQuery } = useAppContext();
+  const { currentDate, setCurrentDate, setCurrentView, setShowEventDialog, setSelectedDate, setEditingEventId, searchQuery, selectedTagIds } = useAppContext();
   const { data: calendars } = useCalendars();
+  const { data: eventTagsMap } = useAllEventTags();
 
   const monthStart = startOfMonth(currentDate);
   const monthEnd = endOfMonth(currentDate);
@@ -19,10 +20,19 @@ export default function MonthView() {
 
   const filteredEvents = useMemo(() => {
     if (!events) return [];
-    if (!searchQuery) return events;
-    const q = searchQuery.toLowerCase();
-    return events.filter(e => e.title.toLowerCase().includes(q) || e.description?.toLowerCase().includes(q));
-  }, [events, searchQuery]);
+    let filtered = events;
+    if (searchQuery) {
+      const q = searchQuery.toLowerCase();
+      filtered = filtered.filter(e => e.title.toLowerCase().includes(q) || e.description?.toLowerCase().includes(q));
+    }
+    if (selectedTagIds.length > 0 && eventTagsMap) {
+      filtered = filtered.filter(e => {
+        const eTags = eventTagsMap.get(e.id) || [];
+        return selectedTagIds.some(tid => eTags.includes(tid));
+      });
+    }
+    return filtered;
+  }, [events, searchQuery, selectedTagIds, eventTagsMap]);
 
   const calMap = useMemo(() => {
     const m = new Map<string, { color: string }>();

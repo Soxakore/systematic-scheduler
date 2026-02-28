@@ -1,8 +1,8 @@
 import { ReactNode, useState, createContext, useContext } from 'react';
 import { useAuth } from '@/hooks/useAuth';
-import { useProfile, useCalendars } from '@/hooks/useData';
+import { useProfile, useCalendars, useTags } from '@/hooks/useData';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { CalendarDays, LayoutGrid, Settings, ListTodo, Plus, Search, ChevronLeft, ChevronRight, LogOut, Menu } from 'lucide-react';
+import { CalendarDays, LayoutGrid, Settings, ListTodo, Plus, Search, ChevronLeft, ChevronRight, LogOut, Menu, Tag } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -22,6 +22,8 @@ interface AppContextType {
   setSelectedDate: (d: Date | null) => void;
   editingEventId: string | null;
   setEditingEventId: (id: string | null) => void;
+  selectedTagIds: string[];
+  setSelectedTagIds: (ids: string[]) => void;
 }
 
 const AppContext = createContext<AppContextType | undefined>(undefined);
@@ -35,6 +37,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const { signOut, user } = useAuth();
   const { data: profile } = useProfile();
   const { data: calendars } = useCalendars();
+  const { data: tags } = useTags();
   const isMobile = useIsMobile();
   const location = useLocation();
   const navigate = useNavigate();
@@ -46,6 +49,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const [showEventDialog, setShowEventDialog] = useState(false);
   const [selectedDate, setSelectedDate] = useState<Date | null>(null);
   const [editingEventId, setEditingEventId] = useState<string | null>(null);
+  const [selectedTagIds, setSelectedTagIds] = useState<string[]>([]);
 
   const navigateDate = (dir: 'prev' | 'next') => {
     const fn = dir === 'next'
@@ -76,7 +80,7 @@ export default function AppLayout({ children }: { children: ReactNode }) {
   const isCalendarPage = location.pathname === '/';
 
   return (
-    <AppContext.Provider value={{ currentDate, setCurrentDate, currentView, setCurrentView, searchQuery, setSearchQuery, showEventDialog, setShowEventDialog, selectedDate, setSelectedDate, editingEventId, setEditingEventId }}>
+    <AppContext.Provider value={{ currentDate, setCurrentDate, currentView, setCurrentView, searchQuery, setSearchQuery, showEventDialog, setShowEventDialog, selectedDate, setSelectedDate, editingEventId, setEditingEventId, selectedTagIds, setSelectedTagIds }}>
       <div className="h-screen flex flex-col bg-background overflow-hidden">
         {/* Top bar */}
         <header className="h-14 border-b flex items-center px-3 gap-2 shrink-0">
@@ -158,6 +162,26 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   </label>
                 ))}
                 <Link to="/calendars" className="text-xs text-primary hover:underline mt-1 block">Manage calendars</Link>
+              </div>
+
+              <div className="px-3 pb-2">
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tags</h3>
+                {tags?.map(tag => (
+                  <label key={tag.id} className="flex items-center gap-2 py-1 text-sm cursor-pointer text-sidebar-foreground">
+                    <input
+                      type="checkbox"
+                      className="rounded"
+                      checked={selectedTagIds.includes(tag.id)}
+                      onChange={() => setSelectedTagIds(prev => prev.includes(tag.id) ? prev.filter(id => id !== tag.id) : [...prev, tag.id])}
+                    />
+                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
+                    <span className="truncate">{tag.name}</span>
+                  </label>
+                ))}
+                {(!tags || tags.length === 0) && <span className="text-xs text-muted-foreground">No tags yet</span>}
+                {selectedTagIds.length > 0 && (
+                  <button className="text-xs text-primary hover:underline mt-1 block" onClick={() => setSelectedTagIds([])}>Clear filter</button>
+                )}
               </div>
 
               <div className="px-3 pb-2">

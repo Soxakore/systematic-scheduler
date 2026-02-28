@@ -1,6 +1,6 @@
 import { useMemo, useRef, useEffect } from 'react';
 import { useAppContext } from '@/components/AppLayout';
-import { useEvents, useCalendars, useUpdateEvent } from '@/hooks/useData';
+import { useEvents, useCalendars, useUpdateEvent, useAllEventTags } from '@/hooks/useData';
 import { startOfDay, endOfDay, format, isToday, differenceInMinutes } from 'date-fns';
 import { cn } from '@/lib/utils';
 
@@ -8,10 +8,11 @@ const HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
 
 export default function DayView() {
-  const { currentDate, setShowEventDialog, setSelectedDate, setEditingEventId, searchQuery } = useAppContext();
+  const { currentDate, setShowEventDialog, setSelectedDate, setEditingEventId, searchQuery, selectedTagIds } = useAppContext();
   const { data: calendars } = useCalendars();
   const updateEvent = useUpdateEvent();
   const scrollRef = useRef<HTMLDivElement>(null);
+  const { data: eventTagsMap } = useAllEventTags();
 
   const dayStart = startOfDay(currentDate);
   const dayEnd = endOfDay(currentDate);
@@ -28,8 +29,14 @@ export default function DayView() {
       const q = searchQuery.toLowerCase();
       filtered = filtered.filter(e => e.title.toLowerCase().includes(q) || e.description?.toLowerCase().includes(q));
     }
+    if (selectedTagIds.length > 0 && eventTagsMap) {
+      filtered = filtered.filter(e => {
+        const eTags = eventTagsMap.get(e.id) || [];
+        return selectedTagIds.some(tid => eTags.includes(tid));
+      });
+    }
     return filtered;
-  }, [events, searchQuery]);
+  }, [events, searchQuery, selectedTagIds, eventTagsMap]);
 
   const calMap = useMemo(() => {
     const m = new Map<string, string>();
