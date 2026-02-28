@@ -139,7 +139,7 @@ export function useTags() {
   return useQuery({
     queryKey: ['tags', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('tags').select('*').eq('user_id', user!.id);
+      const { data, error } = await supabase.from('tags').select('*').eq('user_id', user!.id).order('name');
       if (error) throw error;
       return data as Tag[];
     },
@@ -157,6 +157,74 @@ export function useCreateTag() {
       return data as Tag;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['tags'] }),
+  });
+}
+
+export function useDeleteTag() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      await supabase.from('event_tags').delete().eq('tag_id', id);
+      await supabase.from('system_tags').delete().eq('tag_id', id);
+      const { error } = await supabase.from('tags').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['tags'] });
+      qc.invalidateQueries({ queryKey: ['event_tags'] });
+    },
+  });
+}
+
+// Event Tags
+export function useEventTags(eventId: string | null) {
+  return useQuery({
+    queryKey: ['event_tags', eventId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('event_tags').select('tag_id').eq('event_id', eventId!);
+      if (error) throw error;
+      return data.map(r => r.tag_id) as string[];
+    },
+    enabled: !!eventId,
+  });
+}
+
+export function useAllEventTags() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['all_event_tags', user?.id],
+    queryFn: async () => {
+      const { data: events } = await supabase.from('events').select('id').eq('user_id', user!.id);
+      if (!events || events.length === 0) return new Map<string, string[]>();
+      const eventIds = events.map(e => e.id);
+      const { data, error } = await supabase.from('event_tags').select('event_id, tag_id').in('event_id', eventIds);
+      if (error) throw error;
+      const m = new Map<string, string[]>();
+      (data || []).forEach(r => {
+        const arr = m.get(r.event_id) || [];
+        arr.push(r.tag_id);
+        m.set(r.event_id, arr);
+      });
+      return m;
+    },
+    enabled: !!user,
+  });
+}
+
+export function useSetEventTags() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ eventId, tagIds }: { eventId: string; tagIds: string[] }) => {
+      await supabase.from('event_tags').delete().eq('event_id', eventId);
+      if (tagIds.length > 0) {
+        const { error } = await supabase.from('event_tags').insert(tagIds.map(tag_id => ({ event_id: eventId, tag_id })));
+        if (error) throw error;
+      }
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['event_tags'] });
+      qc.invalidateQueries({ queryKey: ['all_event_tags'] });
+    },
   });
 }
 
