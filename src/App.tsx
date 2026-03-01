@@ -21,6 +21,8 @@ import TemplatesPage from "@/pages/TemplatesPage";
 import AnalyticsPage from "@/pages/AnalyticsPage";
 import GoalsPage from "@/pages/GoalsPage";
 import MorningBriefingPage from "@/pages/MorningBriefingPage";
+import JournalPage from "@/pages/JournalPage";
+import VisionBoardPage from "@/pages/VisionBoardPage";
 import EventDialog from "@/components/EventDialog";
 import NotFound from "./pages/NotFound";
 
@@ -58,6 +60,8 @@ function AppRoutes() {
       <Route path="/analytics" element={<ProtectedRoute><AppLayout><AnalyticsPage /></AppLayout></ProtectedRoute>} />
       <Route path="/goals" element={<ProtectedRoute><AppLayout><GoalsPage /></AppLayout></ProtectedRoute>} />
       <Route path="/briefing" element={<ProtectedRoute><AppLayout><MorningBriefingPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/journal" element={<ProtectedRoute><AppLayout><JournalPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/vision" element={<ProtectedRoute><AppLayout><VisionBoardPage /></AppLayout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>

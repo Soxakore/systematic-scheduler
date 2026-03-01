@@ -124,4 +124,39 @@ export interface EventChecklistItem {
   created_at: string;
 }
 
+export interface JournalEntry {
+  id: string;
+  user_id: string;
+  date: string;
+  mood: number | null;
+  energy: number | null;
+  gratitude: string[];
+  wins: string[];
+  lessons: string[];
+  intentions: string[];
+  free_text: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface VisionBoardItem {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  category: string;
+  color: string;
+  icon: string;
+  position_x: number;
+  position_y: number;
+  width: number;
+  height: number;
+  image_url: string | null;
+  is_achieved: boolean;
+  achieved_at: string | null;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export type ViewType = 'month' | 'week' | 'day' | 'agenda';

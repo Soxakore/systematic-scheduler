@@ -2,7 +2,7 @@ import { ReactNode, useState, createContext, useContext } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile, useCalendars, useTags } from '@/hooks/useData';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { CalendarDays, LayoutGrid, Settings, ListTodo, Plus, Search, ChevronLeft, ChevronRight, LogOut, Menu, Tag, Sparkles, Brain, Flame, Trophy, Target, Sun, FileText } from 'lucide-react';
+import { CalendarDays, LayoutGrid, Settings, ListTodo, Plus, Search, ChevronLeft, ChevronRight, LogOut, Menu, Tag, Sparkles, Brain, Flame, Trophy, Target, Sun, FileText, BookOpen, Eye } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -200,6 +200,8 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                   { to: '/templates', icon: FileText, label: 'Templates' },
                   { to: '/analytics', icon: Trophy, label: 'Analytics' },
                   { to: '/review', icon: Sparkles, label: 'Weekly Review' },
+                  { to: '/journal', icon: BookOpen, label: 'Journal' },
+                  { to: '/vision', icon: Eye, label: 'Vision Board' },
                 ].map(item => (
                   <Link
                     key={item.to}

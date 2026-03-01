@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Json } from '@/integrations/supabase/types';
-import type { Profile, Calendar, CalendarEvent, Tag, System, Goal, DailyScore, FocusSession, EventTemplate, EventChecklistItem } from '@/types';
+import type { Profile, Calendar, CalendarEvent, Tag, System, Goal, DailyScore, FocusSession, EventTemplate, EventChecklistItem, JournalEntry, VisionBoardItem } from '@/types';
 
 // Profile
 export function useProfile() {
@@ -610,5 +610,96 @@ export function useDeleteChecklistItem() {
       return event_id;
     },
     onSuccess: (eventId) => qc.invalidateQueries({ queryKey: ['event_checklist_items', eventId] }),
+  });
+}
+// ========== Journal Entries ==========
+export function useJournalEntry(date: string) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['journal_entry', user?.id, date],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('journal_entries').select('*').eq('user_id', user!.id).eq('date', date).maybeSingle();
+      if (error) throw error;
+      return data as JournalEntry | null;
+    },
+    enabled: !!user && !!date,
+  });
+}
+
+export function useJournalEntries(days: number = 30) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['journal_entries', user?.id, days],
+    queryFn: async () => {
+      const startDate = new Date();
+      startDate.setDate(startDate.getDate() - days);
+      const { data, error } = await supabase.from('journal_entries').select('*').eq('user_id', user!.id).gte('date', startDate.toISOString().split('T')[0]).order('date', { ascending: false });
+      if (error) throw error;
+      return data as JournalEntry[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useUpsertJournalEntry() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (entry: Omit<JournalEntry, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+      const { error } = await supabase.from('journal_entries').upsert({ ...entry, user_id: user!.id, updated_at: new Date().toISOString() }, { onConflict: 'user_id,date' });
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['journal_entry'] });
+      qc.invalidateQueries({ queryKey: ['journal_entries'] });
+    },
+  });
+}
+
+// ========== Vision Board ==========
+export function useVisionBoardItems() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['vision_board_items', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('vision_board_items').select('*').eq('user_id', user!.id).order('sort_order');
+      if (error) throw error;
+      return data as VisionBoardItem[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useCreateVisionBoardItem() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (item: Omit<VisionBoardItem, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
+      const { error } = await supabase.from('vision_board_items').insert({ ...item, user_id: user!.id });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['vision_board_items'] }),
+  });
+}
+
+export function useUpdateVisionBoardItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string } & Partial<VisionBoardItem>) => {
+      const { error } = await supabase.from('vision_board_items').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['vision_board_items'] }),
+  });
+}
+
+export function useDeleteVisionBoardItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('vision_board_items').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['vision_board_items'] }),
   });
 }
