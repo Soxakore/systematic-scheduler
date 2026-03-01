@@ -1,24 +1,25 @@
 import { useMemo } from 'react';
-import { useEvents, useSystems } from '@/hooks/useData';
+import { useEvents, useSystems, useGoals } from '@/hooks/useData';
 import { Card } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
-import { Flame, Brain, Target, CheckCircle2, Clock, ArrowRight, Sun, Calendar } from 'lucide-react';
+import { Flame, Brain, Target, Clock, ArrowRight, Calendar, Timer } from 'lucide-react';
 import { format, startOfDay, endOfDay, parseISO } from 'date-fns';
+import FocusTimer from '@/components/FocusTimer';
 
 export default function DashboardPage() {
   const todayStart = startOfDay(new Date());
   const todayEnd = endOfDay(new Date());
   const { data: todayEvents } = useEvents(todayStart, todayEnd);
   const { data: systems } = useSystems();
+  const { data: goals } = useGoals();
 
   const systemEvents = todayEvents?.filter(e => e.is_system_generated) || [];
   const totalEvents = todayEvents?.length || 0;
+  const activeGoals = goals?.filter(g => g.status === 'active') || [];
 
   const upcoming = useMemo(() => {
     const now = new Date();
-    return (todayEvents || [])
-      .filter(e => new Date(e.start_time) > now)
-      .slice(0, 3);
+    return (todayEvents || []).filter(e => new Date(e.start_time) > now).slice(0, 3);
   }, [todayEvents]);
 
   const greeting = () => {
@@ -35,20 +36,27 @@ export default function DashboardPage() {
         <p className="text-sm text-muted-foreground mt-1">{format(new Date(), 'EEEE, MMMM d')}</p>
       </div>
 
-      <div className="grid grid-cols-2 gap-3 mb-6">
+      <div className="grid grid-cols-3 gap-3 mb-6">
         <Card className="p-3 text-center">
           <Calendar className="h-5 w-5 text-primary mx-auto mb-1" />
           <p className="text-2xl font-bold">{totalEvents}</p>
-          <p className="text-xs text-muted-foreground">Events today</p>
+          <p className="text-xs text-muted-foreground">Events</p>
         </Card>
         <Card className="p-3 text-center">
           <Flame className="h-5 w-5 text-orange-500 mx-auto mb-1" />
           <p className="text-2xl font-bold">{systemEvents.length}</p>
           <p className="text-xs text-muted-foreground">Systems</p>
         </Card>
+        <Card className="p-3 text-center">
+          <Target className="h-5 w-5 text-green-500 mx-auto mb-1" />
+          <p className="text-2xl font-bold">{activeGoals.length}</p>
+          <p className="text-xs text-muted-foreground">Goals</p>
+        </Card>
       </div>
 
-      <div className="mb-6">
+      <FocusTimer />
+
+      <div className="mt-6 mb-6">
         <div className="flex items-center justify-between mb-3">
           <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider">Coming Up</h2>
           <Link to="/" className="text-xs text-primary hover:underline flex items-center gap-1">
@@ -77,17 +85,23 @@ export default function DashboardPage() {
         )}
       </div>
 
-      <div className="grid grid-cols-2 gap-3">
-        <Link to="/systems">
+      <div className="grid grid-cols-3 gap-3">
+        <Link to="/goals">
           <Card className="p-4 hover:bg-accent/50 transition-colors cursor-pointer text-center">
             <Target className="h-6 w-6 text-primary mx-auto mb-2" />
+            <p className="text-sm font-medium">Goals</p>
+          </Card>
+        </Link>
+        <Link to="/systems">
+          <Card className="p-4 hover:bg-accent/50 transition-colors cursor-pointer text-center">
+            <Flame className="h-6 w-6 text-orange-500 mx-auto mb-2" />
             <p className="text-sm font-medium">Systems</p>
           </Card>
         </Link>
-        <Link to="/settings">
+        <Link to="/analytics">
           <Card className="p-4 hover:bg-accent/50 transition-colors cursor-pointer text-center">
             <Brain className="h-6 w-6 text-muted-foreground mx-auto mb-2" />
-            <p className="text-sm font-medium">Settings</p>
+            <p className="text-sm font-medium">Analytics</p>
           </Card>
         </Link>
       </div>

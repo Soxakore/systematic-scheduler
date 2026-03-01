@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Json } from '@/integrations/supabase/types';
-import type { Profile, Calendar, CalendarEvent, Tag, System } from '@/types';
+import type { Profile, Calendar, CalendarEvent, Tag, System, Goal, DailyScore, FocusSession, EventTemplate, EventChecklistItem } from '@/types';
 
 // Profile
 export function useProfile() {
@@ -382,5 +382,233 @@ export function useDeleteFutureSystemEvents() {
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['events'] }),
+  });
+}
+
+// Goals
+export function useGoals() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['goals', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('goals').select('*').eq('user_id', user!.id).order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as Goal[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useCreateGoal() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (goal: { title: string; description?: string; target_date?: string | null; status?: string; progress?: number }) => {
+      const { error } = await supabase.from('goals').insert({ ...goal, user_id: user!.id });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['goals'] }),
+  });
+}
+
+export function useUpdateGoal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string } & Partial<Goal>) => {
+      const { error } = await supabase.from('goals').update(updates).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['goals'] }),
+  });
+}
+
+export function useDeleteGoal() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('goals').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['goals'] }),
+  });
+}
+
+// Daily Scores
+export function useDailyScores(startDate?: string, endDate?: string) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['daily_scores', user?.id, startDate, endDate],
+    queryFn: async () => {
+      let query = supabase.from('daily_scores').select('*').eq('user_id', user!.id);
+      if (startDate) query = query.gte('score_date', startDate);
+      if (endDate) query = query.lte('score_date', endDate);
+      const { data, error } = await query.order('score_date', { ascending: false });
+      if (error) throw error;
+      return data as DailyScore[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useUpsertDailyScore() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (score: Omit<DailyScore, 'id' | 'user_id' | 'created_at'>) => {
+      const { error } = await supabase.from('daily_scores').upsert(
+        { ...score, user_id: user!.id },
+        { onConflict: 'user_id,score_date' }
+      );
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['daily_scores'] }),
+  });
+}
+
+// Focus Sessions
+export function useFocusSessions(limit = 20) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['focus_sessions', user?.id, limit],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('focus_sessions').select('*').eq('user_id', user!.id).order('started_at', { ascending: false }).limit(limit);
+      if (error) throw error;
+      return data as FocusSession[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useActiveSession() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['active_focus_session', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('focus_sessions').select('*').eq('user_id', user!.id).eq('status', 'active').maybeSingle();
+      if (error) throw error;
+      return data as FocusSession | null;
+    },
+    enabled: !!user,
+  });
+}
+
+export function useStartFocusSession() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (params: { duration_minutes: number; event_id?: string }) => {
+      const { data, error } = await supabase.from('focus_sessions').insert({
+        user_id: user!.id,
+        duration_minutes: params.duration_minutes,
+        event_id: params.event_id || null,
+        status: 'active',
+      }).select().single();
+      if (error) throw error;
+      return data as FocusSession;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['focus_sessions'] });
+      qc.invalidateQueries({ queryKey: ['active_focus_session'] });
+    },
+  });
+}
+
+export function useEndFocusSession() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: 'completed' | 'cancelled' }) => {
+      const { error } = await supabase.from('focus_sessions').update({ status, ended_at: new Date().toISOString() }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['focus_sessions'] });
+      qc.invalidateQueries({ queryKey: ['active_focus_session'] });
+    },
+  });
+}
+
+// Event Templates
+export function useEventTemplates() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['event_templates', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('event_templates').select('*').eq('user_id', user!.id).order('name');
+      if (error) throw error;
+      return data as EventTemplate[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useCreateEventTemplate() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (tpl: Omit<EventTemplate, 'id' | 'user_id' | 'created_at'>) => {
+      const { error } = await supabase.from('event_templates').insert({ ...tpl, user_id: user!.id });
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['event_templates'] }),
+  });
+}
+
+export function useDeleteEventTemplate() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('event_templates').delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['event_templates'] }),
+  });
+}
+
+// Event Checklist Items
+export function useEventChecklistItems(eventId: string | null) {
+  return useQuery({
+    queryKey: ['event_checklist_items', eventId],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('event_checklist_items').select('*').eq('event_id', eventId!).order('sort_order');
+      if (error) throw error;
+      return data as EventChecklistItem[];
+    },
+    enabled: !!eventId,
+  });
+}
+
+export function useCreateChecklistItem() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (item: { event_id: string; text: string; sort_order?: number }) => {
+      const { error } = await supabase.from('event_checklist_items').insert({ ...item, user_id: user!.id });
+      if (error) throw error;
+    },
+    onSuccess: (_, vars) => qc.invalidateQueries({ queryKey: ['event_checklist_items', vars.event_id] }),
+  });
+}
+
+export function useUpdateChecklistItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, event_id, ...updates }: { id: string; event_id: string } & Partial<EventChecklistItem>) => {
+      const { error } = await supabase.from('event_checklist_items').update(updates).eq('id', id);
+      if (error) throw error;
+      return event_id;
+    },
+    onSuccess: (eventId) => qc.invalidateQueries({ queryKey: ['event_checklist_items', eventId] }),
+  });
+}
+
+export function useDeleteChecklistItem() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, event_id }: { id: string; event_id: string }) => {
+      const { error } = await supabase.from('event_checklist_items').delete().eq('id', id);
+      if (error) throw error;
+      return event_id;
+    },
+    onSuccess: (eventId) => qc.invalidateQueries({ queryKey: ['event_checklist_items', eventId] }),
   });
 }

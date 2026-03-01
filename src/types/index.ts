@@ -67,4 +67,61 @@ export interface ChecklistItem {
   completed: boolean;
 }
 
+export interface Goal {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  target_date: string | null;
+  status: 'active' | 'completed' | 'archived';
+  progress: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DailyScore {
+  id: string;
+  user_id: string;
+  score_date: string;
+  total_events: number;
+  completed_events: number;
+  focus_minutes: number;
+  score: number;
+  created_at: string;
+}
+
+export interface FocusSession {
+  id: string;
+  user_id: string;
+  event_id: string | null;
+  duration_minutes: number;
+  started_at: string;
+  ended_at: string | null;
+  status: 'active' | 'completed' | 'cancelled';
+  created_at: string;
+}
+
+export interface EventTemplate {
+  id: string;
+  user_id: string;
+  name: string;
+  title: string;
+  description: string;
+  duration_minutes: number;
+  location: string;
+  calendar_id: string | null;
+  is_all_day: boolean;
+  created_at: string;
+}
+
+export interface EventChecklistItem {
+  id: string;
+  event_id: string;
+  user_id: string;
+  text: string;
+  is_completed: boolean;
+  sort_order: number;
+  created_at: string;
+}
+
 export type ViewType = 'month' | 'week' | 'day' | 'agenda';

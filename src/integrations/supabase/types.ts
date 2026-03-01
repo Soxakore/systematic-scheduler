@@ -41,6 +41,77 @@ export type Database = {
         }
         Relationships: []
       }
+      daily_scores: {
+        Row: {
+          completed_events: number
+          created_at: string
+          focus_minutes: number
+          id: string
+          score: number
+          score_date: string
+          total_events: number
+          user_id: string
+        }
+        Insert: {
+          completed_events?: number
+          created_at?: string
+          focus_minutes?: number
+          id?: string
+          score?: number
+          score_date: string
+          total_events?: number
+          user_id: string
+        }
+        Update: {
+          completed_events?: number
+          created_at?: string
+          focus_minutes?: number
+          id?: string
+          score?: number
+          score_date?: string
+          total_events?: number
+          user_id?: string
+        }
+        Relationships: []
+      }
+      event_checklist_items: {
+        Row: {
+          created_at: string
+          event_id: string
+          id: string
+          is_completed: boolean
+          sort_order: number
+          text: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          event_id: string
+          id?: string
+          is_completed?: boolean
+          sort_order?: number
+          text: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          event_id?: string
+          id?: string
+          is_completed?: boolean
+          sort_order?: number
+          text?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_checklist_items_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       event_tags: {
         Row: {
           event_id: string
@@ -67,6 +138,53 @@ export type Database = {
             columns: ["tag_id"]
             isOneToOne: false
             referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_templates: {
+        Row: {
+          calendar_id: string | null
+          created_at: string
+          description: string | null
+          duration_minutes: number
+          id: string
+          is_all_day: boolean
+          location: string | null
+          name: string
+          title: string
+          user_id: string
+        }
+        Insert: {
+          calendar_id?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_all_day?: boolean
+          location?: string | null
+          name: string
+          title?: string
+          user_id: string
+        }
+        Update: {
+          calendar_id?: string | null
+          created_at?: string
+          description?: string | null
+          duration_minutes?: number
+          id?: string
+          is_all_day?: boolean
+          location?: string | null
+          name?: string
+          title?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_templates_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "calendars"
             referencedColumns: ["id"]
           },
         ]
@@ -142,6 +260,83 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      focus_sessions: {
+        Row: {
+          created_at: string
+          duration_minutes: number
+          ended_at: string | null
+          event_id: string | null
+          id: string
+          started_at: string
+          status: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          duration_minutes?: number
+          ended_at?: string | null
+          event_id?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          duration_minutes?: number
+          ended_at?: string | null
+          event_id?: string | null
+          id?: string
+          started_at?: string
+          status?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "focus_sessions_event_id_fkey"
+            columns: ["event_id"]
+            isOneToOne: false
+            referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      goals: {
+        Row: {
+          created_at: string
+          description: string | null
+          id: string
+          progress: number
+          status: string
+          target_date: string | null
+          title: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          progress?: number
+          status?: string
+          target_date?: string | null
+          title: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          description?: string | null
+          id?: string
+          progress?: number
+          status?: string
+          target_date?: string | null
+          title?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
       }
       profiles: {
         Row: {
