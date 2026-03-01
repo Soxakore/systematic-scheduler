@@ -1,4 +1,4 @@
-// WeeklyReviewWizard placeholder - requires additional DB tables
+// WeeklyReviewWizard - integrated into WeeklyReviewPage
 export default function WeeklyReviewWizard() {
   return null;
 }

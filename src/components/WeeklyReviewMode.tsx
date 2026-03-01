@@ -1,4 +1,4 @@
-// WeeklyReviewMode placeholder - requires event_checklist_items table
+// WeeklyReviewMode - integrated into WeeklyReviewPage
 export default function WeeklyReviewMode() {
   return null;
 }
