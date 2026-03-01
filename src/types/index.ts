@@ -30,6 +30,10 @@ export interface CalendarEvent {
   is_all_day: boolean;
   is_system_generated: boolean;
   is_customized: boolean;
+  is_completed: boolean;
+  completed_at: string | null;
+  skipped: boolean;
+  skip_reason: string | null;
   system_instance_date: string | null;
   reminder_minutes: number | null;
   created_at: string;
@@ -78,6 +82,64 @@ export interface EventChecklistItem {
   is_completed: boolean;
   completed_at: string | null;
   sort_order: number;
+  created_at: string;
+}
+
+export interface EventTemplate {
+  id: string;
+  user_id: string;
+  name: string;
+  title: string;
+  description: string;
+  location: string;
+  duration_minutes: number;
+  calendar_id: string | null;
+  tag_ids: string[];
+  is_favorite: boolean;
+  use_count: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface FocusSession {
+  id: string;
+  user_id: string;
+  event_id: string | null;
+  started_at: string;
+  ended_at: string | null;
+  planned_minutes: number;
+  actual_minutes: number | null;
+  session_type: 'focus' | 'short_break' | 'long_break';
+  completed: boolean;
+  created_at: string;
+}
+
+export interface Goal {
+  id: string;
+  user_id: string;
+  title: string;
+  description: string;
+  goal_type: 'weekly' | 'monthly';
+  target_count: number;
+  system_id: string | null;
+  tag_id: string | null;
+  is_active: boolean;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface DailyScore {
+  id: string;
+  user_id: string;
+  date: string;
+  score: number;
+  events_total: number;
+  events_completed: number;
+  systems_total: number;
+  systems_completed: number;
+  focus_minutes: number;
+  goals_met: number;
+  goals_total: number;
   created_at: string;
 }
 

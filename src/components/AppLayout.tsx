@@ -2,7 +2,7 @@ import { ReactNode, useState, createContext, useContext } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile, useCalendars, useTags } from '@/hooks/useData';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { CalendarDays, LayoutGrid, Settings, ListTodo, Plus, Search, ChevronLeft, ChevronRight, LogOut, Menu, Tag, Sparkles } from 'lucide-react';
+import { CalendarDays, LayoutGrid, Settings, ListTodo, Plus, Search, ChevronLeft, ChevronRight, LogOut, Menu, Tag, Sparkles, Brain, Flame, Trophy, Target, Sun, FileText } from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -189,20 +189,32 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <Link to="/systems" className="text-xs text-primary hover:underline block">Manage systems</Link>
               </div>
 
-              {/* Weekly Review entry point */}
+              {/* Nav links */}
               <div className="px-3 pb-2">
-                <Link
-                  to="/review"
-                  className={cn(
-                    "flex items-center gap-2 py-2 px-2 rounded-md text-sm transition-colors",
-                    location.pathname === '/review'
-                      ? 'bg-primary/10 text-primary font-medium'
-                      : 'text-sidebar-foreground hover:bg-accent/50'
-                  )}
-                >
-                  <Sparkles className="h-4 w-4" />
-                  Weekly Review
-                </Link>
+                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Navigate</h3>
+                {[
+                  { to: '/dashboard', icon: Brain, label: 'Dashboard' },
+                  { to: '/briefing', icon: Sun, label: 'Morning Briefing' },
+                  { to: '/habits', icon: Flame, label: 'Habits & Streaks' },
+                  { to: '/goals', icon: Target, label: 'Goals' },
+                  { to: '/templates', icon: FileText, label: 'Templates' },
+                  { to: '/analytics', icon: Trophy, label: 'Analytics' },
+                  { to: '/review', icon: Sparkles, label: 'Weekly Review' },
+                ].map(item => (
+                  <Link
+                    key={item.to}
+                    to={item.to}
+                    className={cn(
+                      "flex items-center gap-2 py-1.5 px-2 rounded-md text-sm transition-colors",
+                      location.pathname === item.to
+                        ? 'bg-primary/10 text-primary font-medium'
+                        : 'text-sidebar-foreground hover:bg-accent/50'
+                    )}
+                  >
+                    <item.icon className="h-4 w-4" />
+                    {item.label}
+                  </Link>
+                ))}
               </div>
 
               <div className="mt-auto p-3 border-t">
@@ -226,9 +238,9 @@ export default function AppLayout({ children }: { children: ReactNode }) {
               <CalendarDays className="h-5 w-5" />
               Calendar
             </Link>
-            <Link to="/review" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/review' ? 'text-primary' : 'text-muted-foreground')}>
-              <Sparkles className="h-5 w-5" />
-              Review
+            <Link to="/dashboard" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/dashboard' ? 'text-primary' : 'text-muted-foreground')}>
+              <Brain className="h-5 w-5" />
+              Dashboard
             </Link>
             <button
               onClick={() => { setSelectedDate(new Date()); setEditingEventId(null); setShowEventDialog(true); }}
@@ -238,13 +250,13 @@ export default function AppLayout({ children }: { children: ReactNode }) {
                 <Plus className="h-5 w-5 text-primary-foreground" />
               </div>
             </button>
-            <Link to="/systems" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/systems' ? 'text-primary' : 'text-muted-foreground')}>
-              <LayoutGrid className="h-5 w-5" />
-              Systems
+            <Link to="/habits" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/habits' ? 'text-primary' : 'text-muted-foreground')}>
+              <Flame className="h-5 w-5" />
+              Habits
             </Link>
             <Link to="/settings" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/settings' ? 'text-primary' : 'text-muted-foreground')}>
               <Settings className="h-5 w-5" />
-              Settings
+              More
             </Link>
           </nav>
         )}

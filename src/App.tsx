@@ -15,6 +15,12 @@ import ForgotPasswordPage from "@/pages/ForgotPassword";
 import ResetPasswordPage from "@/pages/ResetPassword";
 import AgendaView from "@/components/calendar/AgendaView";
 import WeeklyReviewPage from "@/pages/WeeklyReviewPage";
+import DashboardPage from "@/pages/DashboardPage";
+import HabitsPage from "@/pages/HabitsPage";
+import TemplatesPage from "@/pages/TemplatesPage";
+import AnalyticsPage from "@/pages/AnalyticsPage";
+import GoalsPage from "@/pages/GoalsPage";
+import MorningBriefingPage from "@/pages/MorningBriefingPage";
 import EventDialog from "@/components/EventDialog";
 import NotFound from "./pages/NotFound";
 
@@ -46,6 +52,12 @@ function AppRoutes() {
       <Route path="/calendars" element={<ProtectedRoute><AppLayout><CalendarsPage /></AppLayout></ProtectedRoute>} />
       <Route path="/agenda" element={<ProtectedRoute><AppLayout><AgendaView /></AppLayout></ProtectedRoute>} />
       <Route path="/review" element={<ProtectedRoute><AppLayout><WeeklyReviewPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/habits" element={<ProtectedRoute><AppLayout><HabitsPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/templates" element={<ProtectedRoute><AppLayout><TemplatesPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/analytics" element={<ProtectedRoute><AppLayout><AnalyticsPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/goals" element={<ProtectedRoute><AppLayout><GoalsPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/briefing" element={<ProtectedRoute><AppLayout><MorningBriefingPage /></AppLayout></ProtectedRoute>} />
       <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
       <Route path="*" element={<NotFound />} />
     </Routes>
