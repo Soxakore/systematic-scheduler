@@ -33,9 +33,8 @@ export default function SystemsPage() {
   const [startTime, setStartTime] = useState('09:00');
   const [showDeactivateDialog, setShowDeactivateDialog] = useState<string | null>(null);
 
-  // Filter out weekly_review systems — they're managed on the Review page
-  const routineSystems = systems?.filter(s => s.system_type !== 'weekly_review');
-  const hasWeeklyReview = systems?.some(s => s.system_type === 'weekly_review');
+  const routineSystems = systems;
+  const hasWeeklyReview = false;
 
   const openNew = () => {
     setEditing(null);

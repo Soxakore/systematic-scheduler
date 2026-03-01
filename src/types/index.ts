@@ -23,17 +23,13 @@ export interface CalendarEvent {
   calendar_id: string;
   system_id: string | null;
   title: string;
-  description: string;
-  location: string;
+  description: string | null;
+  location: string | null;
   start_time: string;
   end_time: string;
   is_all_day: boolean;
   is_system_generated: boolean;
   is_customized: boolean;
-  is_completed: boolean;
-  completed_at: string | null;
-  skipped: boolean;
-  skip_reason: string | null;
   system_instance_date: string | null;
   reminder_minutes: number | null;
   created_at: string;
@@ -48,22 +44,19 @@ export interface Tag {
   created_at: string;
 }
 
-export type SystemType = 'routine' | 'weekly_review';
-
 export interface System {
   id: string;
   user_id: string;
   calendar_id: string;
   name: string;
-  system_type: SystemType;
   default_duration_minutes: number;
-  time_window: string;
+  time_window: string | null;
   recurrence_type: 'daily' | 'weekly' | 'custom';
   recurrence_days: number[];
   is_active: boolean;
   checklist_items: ChecklistItem[];
   generation_horizon_days: number;
-  default_start_time: string;
+  default_start_time: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -74,83 +67,4 @@ export interface ChecklistItem {
   completed: boolean;
 }
 
-export interface EventChecklistItem {
-  id: string;
-  event_id: string;
-  checklist_item_id: string;
-  text: string;
-  is_completed: boolean;
-  completed_at: string | null;
-  sort_order: number;
-  created_at: string;
-}
-
-export interface EventTemplate {
-  id: string;
-  user_id: string;
-  name: string;
-  title: string;
-  description: string;
-  location: string;
-  duration_minutes: number;
-  calendar_id: string | null;
-  tag_ids: string[];
-  is_favorite: boolean;
-  use_count: number;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface FocusSession {
-  id: string;
-  user_id: string;
-  event_id: string | null;
-  started_at: string;
-  ended_at: string | null;
-  planned_minutes: number;
-  actual_minutes: number | null;
-  session_type: 'focus' | 'short_break' | 'long_break';
-  completed: boolean;
-  created_at: string;
-}
-
-export interface Goal {
-  id: string;
-  user_id: string;
-  title: string;
-  description: string;
-  goal_type: 'weekly' | 'monthly';
-  target_count: number;
-  system_id: string | null;
-  tag_id: string | null;
-  is_active: boolean;
-  created_at: string;
-  updated_at: string;
-}
-
-export interface DailyScore {
-  id: string;
-  user_id: string;
-  date: string;
-  score: number;
-  events_total: number;
-  events_completed: number;
-  systems_total: number;
-  systems_completed: number;
-  focus_minutes: number;
-  goals_met: number;
-  goals_total: number;
-  created_at: string;
-}
-
 export type ViewType = 'month' | 'week' | 'day' | 'agenda';
-
-// Default weekly review checklist template
-export const WEEKLY_REVIEW_DEFAULT_CHECKLIST: ChecklistItem[] = [
-  { id: 'wr-1', text: 'Review last week\'s calendar and completed tasks', completed: false },
-  { id: 'wr-2', text: 'List wins and what went well', completed: false },
-  { id: 'wr-3', text: 'Note what didn\'t go well and why', completed: false },
-  { id: 'wr-4', text: 'Review key systems (health, work, relationships, money) and adjust if needed', completed: false },
-  { id: 'wr-5', text: 'Choose top 3 priorities for next week', completed: false },
-  { id: 'wr-6', text: 'Time-block these priorities in the calendar', completed: false },
-];
