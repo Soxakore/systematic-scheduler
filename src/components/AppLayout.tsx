@@ -2,7 +2,11 @@ import { ReactNode, useState, createContext, useContext } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useProfile, useCalendars, useTags } from '@/hooks/useData';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { CalendarDays, LayoutGrid, Settings, ListTodo, Plus, Search, ChevronLeft, ChevronRight, LogOut, Menu, Tag, Sparkles, Brain, Flame, Trophy, Target, Sun, FileText, BookOpen, Eye } from 'lucide-react';
+import {
+  CalendarDays, LayoutGrid, Settings, ListTodo, Plus, Search,
+  ChevronLeft, ChevronRight, LogOut, Menu, Tag, Sparkles, Brain,
+  Flame, Trophy, Target, Sun, FileText, BookOpen, Eye, X
+} from 'lucide-react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
@@ -79,55 +83,110 @@ export default function AppLayout({ children }: { children: ReactNode }) {
 
   const isCalendarPage = location.pathname === '/';
 
+  const navItems = [
+    { to: '/dashboard', icon: Brain, label: 'Dashboard' },
+    { to: '/briefing', icon: Sun, label: 'Morning Briefing' },
+    { to: '/habits', icon: Flame, label: 'Habits & Streaks' },
+    { to: '/goals', icon: Target, label: 'Goals' },
+    { to: '/templates', icon: FileText, label: 'Templates' },
+    { to: '/analytics', icon: Trophy, label: 'Analytics' },
+    { to: '/review', icon: Sparkles, label: 'Weekly Review' },
+    { to: '/journal', icon: BookOpen, label: 'Journal' },
+    { to: '/vision', icon: Eye, label: 'Vision Board' },
+  ];
+
   return (
-    <AppContext.Provider value={{ currentDate, setCurrentDate, currentView, setCurrentView, searchQuery, setSearchQuery, showEventDialog, setShowEventDialog, selectedDate, setSelectedDate, editingEventId, setEditingEventId, selectedTagIds, setSelectedTagIds }}>
-      <div className="h-screen flex flex-col bg-background overflow-hidden">
-        {/* Top bar */}
-        <header className="h-14 border-b flex items-center px-3 gap-2 shrink-0">
+    <AppContext.Provider value={{
+      currentDate, setCurrentDate, currentView, setCurrentView,
+      searchQuery, setSearchQuery, showEventDialog, setShowEventDialog,
+      selectedDate, setSelectedDate, editingEventId, setEditingEventId,
+      selectedTagIds, setSelectedTagIds
+    }}>
+      {/* Animated mesh background */}
+      <div className="app-bg" />
+      <div className="orb orb-1" />
+      <div className="orb orb-2" />
+      <div className="orb orb-3" />
+
+      <div className="h-screen flex flex-col overflow-hidden relative z-0">
+        {/* ── Glass Header ─────────────────────────────────────────── */}
+        <header className="glass-header h-14 flex items-center px-4 gap-3 shrink-0 relative z-10">
           {!isMobile && (
-            <Button variant="ghost" size="icon" onClick={() => setSidebarOpen(!sidebarOpen)} aria-label="Toggle sidebar">
-              <Menu className="h-5 w-5" />
-            </Button>
+            <button
+              onClick={() => setSidebarOpen(!sidebarOpen)}
+              className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+              aria-label="Toggle sidebar"
+            >
+              {sidebarOpen ? <X className="h-4 w-4" /> : <Menu className="h-4 w-4" />}
+            </button>
           )}
-          <Link to="/" className="flex items-center gap-2 mr-2">
-            <CalendarDays className="h-5 w-5 text-primary" />
-            {!isMobile && <span className="font-semibold text-foreground">System Calendar</span>}
+
+          {/* Logo */}
+          <Link to="/" className="flex items-center gap-2 mr-3 group">
+            <div className="h-7 w-7 rounded-lg bg-primary/20 border border-primary/30 flex items-center justify-center group-hover:bg-primary/30 transition-colors">
+              <CalendarDays className="h-3.5 w-3.5 text-primary" />
+            </div>
+            {!isMobile && (
+              <span className="font-semibold gradient-text text-sm tracking-tight">
+                System Calendar
+              </span>
+            )}
           </Link>
 
+          {/* Calendar nav controls */}
           {isCalendarPage && (
             <>
-              <Button variant="outline" size="sm" onClick={goToday} className="text-xs">
+              <button
+                onClick={goToday}
+                className="px-3 h-7 text-xs rounded-md border border-white/10 bg-white/5 text-foreground hover:bg-white/10 transition-colors font-medium"
+              >
                 Today
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigateDate('prev')}>
-                <ChevronLeft className="h-4 w-4" />
-              </Button>
-              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => navigateDate('next')}>
-                <ChevronRight className="h-4 w-4" />
-              </Button>
-              <span className="text-sm font-medium text-foreground truncate">{viewLabel()}</span>
+              </button>
+              <div className="flex items-center gap-0.5">
+                <button
+                  onClick={() => navigateDate('prev')}
+                  className="h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+                >
+                  <ChevronLeft className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => navigateDate('next')}
+                  className="h-7 w-7 flex items-center justify-center rounded-md text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+                >
+                  <ChevronRight className="h-4 w-4" />
+                </button>
+              </div>
+              <span className="text-sm font-medium text-foreground/80 truncate">{viewLabel()}</span>
+
               <div className="flex-1" />
+
+              {/* View switcher */}
               {!isMobile && (
-                <div className="flex items-center gap-1 border rounded-md p-0.5">
+                <div className="flex items-center gap-0.5 rounded-lg border border-white/10 bg-white/5 p-0.5">
                   {views.map(v => (
-                    <Button
+                    <button
                       key={v.value}
-                      variant={currentView === v.value ? 'default' : 'ghost'}
-                      size="sm"
-                      className="text-xs h-7 px-3"
                       onClick={() => setCurrentView(v.value)}
+                      className={cn(
+                        'px-3 h-6 text-xs rounded-md font-medium transition-all',
+                        currentView === v.value
+                          ? 'bg-primary text-white shadow-sm'
+                          : 'text-muted-foreground hover:text-foreground hover:bg-white/5'
+                      )}
                     >
                       {v.label}
-                    </Button>
+                    </button>
                   ))}
                 </div>
               )}
-              <div className="relative ml-2">
-                <Search className="absolute left-2 top-1/2 -translate-y-1/2 h-3.5 w-3.5 text-muted-foreground" />
+
+              {/* Search */}
+              <div className="relative ml-1">
+                <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-3 w-3 text-muted-foreground pointer-events-none" />
                 <input
                   type="text"
                   placeholder="Search…"
-                  className="h-8 w-36 lg:w-48 pl-7 pr-2 text-sm rounded-md border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-ring"
+                  className="glass-input h-7 w-36 lg:w-48 pl-7 pr-2 text-xs rounded-lg text-foreground placeholder:text-muted-foreground"
                   value={searchQuery}
                   onChange={e => setSearchQuery(e.target.value)}
                 />
@@ -135,131 +194,184 @@ export default function AppLayout({ children }: { children: ReactNode }) {
             </>
           )}
 
-          <div className="flex-1" />
+          {!isCalendarPage && <div className="flex-1" />}
+
+          {/* Sign out */}
           {!isMobile && (
-            <Button variant="ghost" size="icon" onClick={() => { signOut(); navigate('/login'); }} aria-label="Log out">
-              <LogOut className="h-4 w-4" />
-            </Button>
+            <button
+              onClick={() => { signOut(); navigate('/login'); }}
+              className="h-8 w-8 flex items-center justify-center rounded-lg text-muted-foreground hover:text-foreground hover:bg-white/5 transition-colors"
+              aria-label="Log out"
+            >
+              <LogOut className="h-3.5 w-3.5" />
+            </button>
           )}
         </header>
 
         <div className="flex flex-1 overflow-hidden">
-          {/* Desktop sidebar */}
+          {/* ── Glass Sidebar ──────────────────────────────────────── */}
           {!isMobile && sidebarOpen && (
-            <aside className="w-56 border-r bg-sidebar shrink-0 flex flex-col overflow-y-auto scrollbar-thin">
+            <aside className="glass-sidebar w-56 shrink-0 flex flex-col overflow-y-auto scrollbar-thin fade-up">
+              {/* New Event button */}
               <div className="p-3">
-                <Button className="w-full justify-start gap-2" onClick={() => { setSelectedDate(new Date()); setEditingEventId(null); setShowEventDialog(true); }}>
-                  <Plus className="h-4 w-4" /> New Event
-                </Button>
+                <button
+                  onClick={() => { setSelectedDate(new Date()); setEditingEventId(null); setShowEventDialog(true); }}
+                  className="glass-button-primary w-full h-9 rounded-xl flex items-center justify-center gap-2 text-sm font-semibold text-white"
+                >
+                  <Plus className="h-4 w-4" />
+                  New Event
+                </button>
               </div>
 
-              <div className="px-3 pb-2">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Calendars</h3>
-                {calendars?.map(cal => (
-                  <label key={cal.id} className="flex items-center gap-2 py-1 text-sm cursor-pointer text-sidebar-foreground">
-                    <span className="w-3 h-3 rounded-sm shrink-0" style={{ backgroundColor: cal.color }} />
-                    <span className="truncate">{cal.name}</span>
-                  </label>
-                ))}
-                <Link to="/calendars" className="text-xs text-primary hover:underline mt-1 block">Manage calendars</Link>
+              {/* Calendars */}
+              <div className="px-3 pb-3">
+                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">Calendars</h3>
+                <div className="space-y-0.5">
+                  {calendars?.map(cal => (
+                    <label key={cal.id} className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg text-sm cursor-pointer text-sidebar-foreground hover:bg-white/5 transition-colors">
+                      <span className="w-2.5 h-2.5 rounded-full shrink-0 ring-1 ring-white/20" style={{ backgroundColor: cal.color }} />
+                      <span className="truncate">{cal.name}</span>
+                    </label>
+                  ))}
+                </div>
+                <Link to="/calendars" className="text-[10px] text-primary/70 hover:text-primary mt-1.5 block transition-colors">
+                  Manage calendars →
+                </Link>
               </div>
 
-              <div className="px-3 pb-2">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Tags</h3>
-                {tags?.map(tag => (
-                  <label key={tag.id} className="flex items-center gap-2 py-1 text-sm cursor-pointer text-sidebar-foreground">
-                    <input
-                      type="checkbox"
-                      className="rounded"
-                      checked={selectedTagIds.includes(tag.id)}
-                      onChange={() => setSelectedTagIds(prev => prev.includes(tag.id) ? prev.filter(id => id !== tag.id) : [...prev, tag.id])}
-                    />
-                    <span className="w-2.5 h-2.5 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
-                    <span className="truncate">{tag.name}</span>
-                  </label>
-                ))}
-                {(!tags || tags.length === 0) && <span className="text-xs text-muted-foreground">No tags yet</span>}
+              <div className="mx-3 divider-gradient mb-3" />
+
+              {/* Tags */}
+              <div className="px-3 pb-3">
+                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">Tags</h3>
+                <div className="space-y-0.5">
+                  {tags?.map(tag => (
+                    <label key={tag.id} className="flex items-center gap-2.5 py-1.5 px-2 rounded-lg text-sm cursor-pointer text-sidebar-foreground hover:bg-white/5 transition-colors">
+                      <input
+                        type="checkbox"
+                        className="rounded w-3 h-3 accent-primary"
+                        checked={selectedTagIds.includes(tag.id)}
+                        onChange={() => setSelectedTagIds(
+                          selectedTagIds.includes(tag.id)
+                            ? selectedTagIds.filter(id => id !== tag.id)
+                            : [...selectedTagIds, tag.id]
+                        )}
+                      />
+                      <span className="w-2 h-2 rounded-full shrink-0" style={{ backgroundColor: tag.color }} />
+                      <span className="truncate">{tag.name}</span>
+                    </label>
+                  ))}
+                  {(!tags || tags.length === 0) && (
+                    <span className="text-xs text-muted-foreground px-2">No tags yet</span>
+                  )}
+                </div>
                 {selectedTagIds.length > 0 && (
-                  <button className="text-xs text-primary hover:underline mt-1 block" onClick={() => setSelectedTagIds([])}>Clear filter</button>
+                  <button
+                    className="text-[10px] text-primary/70 hover:text-primary mt-1.5 block transition-colors"
+                    onClick={() => setSelectedTagIds([])}
+                  >
+                    Clear filter ×
+                  </button>
                 )}
               </div>
 
-              <div className="px-3 pb-2">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Systems</h3>
-                <Link to="/systems" className="text-xs text-primary hover:underline block">Manage systems</Link>
+              <div className="mx-3 divider-gradient mb-3" />
+
+              {/* Navigation */}
+              <div className="px-3 pb-3">
+                <h3 className="text-[10px] font-semibold text-muted-foreground uppercase tracking-widest mb-2">Navigate</h3>
+                <div className="stagger space-y-0.5">
+                  {navItems.map(item => {
+                    const active = location.pathname === item.to;
+                    return (
+                      <Link
+                        key={item.to}
+                        to={item.to}
+                        className={cn(
+                          'flex items-center gap-2.5 py-1.5 px-2 rounded-lg text-sm transition-all duration-200 group',
+                          active
+                            ? 'nav-active text-primary font-medium pulse-glow'
+                            : 'text-sidebar-foreground hover:bg-white/5 hover:text-foreground'
+                        )}
+                      >
+                        <item.icon className={cn('h-3.5 w-3.5 shrink-0 transition-transform group-hover:scale-110', active && 'text-primary')} />
+                        {item.label}
+                      </Link>
+                    );
+                  })}
+                </div>
               </div>
 
-              {/* Nav links */}
-              <div className="px-3 pb-2">
-                <h3 className="text-xs font-semibold text-muted-foreground uppercase tracking-wider mb-2">Navigate</h3>
-                {[
-                  { to: '/dashboard', icon: Brain, label: 'Dashboard' },
-                  { to: '/briefing', icon: Sun, label: 'Morning Briefing' },
-                  { to: '/habits', icon: Flame, label: 'Habits & Streaks' },
-                  { to: '/goals', icon: Target, label: 'Goals' },
-                  { to: '/templates', icon: FileText, label: 'Templates' },
-                  { to: '/analytics', icon: Trophy, label: 'Analytics' },
-                  { to: '/review', icon: Sparkles, label: 'Weekly Review' },
-                  { to: '/journal', icon: BookOpen, label: 'Journal' },
-                  { to: '/vision', icon: Eye, label: 'Vision Board' },
-                ].map(item => (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    className={cn(
-                      "flex items-center gap-2 py-1.5 px-2 rounded-md text-sm transition-colors",
-                      location.pathname === item.to
-                        ? 'bg-primary/10 text-primary font-medium'
-                        : 'text-sidebar-foreground hover:bg-accent/50'
-                    )}
-                  >
-                    <item.icon className="h-4 w-4" />
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-
-              <div className="mt-auto p-3 border-t">
-                <Link to="/settings" className="flex items-center gap-2 text-sm text-sidebar-foreground hover:text-foreground">
-                  <Settings className="h-4 w-4" /> Settings
+              {/* Bottom settings */}
+              <div className="mt-auto p-3 border-t border-white/5">
+                <Link
+                  to="/settings"
+                  className={cn(
+                    'flex items-center gap-2.5 py-1.5 px-2 rounded-lg text-sm transition-colors',
+                    location.pathname === '/settings'
+                      ? 'nav-active text-primary font-medium'
+                      : 'text-sidebar-foreground hover:bg-white/5 hover:text-foreground'
+                  )}
+                >
+                  <Settings className="h-3.5 w-3.5 shrink-0" />
+                  Settings
                 </Link>
               </div>
             </aside>
           )}
 
-          {/* Main content */}
+          {/* ── Main content ──────────────────────────────────────── */}
           <main className="flex-1 overflow-hidden">
             {children}
           </main>
         </div>
 
-        {/* Mobile bottom nav */}
+        {/* ── Mobile bottom nav ─────────────────────────────────── */}
         {isMobile && (
-          <nav className="h-14 border-t flex items-center justify-around bg-background shrink-0">
-            <Link to="/" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/' ? 'text-primary' : 'text-muted-foreground')}>
-              <CalendarDays className="h-5 w-5" />
-              Calendar
-            </Link>
-            <Link to="/dashboard" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/dashboard' ? 'text-primary' : 'text-muted-foreground')}>
-              <Brain className="h-5 w-5" />
-              Dashboard
-            </Link>
+          <nav className="glass-header h-16 flex items-center justify-around shrink-0 border-t border-white/5">
+            {[
+              { to: '/', icon: CalendarDays, label: 'Calendar' },
+              { to: '/dashboard', icon: Brain, label: 'Dashboard' },
+            ].map(item => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={cn(
+                  'flex flex-col items-center gap-1 text-[10px] font-medium transition-colors',
+                  location.pathname === item.to ? 'text-primary' : 'text-muted-foreground'
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                {item.label}
+              </Link>
+            ))}
+
+            {/* FAB */}
             <button
               onClick={() => { setSelectedDate(new Date()); setEditingEventId(null); setShowEventDialog(true); }}
-              className="flex flex-col items-center gap-0.5 text-xs text-primary"
+              className="flex flex-col items-center -mt-5"
             >
-              <div className="h-10 w-10 rounded-full bg-primary flex items-center justify-center -mt-4">
-                <Plus className="h-5 w-5 text-primary-foreground" />
+              <div className="glass-button-primary h-12 w-12 rounded-2xl flex items-center justify-center shadow-lg">
+                <Plus className="h-5 w-5 text-white" />
               </div>
             </button>
-            <Link to="/habits" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/habits' ? 'text-primary' : 'text-muted-foreground')}>
-              <Flame className="h-5 w-5" />
-              Habits
-            </Link>
-            <Link to="/settings" className={cn("flex flex-col items-center gap-0.5 text-xs", location.pathname === '/settings' ? 'text-primary' : 'text-muted-foreground')}>
-              <Settings className="h-5 w-5" />
-              More
-            </Link>
+
+            {[
+              { to: '/habits', icon: Flame, label: 'Habits' },
+              { to: '/settings', icon: Settings, label: 'More' },
+            ].map(item => (
+              <Link
+                key={item.to}
+                to={item.to}
+                className={cn(
+                  'flex flex-col items-center gap-1 text-[10px] font-medium transition-colors',
+                  location.pathname === item.to ? 'text-primary' : 'text-muted-foreground'
+                )}
+              >
+                <item.icon className="h-5 w-5" />
+                {item.label}
+              </Link>
+            ))}
           </nav>
         )}
       </div>
