@@ -618,9 +618,9 @@ export function useJournalEntry(date: string) {
   return useQuery({
     queryKey: ['journal_entry', user?.id, date],
     queryFn: async () => {
-      const { data, error } = await supabase.from('journal_entries').select('*').eq('user_id', user!.id).eq('date', date).maybeSingle();
+      const { data, error } = await supabase.from('journal_entries' as any).select('*').eq('user_id', user!.id).eq('date', date).maybeSingle();
       if (error) throw error;
-      return data as JournalEntry | null;
+      return data as unknown as JournalEntry | null;
     },
     enabled: !!user && !!date,
   });
@@ -633,9 +633,9 @@ export function useJournalEntries(days: number = 30) {
     queryFn: async () => {
       const startDate = new Date();
       startDate.setDate(startDate.getDate() - days);
-      const { data, error } = await supabase.from('journal_entries').select('*').eq('user_id', user!.id).gte('date', startDate.toISOString().split('T')[0]).order('date', { ascending: false });
+      const { data, error } = await supabase.from('journal_entries' as any).select('*').eq('user_id', user!.id).gte('date', startDate.toISOString().split('T')[0]).order('date', { ascending: false });
       if (error) throw error;
-      return data as JournalEntry[];
+      return (data ?? []) as unknown as JournalEntry[];
     },
     enabled: !!user,
   });
@@ -646,7 +646,7 @@ export function useUpsertJournalEntry() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (entry: Omit<JournalEntry, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      const { error } = await supabase.from('journal_entries').upsert({ ...entry, user_id: user!.id, updated_at: new Date().toISOString() }, { onConflict: 'user_id,date' });
+      const { error } = await supabase.from('journal_entries' as any).upsert({ ...entry, user_id: user!.id, updated_at: new Date().toISOString() } as any, { onConflict: 'user_id,date' });
       if (error) throw error;
     },
     onSuccess: () => {
@@ -662,9 +662,9 @@ export function useVisionBoardItems() {
   return useQuery({
     queryKey: ['vision_board_items', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('vision_board_items').select('*').eq('user_id', user!.id).order('sort_order');
+      const { data, error } = await supabase.from('vision_board_items' as any).select('*').eq('user_id', user!.id).order('sort_order');
       if (error) throw error;
-      return data as VisionBoardItem[];
+      return (data ?? []) as unknown as VisionBoardItem[];
     },
     enabled: !!user,
   });
@@ -675,7 +675,7 @@ export function useCreateVisionBoardItem() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (item: Omit<VisionBoardItem, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      const { error } = await supabase.from('vision_board_items').insert({ ...item, user_id: user!.id });
+      const { error } = await supabase.from('vision_board_items' as any).insert({ ...item, user_id: user!.id } as any);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['vision_board_items'] }),
@@ -686,7 +686,7 @@ export function useUpdateVisionBoardItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async ({ id, ...updates }: { id: string } & Partial<VisionBoardItem>) => {
-      const { error } = await supabase.from('vision_board_items').update({ ...updates, updated_at: new Date().toISOString() }).eq('id', id);
+      const { error } = await supabase.from('vision_board_items' as any).update({ ...updates, updated_at: new Date().toISOString() } as any).eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['vision_board_items'] }),
@@ -697,7 +697,7 @@ export function useDeleteVisionBoardItem() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: async (id: string) => {
-      const { error } = await supabase.from('vision_board_items').delete().eq('id', id);
+      const { error } = await supabase.from('vision_board_items' as any).delete().eq('id', id);
       if (error) throw error;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['vision_board_items'] }),
