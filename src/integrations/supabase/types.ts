@@ -338,6 +338,51 @@ export type Database = {
         }
         Relationships: []
       }
+      journal_entries: {
+        Row: {
+          created_at: string
+          date: string
+          energy: number | null
+          free_text: string | null
+          gratitude: string[] | null
+          id: string
+          intentions: string[] | null
+          lessons: string[] | null
+          mood: number | null
+          updated_at: string
+          user_id: string
+          wins: string[] | null
+        }
+        Insert: {
+          created_at?: string
+          date: string
+          energy?: number | null
+          free_text?: string | null
+          gratitude?: string[] | null
+          id?: string
+          intentions?: string[] | null
+          lessons?: string[] | null
+          mood?: number | null
+          updated_at?: string
+          user_id: string
+          wins?: string[] | null
+        }
+        Update: {
+          created_at?: string
+          date?: string
+          energy?: number | null
+          free_text?: string | null
+          gratitude?: string[] | null
+          id?: string
+          intentions?: string[] | null
+          lessons?: string[] | null
+          mood?: number | null
+          updated_at?: string
+          user_id?: string
+          wins?: string[] | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           created_at: string
@@ -478,6 +523,66 @@ export type Database = {
           id?: string
           name?: string
           user_id?: string
+        }
+        Relationships: []
+      }
+      vision_board_items: {
+        Row: {
+          achieved_at: string | null
+          category: string | null
+          color: string | null
+          created_at: string
+          description: string | null
+          height: number
+          icon: string | null
+          id: string
+          image_url: string | null
+          is_achieved: boolean
+          position_x: number
+          position_y: number
+          sort_order: number
+          title: string
+          updated_at: string
+          user_id: string
+          width: number
+        }
+        Insert: {
+          achieved_at?: string | null
+          category?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          height?: number
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          is_achieved?: boolean
+          position_x?: number
+          position_y?: number
+          sort_order?: number
+          title: string
+          updated_at?: string
+          user_id: string
+          width?: number
+        }
+        Update: {
+          achieved_at?: string | null
+          category?: string | null
+          color?: string | null
+          created_at?: string
+          description?: string | null
+          height?: number
+          icon?: string | null
+          id?: string
+          image_url?: string | null
+          is_achieved?: boolean
+          position_x?: number
+          position_y?: number
+          sort_order?: number
+          title?: string
+          updated_at?: string
+          user_id?: string
+          width?: number
         }
         Relationships: []
       }
