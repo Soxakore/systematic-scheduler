@@ -3,7 +3,6 @@ import { useEvents, useSystems, useGoals } from '@/hooks/useData';
 import { Link } from 'react-router-dom';
 import { Target, Clock, ArrowRight, Calendar, Zap, TrendingUp, Flame, Brain } from 'lucide-react';
 import { format, startOfDay, endOfDay, parseISO } from 'date-fns';
-import FocusTimer from '@/components/FocusTimer';
 
 export default function DashboardPage() {
   const todayStart = startOfDay(new Date());
@@ -65,11 +64,6 @@ export default function DashboardPage() {
               <p className="text-[11px] text-muted-foreground mt-1 leading-tight">{s.label}</p>
             </div>
           ))}
-        </div>
-
-        {/* Focus Timer */}
-        <div className="surface p-4">
-          <FocusTimer />
         </div>
 
         {/* Upcoming events */}
