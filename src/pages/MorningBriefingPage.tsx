@@ -1,7 +1,5 @@
 import { useMemo } from 'react';
-import { useEvents, useSystems } from '@/hooks/useData';
-import { Card } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useEvents } from '@/hooks/useData';
 import { Link } from 'react-router-dom';
 import { Sun, Flame, Clock, Brain, Calendar } from 'lucide-react';
 import { format, startOfDay, endOfDay, parseISO, differenceInMinutes } from 'date-fns';
@@ -24,84 +22,94 @@ export default function MorningBriefingPage() {
   const timeUntilNext = nextEvent ? differenceInMinutes(parseISO(nextEvent.start_time), now) : null;
 
   return (
-    <div className="h-full overflow-y-auto scrollbar-thin p-4 max-w-2xl mx-auto">
-      <div className="mb-6">
-        <div className="flex items-center gap-2 mb-2">
-          <Sun className="h-6 w-6 text-yellow-500" />
-          <h1 className="text-xl font-semibold text-foreground">Morning Briefing</h1>
-        </div>
-        <p className="text-sm text-muted-foreground">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
-      </div>
+    <div className="h-full overflow-y-auto scrollbar-thin p-5">
+      <div className="max-w-2xl mx-auto space-y-5">
 
-      <Card className="p-4 mb-4">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">At a Glance</h2>
-        <div className="grid grid-cols-3 gap-3 text-center">
-          <div>
-            <Calendar className="h-5 w-5 text-primary mx-auto mb-1" />
-            <p className="text-xl font-bold">{sortedEvents.length}</p>
-            <p className="text-xs text-muted-foreground">Events</p>
+        {/* Header */}
+        <div className="flex items-center gap-3">
+          <div className="h-9 w-9 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center shrink-0">
+            <Sun className="h-4 w-4 text-yellow-500" />
           </div>
           <div>
-            <Flame className="h-5 w-5 text-orange-500 mx-auto mb-1" />
-            <p className="text-xl font-bold">{systemEvents.length}</p>
-            <p className="text-xs text-muted-foreground">Systems</p>
-          </div>
-          <div>
-            <Clock className="h-5 w-5 text-green-500 mx-auto mb-1" />
-            <p className="text-xl font-bold">{Math.max(0, Math.round(freeMinutes / 60))}h</p>
-            <p className="text-xs text-muted-foreground">Free</p>
+            <h1 className="text-lg font-semibold text-foreground">Morning Briefing</h1>
+            <p className="text-xs text-muted-foreground">{format(new Date(), 'EEEE, MMMM d, yyyy')}</p>
           </div>
         </div>
-      </Card>
 
-      {nextEvent && (
-        <Card className="p-4 mb-4 border-l-4 border-l-primary">
-          <p className="text-xs text-muted-foreground mb-1">Next up {timeUntilNext !== null && `in ${timeUntilNext} min`}</p>
-          <h3 className="font-medium text-foreground">{nextEvent.title}</h3>
-          <p className="text-sm text-muted-foreground">
-            {format(parseISO(nextEvent.start_time), 'h:mm a')} – {format(parseISO(nextEvent.end_time), 'h:mm a')}
-          </p>
-        </Card>
-      )}
+        {/* Stats row */}
+        <div className="grid grid-cols-3 gap-3">
+          <div className="surface p-4 text-center">
+            <Calendar className="h-4 w-4 text-primary mx-auto mb-2" />
+            <p className="stat-number">{sortedEvents.length}</p>
+            <p className="text-[11px] text-muted-foreground mt-1 leading-tight">Events</p>
+          </div>
+          <div className="surface p-4 text-center">
+            <Flame className="h-4 w-4 text-orange-400 mx-auto mb-2" />
+            <p className="stat-number">{systemEvents.length}</p>
+            <p className="text-[11px] text-muted-foreground mt-1 leading-tight">Systems</p>
+          </div>
+          <div className="surface p-4 text-center">
+            <Clock className="h-4 w-4 text-emerald-400 mx-auto mb-2" />
+            <p className="stat-number">{Math.max(0, Math.round(freeMinutes / 60))}h</p>
+            <p className="text-[11px] text-muted-foreground mt-1 leading-tight">Free</p>
+          </div>
+        </div>
 
-      <div className="mb-4">
-        <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Today's Schedule</h2>
-        {sortedEvents.length === 0 ? (
-          <Card className="p-4 text-center text-sm text-muted-foreground">No events scheduled today.</Card>
-        ) : (
-          <div className="space-y-1">
-            {sortedEvents.map(event => {
-              const isPast = new Date(event.end_time) < now;
-              return (
-                <div key={event.id} className={`flex items-center gap-3 py-2 px-3 rounded-md ${isPast ? 'opacity-50' : ''}`}>
-                  <span className="text-xs text-muted-foreground w-16 shrink-0">
-                    {format(parseISO(event.start_time), 'h:mm a')}
-                  </span>
-                  <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
-                    event.is_system_generated ? 'bg-primary' : 'bg-muted-foreground'
-                  }`} />
-                  <span className="text-sm flex-1 truncate">{event.title}</span>
-                  <span className="text-xs text-muted-foreground">
-                    {differenceInMinutes(parseISO(event.end_time), parseISO(event.start_time))}m
-                  </span>
-                </div>
-              );
-            })}
+        {/* Next event */}
+        {nextEvent && (
+          <div className="surface p-4 border-l-2 border-l-primary">
+            <p className="text-[11px] text-muted-foreground mb-1">
+              Next up{timeUntilNext !== null && ` in ${timeUntilNext} min`}
+            </p>
+            <p className="text-sm font-medium text-foreground">{nextEvent.title}</p>
+            <p className="text-xs text-muted-foreground mt-0.5">
+              {format(parseISO(nextEvent.start_time), 'h:mm a')} – {format(parseISO(nextEvent.end_time), 'h:mm a')}
+            </p>
           </div>
         )}
-      </div>
 
-      <div className="flex gap-3 mt-6">
-        <Link to="/" className="flex-1">
-          <Button variant="outline" className="w-full gap-2">
+        {/* Today's Schedule */}
+        <div>
+          <p className="section-label flex items-center gap-1.5 mb-3">
+            <Clock className="h-3.5 w-3.5" /> Today's Schedule
+          </p>
+          {sortedEvents.length === 0 ? (
+            <div className="surface p-6 text-center">
+              <p className="text-sm text-muted-foreground">No events scheduled today.</p>
+            </div>
+          ) : (
+            <div className="space-y-1.5">
+              {sortedEvents.map(event => {
+                const isPast = new Date(event.end_time) < now;
+                return (
+                  <div key={event.id} className={`surface-interactive p-3 flex items-center gap-3 ${isPast ? 'opacity-50' : ''}`}>
+                    <span className="text-xs text-muted-foreground w-16 shrink-0">
+                      {format(parseISO(event.start_time), 'h:mm a')}
+                    </span>
+                    <div className={`w-1.5 h-1.5 rounded-full shrink-0 ${
+                      event.is_system_generated ? 'bg-primary' : 'bg-muted-foreground'
+                    }`} />
+                    <span className="text-sm flex-1 truncate text-foreground">{event.title}</span>
+                    <span className="text-xs text-muted-foreground">
+                      {differenceInMinutes(parseISO(event.end_time), parseISO(event.start_time))}m
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* Quick links */}
+        <div className="grid grid-cols-2 gap-3">
+          <Link to="/" className="surface-interactive p-3 flex items-center justify-center gap-2 text-sm font-medium text-muted-foreground hover:text-foreground">
             <Calendar className="h-4 w-4" /> Open Calendar
-          </Button>
-        </Link>
-        <Link to="/dashboard" className="flex-1">
-          <Button className="w-full gap-2">
+          </Link>
+          <Link to="/dashboard" className="surface-interactive p-3 flex items-center justify-center gap-2 text-sm font-medium text-primary">
             <Brain className="h-4 w-4" /> Dashboard
-          </Button>
-        </Link>
+          </Link>
+        </div>
+
       </div>
     </div>
   );
