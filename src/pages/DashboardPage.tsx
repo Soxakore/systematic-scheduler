@@ -1,5 +1,6 @@
 import { useMemo } from 'react';
 import { useEvents, useSystems, useGoals } from '@/hooks/useData';
+import FocusTimer from '@/components/FocusTimer';
 import { Link } from 'react-router-dom';
 import { Target, Clock, ArrowRight, Calendar, Zap, TrendingUp, Flame, Brain } from 'lucide-react';
 import { format, startOfDay, endOfDay, parseISO } from 'date-fns';
@@ -104,6 +105,12 @@ export default function DashboardPage() {
               ))}
             </div>
           )}
+        </div>
+
+        {/* Focus Timer */}
+        <div>
+          <p className="section-label mb-3">Focus Timer</p>
+          <FocusTimer />
         </div>
 
         {/* Quick links */}

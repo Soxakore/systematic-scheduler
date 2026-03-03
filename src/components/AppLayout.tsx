@@ -8,7 +8,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useData';
 import { format } from 'date-fns';
-import FocusTimer from './FocusTimer';
+
 
 /* ── App-wide context ──────────────────────────────────────── */
 interface AppContextValue {
@@ -184,9 +184,7 @@ export default function AppLayout() {
               />
             </div>
 
-            <div className="ml-auto">
-              <FocusTimer />
-            </div>
+            <div className="ml-auto" />
           </header>
 
           {/* Page */}
