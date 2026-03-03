@@ -60,7 +60,8 @@ function AppRoutes() {
         <Route path="templates" element={<TemplatesPage />} />
         <Route path="analytics" element={<AnalyticsPage />} />
         <Route path="goals" element={<GoalsPage />} />
-        <Route path="briefing" element={<MorningBriefingPage />} />
+        <Route path="morning" element={<MorningBriefingPage />} />
+        <Route path="briefing" element={<Navigate to="/morning" replace />} />
         <Route path="journal" element={<JournalPage />} />
         <Route path="vision" element={<VisionBoardPage />} />
         <Route path="settings" element={<SettingsPage />} />
