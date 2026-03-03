@@ -8,8 +8,7 @@ import {
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useData';
 import { format } from 'date-fns';
-import { FocusTimer } from './FocusTimer';
-import { SearchBar } from './SearchBar';
+import FocusTimer from './FocusTimer';
 
 /* ── App-wide context ──────────────────────────────────────── */
 interface AppContextValue {
