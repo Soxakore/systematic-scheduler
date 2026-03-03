@@ -49,20 +49,22 @@ function AppRoutes() {
       <Route path="/signup" element={<PublicRoute><SignupPage /></PublicRoute>} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
-      <Route path="/" element={<ProtectedRoute><AppLayout><CalendarPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/systems" element={<ProtectedRoute><AppLayout><SystemsPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/calendars" element={<ProtectedRoute><AppLayout><CalendarsPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/agenda" element={<ProtectedRoute><AppLayout><AgendaView /></AppLayout></ProtectedRoute>} />
-      <Route path="/review" element={<ProtectedRoute><AppLayout><WeeklyReviewPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/dashboard" element={<ProtectedRoute><AppLayout><DashboardPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/habits" element={<ProtectedRoute><AppLayout><HabitsPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/templates" element={<ProtectedRoute><AppLayout><TemplatesPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/analytics" element={<ProtectedRoute><AppLayout><AnalyticsPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/goals" element={<ProtectedRoute><AppLayout><GoalsPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/briefing" element={<ProtectedRoute><AppLayout><MorningBriefingPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/journal" element={<ProtectedRoute><AppLayout><JournalPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/vision" element={<ProtectedRoute><AppLayout><VisionBoardPage /></AppLayout></ProtectedRoute>} />
-      <Route path="/settings" element={<ProtectedRoute><AppLayout><SettingsPage /></AppLayout></ProtectedRoute>} />
+      <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
+        <Route index element={<CalendarPage />} />
+        <Route path="systems" element={<SystemsPage />} />
+        <Route path="calendars" element={<CalendarsPage />} />
+        <Route path="agenda" element={<AgendaView />} />
+        <Route path="review" element={<WeeklyReviewPage />} />
+        <Route path="dashboard" element={<DashboardPage />} />
+        <Route path="habits" element={<HabitsPage />} />
+        <Route path="templates" element={<TemplatesPage />} />
+        <Route path="analytics" element={<AnalyticsPage />} />
+        <Route path="goals" element={<GoalsPage />} />
+        <Route path="briefing" element={<MorningBriefingPage />} />
+        <Route path="journal" element={<JournalPage />} />
+        <Route path="vision" element={<VisionBoardPage />} />
+        <Route path="settings" element={<SettingsPage />} />
+      </Route>
       <Route path="*" element={<NotFound />} />
     </Routes>
   );
