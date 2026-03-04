@@ -188,7 +188,9 @@ export default function AppLayout() {
 
           {/* Page */}
           <main className="flex-1 overflow-hidden">
-            <Outlet />
+            <PageTransition>
+              <Outlet />
+            </PageTransition>
           </main>
         </div>
 
