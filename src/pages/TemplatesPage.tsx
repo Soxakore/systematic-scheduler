@@ -37,8 +37,11 @@ export default function TemplatesPage() {
   return (
     <div className="h-full overflow-y-auto scrollbar-thin p-4 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
-          <FileText className="h-5 w-5 text-primary" /> Event Templates
+        <h1 className="text-xl font-semibold text-foreground flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+            <FileText className="h-4 w-4 text-primary" weight="duotone" />
+          </div>
+          Event Templates
         </h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -82,7 +85,9 @@ export default function TemplatesPage() {
         <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
       ) : !templates?.length ? (
         <Card className="p-8 text-center">
-          <FileText className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+          <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-3">
+            <FileText className="h-7 w-7 text-primary" weight="duotone" />
+          </div>
           <p className="text-muted-foreground">No templates yet. Create one to quickly add recurring event types.</p>
         </Card>
       ) : (
@@ -94,7 +99,7 @@ export default function TemplatesPage() {
                   <h3 className="font-medium text-foreground text-sm">{t.name}</h3>
                   <p className="text-xs text-muted-foreground mt-0.5">{t.title}</p>
                   <div className="flex items-center gap-2 mt-1 text-xs text-muted-foreground">
-                    <Clock className="h-3 w-3" />
+                    <Clock className="h-3 w-3" weight="duotone" />
                     <span>{t.duration_minutes}min</span>
                     {t.is_all_day && <span className="px-1.5 py-0.5 bg-secondary rounded text-[10px]">All day</span>}
                     {t.location && <span>· {t.location}</span>}

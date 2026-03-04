@@ -37,8 +37,11 @@ export default function WeeklyReviewPage() {
 
   return (
     <div className="h-full overflow-y-auto scrollbar-thin p-4 max-w-2xl mx-auto">
-      <h1 className="text-xl font-semibold text-foreground mb-2 flex items-center gap-2">
-        <Sparkle className="h-5 w-5 text-primary" /> Weekly Review
+      <h1 className="text-xl font-semibold text-foreground mb-2 flex items-center gap-2.5">
+        <div className="h-8 w-8 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+          <Sparkle className="h-4 w-4 text-primary" weight="duotone" />
+        </div>
+        Weekly Review
       </h1>
       <p className="text-sm text-muted-foreground mb-6">
         {format(lastWeekStart, 'MMM d')} – {format(lastWeekEnd, 'MMM d, yyyy')}
@@ -46,22 +49,30 @@ export default function WeeklyReviewPage() {
 
       <div className="grid grid-cols-2 gap-3 mb-6">
         <Card className="p-4 text-center">
-          <CalendarBlank className="h-5 w-5 text-primary mx-auto mb-1" />
+          <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center mx-auto mb-2">
+            <CalendarBlank className="h-5 w-5 text-primary" weight="duotone" />
+          </div>
           <p className="text-2xl font-bold">{stats.totalEvents}</p>
           <p className="text-xs text-muted-foreground">Events</p>
         </Card>
         <Card className="p-4 text-center">
-          <Fire className="h-5 w-5 text-orange-500 mx-auto mb-1" />
+          <div className="h-10 w-10 rounded-xl bg-orange-500/15 flex items-center justify-center mx-auto mb-2">
+            <Fire className="h-5 w-5 text-orange-500" weight="duotone" />
+          </div>
           <p className="text-2xl font-bold">{stats.systemEvents}</p>
           <p className="text-xs text-muted-foreground">System Events</p>
         </Card>
         <Card className="p-4 text-center">
-          <Clock className="h-5 w-5 text-green-500 mx-auto mb-1" />
+          <div className="h-10 w-10 rounded-xl bg-green-500/15 flex items-center justify-center mx-auto mb-2">
+            <Clock className="h-5 w-5 text-green-500" weight="duotone" />
+          </div>
           <p className="text-2xl font-bold">{Math.round(stats.totalMinutes / 60)}h</p>
           <p className="text-xs text-muted-foreground">Scheduled</p>
         </Card>
         <Card className="p-4 text-center">
-          <Target className="h-5 w-5 text-purple-500 mx-auto mb-1" />
+          <div className="h-10 w-10 rounded-xl bg-purple-500/15 flex items-center justify-center mx-auto mb-2">
+            <Target className="h-5 w-5 text-purple-500" weight="duotone" />
+          </div>
           <p className="text-2xl font-bold">{Math.round(stats.focusMinutes / 60)}h</p>
           <p className="text-xs text-muted-foreground">Focus Time</p>
         </Card>
@@ -71,11 +82,11 @@ export default function WeeklyReviewPage() {
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Status</h2>
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm">
-            <CheckCircle className="h-4 w-4 text-green-500" />
+            <CheckCircle className="h-4 w-4 text-green-500" weight="fill" />
             <span className="text-foreground">{stats.activeSystems} active systems running</span>
           </div>
           <div className="flex items-center gap-2 text-sm">
-            <Target className="h-4 w-4 text-primary" />
+            <Target className="h-4 w-4 text-primary" weight="duotone" />
             <span className="text-foreground">{stats.activeGoals} active goals in progress</span>
           </div>
         </div>

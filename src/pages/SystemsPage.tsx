@@ -131,7 +131,12 @@ export default function SystemsPage() {
   return (
     <div className="h-full overflow-y-auto scrollbar-thin p-4 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-foreground">Systems</h1>
+        <h1 className="text-xl font-semibold text-foreground flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-xl bg-orange-400/15 flex items-center justify-center shrink-0">
+            <Lightning className="h-4 w-4 text-orange-400" weight="duotone" />
+          </div>
+          Systems
+        </h1>
         <Button onClick={openNew} size="sm" className="gap-1.5">
           <Plus className="h-4 w-4" /> New System
         </Button>
@@ -142,8 +147,8 @@ export default function SystemsPage() {
         <Link to="/review" className="block mb-4">
           <Card className="p-4 hover:bg-accent/50 transition-colors cursor-pointer">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <Sparkle className="h-5 w-5 text-primary" />
+              <div className="w-10 h-10 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+                <Sparkle className="h-5 w-5 text-primary" weight="duotone" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-medium text-foreground">Weekly Review</h3>
@@ -166,7 +171,11 @@ export default function SystemsPage() {
           {routineSystems?.map(system => (
             <Card key={system.id} className="p-4">
               <div className="flex items-start justify-between gap-3">
-                <div className="flex-1 min-w-0">
+                <div className="flex items-start gap-3 flex-1 min-w-0">
+                  <div className="w-9 h-9 rounded-xl bg-orange-400/15 flex items-center justify-center shrink-0 mt-0.5">
+                    <Lightning className="h-4 w-4 text-orange-400" weight="duotone" />
+                  </div>
+                  <div className="flex-1 min-w-0">
                   <div className="flex items-center gap-2">
                     <h3 className="font-medium text-foreground truncate">{system.name}</h3>
                     {system.is_active && (
@@ -178,16 +187,17 @@ export default function SystemsPage() {
                     {' · '}{system.default_duration_minutes}min
                     {' · '}{system.default_start_time}
                   </p>
+                  </div>
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleActive(system)}>
-                    {system.is_active ? <ProhibitInset className="h-4 w-4" /> : <Lightning className="h-4 w-4" />}
+                    {system.is_active ? <ProhibitInset className="h-4 w-4" weight="bold" /> : <Lightning className="h-4 w-4" weight="duotone" />}
                   </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(system)}>
-                    <PencilSimple className="h-4 w-4" />
+                    <PencilSimple className="h-4 w-4" weight="bold" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(system.id)}>
-                    <Trash className="h-4 w-4" />
+                    <Trash className="h-4 w-4" weight="bold" />
                   </Button>
                 </div>
               </div>

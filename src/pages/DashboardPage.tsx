@@ -29,16 +29,16 @@ export default function DashboardPage() {
   };
 
   const stats = [
-    { icon: CalendarBlank, value: totalEvents,       label: 'Events today',  color: 'text-primary'      },
-    { icon: Lightning,      value: systemEvents.length, label: 'System tasks', color: 'text-orange-400'   },
-    { icon: Target,   value: activeGoals.length,  label: 'Active goals', color: 'text-emerald-400'  },
+    { icon: CalendarBlank, value: totalEvents,          label: 'Events today',  color: 'text-primary',       bg: 'bg-primary/15'        },
+    { icon: Lightning,     value: systemEvents.length,  label: 'System tasks',  color: 'text-orange-400',    bg: 'bg-orange-400/15'     },
+    { icon: Target,        value: activeGoals.length,   label: 'Active goals',  color: 'text-emerald-400',   bg: 'bg-emerald-400/15'    },
   ];
 
   const quickLinks = [
-    { to: '/goals',     icon: Target,    label: 'Goals',     color: 'text-emerald-400' },
-    { to: '/systems',   icon: Lightning,       label: 'Systems',   color: 'text-orange-400'  },
-    { to: '/analytics', icon: TrendUp, label: 'Analytics', color: 'text-primary'    },
-    { to: '/habits',    icon: Fire,     label: 'Habits',    color: 'text-red-400'     },
+    { to: '/goals',     icon: Target,    label: 'Goals',     color: 'text-emerald-400', bg: 'bg-emerald-400/15' },
+    { to: '/systems',   icon: Lightning, label: 'Systems',   color: 'text-orange-400',  bg: 'bg-orange-400/15'  },
+    { to: '/analytics', icon: TrendUp,   label: 'Analytics', color: 'text-primary',     bg: 'bg-primary/15'     },
+    { to: '/habits',    icon: Fire,      label: 'Habits',    color: 'text-red-400',     bg: 'bg-red-400/15'     },
   ];
 
   return (
@@ -48,7 +48,7 @@ export default function DashboardPage() {
         {/* Greeting */}
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-            <Brain className="h-5 w-5 text-primary" weight="regular" />
+            <Brain className="h-5 w-5 text-primary" weight="duotone" />
           </div>
           <div>
             <h1 className="text-xl font-semibold text-foreground" style={{ letterSpacing: '-0.03em' }}>{greeting()}</h1>
@@ -60,7 +60,9 @@ export default function DashboardPage() {
         <div className="grid grid-cols-3 gap-3">
           {stats.map((s, i) => (
             <div key={i} className="surface p-5 text-center">
-              <s.icon className={`h-5 w-5 mx-auto mb-2.5 ${s.color}`} weight="regular" />
+              <div className={`h-10 w-10 rounded-xl ${s.bg} flex items-center justify-center mx-auto mb-3`}>
+                <s.icon className={`h-5 w-5 ${s.color}`} weight="duotone" />
+              </div>
               <p className="stat-number">{s.value}</p>
               <p className="text-[11px] text-muted-foreground mt-1.5 leading-tight">{s.label}</p>
             </div>
@@ -71,7 +73,7 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <span className="section-label flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" weight="regular" /> Coming Up
+              <Clock className="h-3.5 w-3.5" weight="duotone" /> Coming Up
             </span>
             <Link
               to="/"
@@ -90,7 +92,7 @@ export default function DashboardPage() {
               {upcoming.map(e => (
                 <div key={e.id} className="surface-interactive p-3.5 flex items-center gap-3">
                   <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <Clock className="h-4 w-4 text-primary" weight="regular" />
+                    <Clock className="h-4 w-4 text-primary" weight="duotone" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-medium truncate text-foreground">{e.title}</p>
@@ -120,7 +122,9 @@ export default function DashboardPage() {
             {quickLinks.map(item => (
               <Link key={item.to} to={item.to}>
                 <div className="surface-interactive p-4 text-center">
-                  <item.icon className={`h-5 w-5 mx-auto mb-2 ${item.color}`} weight="regular" />
+                  <div className={`h-9 w-9 rounded-xl ${item.bg} flex items-center justify-center mx-auto mb-2`}>
+                    <item.icon className={`h-5 w-5 ${item.color}`} weight="duotone" />
+                  </div>
                   <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
                 </div>
               </Link>

@@ -48,7 +48,7 @@ function VisionCard({ item, onUpdate, onDelete }: {
         </span>
         {item.is_achieved && (
           <span className="ml-auto flex items-center gap-1 text-[10px] text-emerald-400 font-semibold">
-            <Trophy className="h-3 w-3" /> Done
+            <Trophy className="h-3 w-3" weight="fill" /> Done
           </span>
         )}
       </div>
@@ -80,7 +80,7 @@ function VisionCard({ item, onUpdate, onDelete }: {
             className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-semibold text-emerald-400 border border-emerald-700/40 bg-emerald-900/20 hover:bg-emerald-900/40 transition-colors"
             onClick={() => onUpdate({ is_achieved: true, achieved_at: new Date().toISOString() })}
           >
-            <Check className="h-3 w-3" /> Achieved
+            <Check className="h-3 w-3" weight="bold" /> Achieved
           </button>
         ) : (
           <button
@@ -94,7 +94,7 @@ function VisionCard({ item, onUpdate, onDelete }: {
           className="px-2.5 py-1 rounded-md text-[10px] font-semibold text-red-400 border border-red-900/40 bg-red-900/10 hover:bg-red-900/20 transition-colors ml-auto"
           onClick={onDelete}
         >
-          <Trash className="h-3 w-3" />
+          <Trash className="h-3 w-3" weight="bold" />
         </button>
       </div>
     </div>
@@ -151,7 +151,7 @@ export default function VisionBoardPage() {
           <div>
             <h1 className="text-xl font-semibold text-foreground flex items-center gap-2.5">
               <div className="h-8 w-8 rounded-lg bg-primary/10 border border-primary/20 flex items-center justify-center">
-                <Eye className="h-4 w-4 text-primary" />
+                <Eye className="h-4 w-4 text-primary" weight="duotone" />
               </div>
               Vision Board
             </h1>
@@ -288,7 +288,9 @@ export default function VisionBoardPage() {
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="surface p-12 text-center">
-            <Sparkle className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
+            <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-3">
+            <Sparkle className="h-7 w-7 text-primary" weight="duotone" />
+          </div>
             <h3 className="font-semibold text-foreground text-sm mb-1">
               {filter ? 'No visions here' : 'Your vision board is empty'}
             </h3>

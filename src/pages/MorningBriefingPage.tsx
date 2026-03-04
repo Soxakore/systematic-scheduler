@@ -28,7 +28,7 @@ export default function MorningBriefingPage() {
         {/* Header */}
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-2xl bg-orange-500/10 flex items-center justify-center shrink-0">
-            <SunHorizon className="h-5 w-5 text-orange-400" weight="regular" />
+            <SunHorizon className="h-5 w-5 text-orange-400" weight="duotone" />
           </div>
           <div>
             <h1 className="text-xl font-semibold text-foreground" style={{ letterSpacing: '-0.03em' }}>Morning Briefing</h1>
@@ -39,17 +39,23 @@ export default function MorningBriefingPage() {
         {/* Stats row */}
         <div className="grid grid-cols-3 gap-3">
           <div className="surface p-5 text-center">
-            <CalendarBlank className="h-5 w-5 text-primary mx-auto mb-2.5" weight="regular" />
+            <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center mx-auto mb-3">
+              <CalendarBlank className="h-5 w-5 text-primary" weight="duotone" />
+            </div>
             <p className="stat-number">{sortedEvents.length}</p>
             <p className="text-[11px] text-muted-foreground mt-1.5 leading-tight">Events</p>
           </div>
           <div className="surface p-5 text-center">
-            <Fire className="h-5 w-5 text-orange-400 mx-auto mb-2.5" weight="regular" />
+            <div className="h-10 w-10 rounded-xl bg-orange-400/15 flex items-center justify-center mx-auto mb-3">
+              <Fire className="h-5 w-5 text-orange-400" weight="duotone" />
+            </div>
             <p className="stat-number">{systemEvents.length}</p>
             <p className="text-[11px] text-muted-foreground mt-1.5 leading-tight">Systems</p>
           </div>
           <div className="surface p-5 text-center">
-            <Clock className="h-5 w-5 text-emerald-400 mx-auto mb-2.5" weight="regular" />
+            <div className="h-10 w-10 rounded-xl bg-emerald-400/15 flex items-center justify-center mx-auto mb-3">
+              <Clock className="h-5 w-5 text-emerald-400" weight="duotone" />
+            </div>
             <p className="stat-number">{Math.max(0, Math.round(freeMinutes / 60))}h</p>
             <p className="text-[11px] text-muted-foreground mt-1.5 leading-tight">Free</p>
           </div>
@@ -71,7 +77,7 @@ export default function MorningBriefingPage() {
         {/* Today's Schedule */}
         <div>
           <p className="section-label flex items-center gap-1.5 mb-3">
-            <Clock className="h-3.5 w-3.5" weight="regular" /> Today's Schedule
+            <Clock className="h-3.5 w-3.5" weight="duotone" /> Today's Schedule
           </p>
           {sortedEvents.length === 0 ? (
             <div className="surface p-8 text-center">
@@ -103,10 +109,10 @@ export default function MorningBriefingPage() {
         {/* Quick links */}
         <div className="grid grid-cols-2 gap-3">
           <Link to="/" className="surface-interactive p-4 flex items-center justify-center gap-2 text-[13px] font-medium text-muted-foreground hover:text-foreground">
-            <CalendarBlank className="h-4 w-4" weight="regular" /> Open Calendar
+            <CalendarBlank className="h-4 w-4" weight="duotone" /> Open Calendar
           </Link>
           <Link to="/dashboard" className="surface-interactive p-4 flex items-center justify-center gap-2 text-[13px] font-medium text-primary">
-            <Brain className="h-4 w-4" weight="regular" /> Dashboard
+            <Brain className="h-4 w-4" weight="duotone" /> Dashboard
           </Link>
         </div>
 

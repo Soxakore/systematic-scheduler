@@ -39,8 +39,11 @@ export default function GoalsPage() {
   return (
     <div className="h-full overflow-y-auto scrollbar-thin p-4 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
-        <h1 className="text-xl font-semibold text-foreground flex items-center gap-2">
-          <Target className="h-5 w-5 text-primary" /> Goals
+        <h1 className="text-xl font-semibold text-foreground flex items-center gap-2.5">
+          <div className="h-8 w-8 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+            <Target className="h-4 w-4 text-primary" weight="duotone" />
+          </div>
+          Goals
         </h1>
         <Dialog open={open} onOpenChange={setOpen}>
           <DialogTrigger asChild>
@@ -64,7 +67,9 @@ export default function GoalsPage() {
         <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
       ) : activeGoals.length === 0 && completedGoals.length === 0 ? (
         <Card className="p-8 text-center">
-          <Target className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+          <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-3">
+            <Target className="h-7 w-7 text-primary" weight="duotone" />
+          </div>
           <p className="text-muted-foreground">No goals yet. Create your first goal to get started.</p>
         </Card>
       ) : (
@@ -83,7 +88,7 @@ export default function GoalsPage() {
                       </div>
                       <div className="flex gap-1 ml-2 shrink-0">
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateGoal.mutate({ id: g.id, status: 'completed', progress: 100 })}>
-                          <CheckCircle className="h-4 w-4 text-green-500" />
+                          <CheckCircle className="h-4 w-4 text-green-500" weight="fill" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteGoal.mutate(g.id)}>
                           <Trash className="h-4 w-4 text-destructive" />

@@ -33,23 +33,32 @@ export default function AnalyticsPage() {
 
   return (
     <div className="h-full overflow-y-auto scrollbar-thin p-4 max-w-2xl mx-auto">
-      <h1 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-        <ChartBar className="h-5 w-5 text-primary" /> Analytics
+      <h1 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2.5">
+        <div className="h-8 w-8 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
+          <ChartBar className="h-4 w-4 text-primary" weight="duotone" />
+        </div>
+        Analytics
       </h1>
 
       <div className="grid grid-cols-3 gap-3 mb-6">
-        <Card className="p-3 text-center">
-          <CalendarBlank className="h-5 w-5 text-primary mx-auto mb-1" />
+        <Card className="p-4 text-center">
+          <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center mx-auto mb-2">
+            <CalendarBlank className="h-5 w-5 text-primary" weight="duotone" />
+          </div>
           <p className="text-2xl font-bold">{totalEvents}</p>
           <p className="text-xs text-muted-foreground">Today</p>
         </Card>
-        <Card className="p-3 text-center">
-          <Clock className="h-5 w-5 text-green-500 mx-auto mb-1" />
+        <Card className="p-4 text-center">
+          <div className="h-10 w-10 rounded-xl bg-green-500/15 flex items-center justify-center mx-auto mb-2">
+            <Clock className="h-5 w-5 text-green-500" weight="duotone" />
+          </div>
           <p className="text-2xl font-bold">{Math.round(totalFocusMinutes / 60)}h</p>
           <p className="text-xs text-muted-foreground">Focus (all)</p>
         </Card>
-        <Card className="p-3 text-center">
-          <Target className="h-5 w-5 text-orange-500 mx-auto mb-1" />
+        <Card className="p-4 text-center">
+          <div className="h-10 w-10 rounded-xl bg-orange-500/15 flex items-center justify-center mx-auto mb-2">
+            <Target className="h-5 w-5 text-orange-500" weight="duotone" />
+          </div>
           <p className="text-2xl font-bold">{scores?.length || 0}</p>
           <p className="text-xs text-muted-foreground">Days tracked</p>
         </Card>
@@ -71,7 +80,9 @@ export default function AnalyticsPage() {
         </Card>
       ) : (
         <Card className="p-8 text-center">
-          <ChartBar className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+          <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-3">
+            <ChartBar className="h-7 w-7 text-primary" weight="duotone" />
+          </div>
           <p className="text-muted-foreground text-sm">No data yet. Analytics will populate as you use the app.</p>
         </Card>
       )}

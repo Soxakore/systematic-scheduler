@@ -142,8 +142,10 @@ export default function JournalPage() {
       <div className="max-w-2xl mx-auto p-4 space-y-5">
         <div className="flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold flex items-center gap-2">
-              <BookOpen className="h-6 w-6 text-primary" />
+            <h1 className="text-xl font-semibold flex items-center gap-2.5">
+              <div className="h-8 w-8 rounded-xl bg-indigo-500/15 flex items-center justify-center shrink-0">
+                <BookOpen className="h-4 w-4 text-indigo-500" weight="duotone" />
+              </div>
               Daily Journal
             </h1>
             {journalStreak > 0 && (
@@ -178,7 +180,9 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Smiley className="h-4 w-4 text-amber-500" /> How are you feeling?
+                  <div className="h-7 w-7 rounded-lg bg-amber-500/15 flex items-center justify-center shrink-0">
+                    <Smiley className="h-4 w-4 text-amber-500" weight="duotone" />
+                  </div> How are you feeling?
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -204,7 +208,9 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Lightning className="h-4 w-4 text-yellow-500" /> Energy Level
+                  <div className="h-7 w-7 rounded-lg bg-yellow-500/15 flex items-center justify-center shrink-0">
+                    <Lightning className="h-4 w-4 text-yellow-500" weight="duotone" />
+                  </div> Energy Level
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -232,7 +238,9 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Star className="h-4 w-4 text-blue-500" /> Intentions for Today
+                  <div className="h-7 w-7 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
+                    <Star className="h-4 w-4 text-blue-500" weight="duotone" />
+                  </div> Intentions for Today
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -243,7 +251,9 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Heart className="h-4 w-4 text-pink-500" /> Gratitude
+                  <div className="h-7 w-7 rounded-lg bg-pink-500/15 flex items-center justify-center shrink-0">
+                    <Heart className="h-4 w-4 text-pink-500" weight="duotone" />
+                  </div> Gratitude
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -254,7 +264,9 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Trophy className="h-4 w-4 text-green-500" /> Wins
+                  <div className="h-7 w-7 rounded-lg bg-green-500/15 flex items-center justify-center shrink-0">
+                    <Trophy className="h-4 w-4 text-green-500" weight="duotone" />
+                  </div> Wins
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -265,7 +277,9 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Lightbulb className="h-4 w-4 text-orange-500" /> Lessons & Reflections
+                  <div className="h-7 w-7 rounded-lg bg-orange-500/15 flex items-center justify-center shrink-0">
+                    <Lightbulb className="h-4 w-4 text-orange-500" weight="duotone" />
+                  </div> Lessons &amp; Reflections
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -276,7 +290,9 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <BookOpen className="h-4 w-4 text-indigo-500" /> Free Write
+                  <div className="h-7 w-7 rounded-lg bg-indigo-500/15 flex items-center justify-center shrink-0">
+                    <BookOpen className="h-4 w-4 text-indigo-500" weight="duotone" />
+                  </div> Free Write
                 </CardTitle>
               </CardHeader>
               <CardContent>
