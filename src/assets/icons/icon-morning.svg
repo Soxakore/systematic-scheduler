@@ -1,0 +1,28 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="morning_bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FFD60A"/>
+      <stop offset="100%" stop-color="#E07000"/>
+    </linearGradient>
+    <radialGradient id="morning_gloss" cx="32%" cy="16%" r="58%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.45)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.0)"/>
+    </radialGradient>
+    <filter id="morning_shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="rgba(0,0,0,0.38)"/>
+    </filter>
+  </defs>
+  <rect x="2" y="2" width="44" height="44" rx="11" ry="11" fill="url(#morning_bg)" filter="url(#morning_shadow)"/>
+  <rect x="3" y="3" width="42" height="42" rx="10" ry="10" fill="none" stroke="rgba(255,255,255,0.20)" stroke-width="1"/>
+  <rect x="2" y="2" width="44" height="44" rx="11" ry="11" fill="url(#morning_gloss)"/>
+  <circle cx="24" cy="24" r="7" fill="rgba(255,255,255,0.92)"/>
+  <line x1="33.50" y1="24.00" x2="38.50" y2="24.00" stroke="rgba(255,255,255,0.88)" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="30.72" y1="30.72" x2="34.25" y2="34.25" stroke="rgba(255,255,255,0.88)" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="24.00" y1="33.50" x2="24.00" y2="38.50" stroke="rgba(255,255,255,0.88)" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="17.28" y1="30.72" x2="13.75" y2="34.25" stroke="rgba(255,255,255,0.88)" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="14.50" y1="24.00" x2="9.50" y2="24.00" stroke="rgba(255,255,255,0.88)" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="17.28" y1="17.28" x2="13.75" y2="13.75" stroke="rgba(255,255,255,0.88)" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="24.00" y1="14.50" x2="24.00" y2="9.50" stroke="rgba(255,255,255,0.88)" stroke-width="2.2" stroke-linecap="round"/>
+  <line x1="30.72" y1="17.28" x2="34.25" y2="13.75" stroke="rgba(255,255,255,0.88)" stroke-width="2.2" stroke-linecap="round"/>
+
+</svg>

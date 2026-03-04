@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<title>Systematic Scheduler – 3D SVG Icons</title>
+<style>
+  * { margin:0; padding:0; box-sizing:border-box; }
+  body {
+    background: #0a0a0f;
+    font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", sans-serif;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 100vh;
+    padding: 48px 24px;
+    gap: 48px;
+  }
+  h1 {
+    color: rgba(255,255,255,0.85);
+    font-size: 15px;
+    font-weight: 500;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.4);
+  }
+  .grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 32px;
+  }
+  .card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 12px;
+  }
+  .card img {
+    width: 72px;
+    height: 72px;
+    image-rendering: crisp-edges;
+    transition: transform 0.2s ease, filter 0.2s ease;
+  }
+  .card img:hover {
+    transform: translateY(-3px) scale(1.08);
+    filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5));
+  }
+  .card span {
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.08em;
+    color: rgba(255,255,255,0.38);
+    text-transform: uppercase;
+  }
+  .sizes {
+    display: flex;
+    align-items: flex-end;
+    gap: 24px;
+    padding: 24px 32px;
+    background: rgba(255,255,255,0.04);
+    border-radius: 16px;
+    border: 1px solid rgba(255,255,255,0.07);
+  }
+  .sizes img { transition: transform 0.2s ease; }
+  .sizes img:hover { transform: scale(1.05); }
+</style>
+</head>
+<body>
+  <h1>Systematic Scheduler — Navigation Icons</h1>
+
+  <div class="grid">
+    <div class="card"><img src="icon-morning.svg"/><span>Morning</span></div>
+    <div class="card"><img src="icon-dashboard.svg"/><span>Dashboard</span></div>
+    <div class="card"><img src="icon-goals.svg"/><span>Goals</span></div>
+    <div class="card"><img src="icon-habits.svg"/><span>Habits</span></div>
+    <div class="card"><img src="icon-systems.svg"/><span>Systems</span></div>
+    <div class="card"><img src="icon-journal.svg"/><span>Journal</span></div>
+    <div class="card"><img src="icon-vision.svg"/><span>Vision</span></div>
+    <div class="card"><img src="icon-analytics.svg"/><span>Analytics</span></div>
+    <div class="card"><img src="icon-review.svg"/><span>Review</span></div>
+    <div class="card"><img src="icon-templates.svg"/><span>Templates</span></div>
+  </div>
+
+  <!-- size reference -->
+  <div class="sizes">
+    <img src="icon-dashboard.svg" width="24" height="24"/>
+    <img src="icon-dashboard.svg" width="32" height="32"/>
+    <img src="icon-dashboard.svg" width="48" height="48"/>
+    <img src="icon-dashboard.svg" width="64" height="64"/>
+    <img src="icon-dashboard.svg" width="96" height="96"/>
+  </div>
+</body>
+</html>

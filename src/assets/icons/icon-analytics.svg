@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="analytics_bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5AC8FA"/>
+      <stop offset="100%" stop-color="#0071A6"/>
+    </linearGradient>
+    <radialGradient id="analytics_gloss" cx="32%" cy="16%" r="58%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.45)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.0)"/>
+    </radialGradient>
+    <filter id="analytics_shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="rgba(0,0,0,0.38)"/>
+    </filter>
+  </defs>
+  <rect x="2" y="2" width="44" height="44" rx="11" ry="11" fill="url(#analytics_bg)" filter="url(#analytics_shadow)"/>
+  <rect x="3" y="3" width="42" height="42" rx="10" ry="10" fill="none" stroke="rgba(255,255,255,0.20)" stroke-width="1"/>
+  <rect x="2" y="2" width="44" height="44" rx="11" ry="11" fill="url(#analytics_gloss)"/>
+  <rect x="11" y="28" width="8" height="10" rx="2.5" ry="2.5" fill="rgba(255,255,255,0.88)"/>
+  <rect x="20" y="22" width="8" height="16" rx="2.5" ry="2.5" fill="rgba(255,255,255,0.88)"/>
+  <rect x="29" y="16" width="8" height="22" rx="2.5" ry="2.5" fill="rgba(255,255,255,0.88)"/>
+  <polyline points="15,28 24,22 33,16" fill="none" stroke="rgba(255,255,255,0.55)" stroke-width="1.5" stroke-dasharray="2,2" stroke-linecap="round"/>
+
+</svg>

@@ -1,0 +1,25 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" width="48" height="48">
+  <defs>
+    <linearGradient id="templates_bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#5E5CE6"/>
+      <stop offset="100%" stop-color="#3230C0"/>
+    </linearGradient>
+    <radialGradient id="templates_gloss" cx="32%" cy="16%" r="58%">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.45)"/>
+      <stop offset="100%" stop-color="rgba(255,255,255,0.0)"/>
+    </radialGradient>
+    <filter id="templates_shadow" x="-25%" y="-25%" width="150%" height="150%">
+      <feDropShadow dx="0" dy="3" stdDeviation="3.5" flood-color="rgba(0,0,0,0.38)"/>
+    </filter>
+  </defs>
+  <rect x="2" y="2" width="44" height="44" rx="11" ry="11" fill="url(#templates_bg)" filter="url(#templates_shadow)"/>
+  <rect x="3" y="3" width="42" height="42" rx="10" ry="10" fill="none" stroke="rgba(255,255,255,0.20)" stroke-width="1"/>
+  <rect x="2" y="2" width="44" height="44" rx="11" ry="11" fill="url(#templates_gloss)"/>
+  <rect x="8" y="30" width="32" height="6" rx="3" ry="3" fill="rgba(255,255,255,0.50)"/>
+  <rect x="9" y="26" width="30" height="6" rx="3" ry="3" fill="rgba(255,255,255,0.68)"/>
+  <rect x="10" y="22" width="28" height="6" rx="3" ry="3" fill="rgba(255,255,255,0.85)"/>
+  <rect x="11" y="18" width="26" height="8" rx="3" ry="3" fill="rgba(255,255,255,0.93)"/>
+  <line x1="14.5" y1="20.5" x2="32" y2="20.5" stroke="rgba(140,100,255,0.5)" stroke-width="1.2" stroke-linecap="round"/>
+  <line x1="14.5" y1="23" x2="28" y2="23" stroke="rgba(140,100,255,0.4)" stroke-width="1.2" stroke-linecap="round"/>
+
+</svg>
