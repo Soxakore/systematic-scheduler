@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import PageTransition from './PageTransition';
 import {
   CalendarDays, LayoutDashboard, Target, Repeat2,
   BookOpen, BarChart3, Settings, Sparkles, Sun,
