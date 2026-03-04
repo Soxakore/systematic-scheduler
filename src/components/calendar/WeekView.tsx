@@ -3,6 +3,7 @@ import { useAppContext } from '@/components/AppLayout';
 import { useEvents, useCalendars, useUpdateEvent, useAllEventTags } from '@/hooks/useData';
 import { startOfWeek, endOfWeek, addDays, format, isSameDay, isToday, differenceInMinutes } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { GearSix } from '@phosphor-icons/react';
 
 const HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -202,7 +203,7 @@ export default function WeekView() {
                       onMouseDown={e => handleDragStart(e, event.id, dayIndex, top)}
                     >
                       <div className="font-medium truncate">
-                        {event.is_system_generated && '⚙ '}{event.title}
+                        {event.is_system_generated && <GearSix className="inline h-2.5 w-2.5 mr-0.5 opacity-70 shrink-0" weight="bold" />}{event.title}
                       </div>
                       {height > 30 && (
                         <div className="opacity-80 truncate">

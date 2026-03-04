@@ -3,7 +3,7 @@ import { useAppContext } from '@/components/AppLayout';
 import { useEvents, useCalendars, useAllEventTags } from '@/hooks/useData';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Plus } from '@phosphor-icons/react';
+import { Plus, GearSix } from '@phosphor-icons/react';
 
 export default function MonthView() {
   const { currentDate, setCurrentDate, setCurrentView, setShowEventDialog, setSelectedDate, setEditingEventId, searchQuery, selectedTagIds } = useAppContext();
@@ -103,7 +103,7 @@ export default function MonthView() {
                       setShowEventDialog(true);
                     }}
                   >
-                    {event.is_system_generated && '⚙ '}{event.title}
+                    {event.is_system_generated && <GearSix className="inline h-2 w-2 mr-0.5 opacity-70 shrink-0" weight="bold" />}{event.title}
                   </button>
                 ))}
                 {dayEvents.length > 3 && (

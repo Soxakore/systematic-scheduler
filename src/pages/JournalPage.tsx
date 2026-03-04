@@ -6,14 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { CaretLeft, CaretRight, BookOpen, Plus, X, Smiley, Lightning, Trophy, Lightbulb, Star, Heart } from '@phosphor-icons/react';
+import { CaretLeft, CaretRight, BookOpen, Plus, X, Smiley, SmileySad, SmileyMelting, SmileyMeh, SmileyWink, Lightning, Trophy, Lightbulb, Star, Heart } from '@phosphor-icons/react';
 
 const MOODS = [
-  { value: 1, emoji: '😞', label: 'Rough' },
-  { value: 2, emoji: '😕', label: 'Low' },
-  { value: 3, emoji: '😐', label: 'Okay' },
-  { value: 4, emoji: '😊', label: 'Good' },
-  { value: 5, emoji: '🔥', label: 'Great' },
+  { value: 1, icon: SmileySad,     color: 'text-red-400',    label: 'Rough' },
+  { value: 2, icon: SmileyMelting, color: 'text-orange-400', label: 'Low' },
+  { value: 3, icon: SmileyMeh,     color: 'text-yellow-400', label: 'Okay' },
+  { value: 4, icon: Smiley,        color: 'text-green-400',  label: 'Good' },
+  { value: 5, icon: SmileyWink,    color: 'text-primary',    label: 'Great' },
 ];
 
 const ENERGY_LEVELS = [
@@ -197,7 +197,7 @@ export default function JournalPage() {
                           : 'hover:bg-muted'
                       }`}
                     >
-                      <span className="text-2xl">{m.emoji}</span>
+                      <m.icon className={`h-6 w-6 ${m.color}`} weight={mood === m.value ? 'fill' : 'duotone'} />
                       <span className="text-xs text-muted-foreground">{m.label}</span>
                     </button>
                   ))}
@@ -324,7 +324,7 @@ export default function JournalPage() {
                           e.date === dateStr ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
                         }`}
                       >
-                        <span className="text-lg">{MOODS.find(m => m.value === e.mood)?.emoji || ''}</span>
+                        {(() => { const m = MOODS.find(m => m.value === e.mood); return m ? <m.icon className={`h-5 w-5 shrink-0 ${m.color}`} weight="fill" /> : <span className="h-5 w-5" />; })()}
                         <div className="flex-1 min-w-0">
                           <div className="font-medium">{format(new Date(e.date + 'T12:00:00'), 'EEE, MMM d')}</div>
                           <div className="text-xs text-muted-foreground truncate">

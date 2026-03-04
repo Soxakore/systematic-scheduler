@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useAppContext } from '@/components/AppLayout';
 import { useEvents, useCalendars, useAllEventTags } from '@/hooks/useData';
 import { format, isToday, isTomorrow, addDays, startOfDay } from 'date-fns';
+import { GearSix, MapPin } from '@phosphor-icons/react';
 
 export default function AgendaView() {
   const { setShowEventDialog, setEditingEventId, searchQuery, selectedTagIds } = useAppContext();
@@ -91,7 +92,7 @@ export default function AgendaView() {
                   <div className="w-1 self-stretch rounded-full shrink-0" style={{ backgroundColor: cal?.color || '#3B82F6' }} />
                   <div className="flex-1 min-w-0">
                     <div className="font-medium text-sm text-foreground truncate">
-                      {event.is_system_generated && <span className="text-system-badge mr-1">⚙</span>}
+                      {event.is_system_generated && <GearSix className="inline h-3 w-3 text-system-badge mr-1 shrink-0" weight="bold" />}
                       {event.title}
                     </div>
                     <div className="text-xs text-muted-foreground mt-0.5">
@@ -99,7 +100,9 @@ export default function AgendaView() {
                       {cal && <span className="ml-2">· {cal.name}</span>}
                     </div>
                     {event.location && (
-                      <div className="text-xs text-muted-foreground mt-0.5 truncate">📍 {event.location}</div>
+                      <div className="text-xs text-muted-foreground mt-0.5 truncate flex items-center gap-1">
+                        <MapPin className="h-3 w-3 shrink-0" weight="duotone" />{event.location}
+                      </div>
                     )}
                   </div>
                 </button>

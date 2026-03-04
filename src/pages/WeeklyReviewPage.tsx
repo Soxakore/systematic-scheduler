@@ -96,12 +96,12 @@ export default function WeeklyReviewPage() {
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Insights</h2>
         <div className="space-y-2 text-sm text-muted-foreground">
           {stats.systemEvents > 0 && stats.totalEvents > 0 && (
-            <p>📊 {Math.round((stats.systemEvents / stats.totalEvents) * 100)}% of your events came from systems.</p>
+            <p>{Math.round((stats.systemEvents / stats.totalEvents) * 100)}% of your events came from systems.</p>
           )}
           {stats.focusMinutes > 0 && (
-            <p>🎯 You logged {stats.focusMinutes} minutes of focused work.</p>
+            <p>You logged {stats.focusMinutes} minutes of focused work.</p>
           )}
-          {stats.totalEvents === 0 && <p>📋 No events tracked last week. Try scheduling more activities!</p>}
+          {stats.totalEvents === 0 && <p>No events tracked last week. Try scheduling more activities!</p>}
         </div>
       </Card>
     </div>
