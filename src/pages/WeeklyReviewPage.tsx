@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
-import { Sparkles, Calendar, Clock, Flame, Target, CheckCircle2 } from 'lucide-react';
+import { Sparkle, CalendarBlank, Clock, Fire, Target, CheckCircle } from '@phosphor-icons/react';
 import { useEvents, useSystems, useGoals, useFocusSessions } from '@/hooks/useData';
 import { format, startOfWeek, endOfWeek, subWeeks, differenceInMinutes, parseISO } from 'date-fns';
 
@@ -38,7 +38,7 @@ export default function WeeklyReviewPage() {
   return (
     <div className="h-full overflow-y-auto scrollbar-thin p-4 max-w-2xl mx-auto">
       <h1 className="text-xl font-semibold text-foreground mb-2 flex items-center gap-2">
-        <Sparkles className="h-5 w-5 text-primary" /> Weekly Review
+        <Sparkle className="h-5 w-5 text-primary" /> Weekly Review
       </h1>
       <p className="text-sm text-muted-foreground mb-6">
         {format(lastWeekStart, 'MMM d')} – {format(lastWeekEnd, 'MMM d, yyyy')}
@@ -46,12 +46,12 @@ export default function WeeklyReviewPage() {
 
       <div className="grid grid-cols-2 gap-3 mb-6">
         <Card className="p-4 text-center">
-          <Calendar className="h-5 w-5 text-primary mx-auto mb-1" />
+          <CalendarBlank className="h-5 w-5 text-primary mx-auto mb-1" />
           <p className="text-2xl font-bold">{stats.totalEvents}</p>
           <p className="text-xs text-muted-foreground">Events</p>
         </Card>
         <Card className="p-4 text-center">
-          <Flame className="h-5 w-5 text-orange-500 mx-auto mb-1" />
+          <Fire className="h-5 w-5 text-orange-500 mx-auto mb-1" />
           <p className="text-2xl font-bold">{stats.systemEvents}</p>
           <p className="text-xs text-muted-foreground">System Events</p>
         </Card>
@@ -71,7 +71,7 @@ export default function WeeklyReviewPage() {
         <h2 className="text-sm font-semibold text-muted-foreground uppercase tracking-wider mb-3">Status</h2>
         <div className="space-y-2">
           <div className="flex items-center gap-2 text-sm">
-            <CheckCircle2 className="h-4 w-4 text-green-500" />
+            <CheckCircle className="h-4 w-4 text-green-500" />
             <span className="text-foreground">{stats.activeSystems} active systems running</span>
           </div>
           <div className="flex items-center gap-2 text-sm">

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
-import { BarChart3, Calendar, Clock, Target } from 'lucide-react';
+import { ChartBar, CalendarBlank, Clock, Target } from '@phosphor-icons/react';
 import { useDailyScores, useFocusSessions, useEvents } from '@/hooks/useData';
 import { format, subDays, startOfDay, endOfDay } from 'date-fns';
 import { BarChart, Bar, XAxis, YAxis, ResponsiveContainer, Tooltip } from 'recharts';
@@ -34,12 +34,12 @@ export default function AnalyticsPage() {
   return (
     <div className="h-full overflow-y-auto scrollbar-thin p-4 max-w-2xl mx-auto">
       <h1 className="text-xl font-semibold text-foreground mb-6 flex items-center gap-2">
-        <BarChart3 className="h-5 w-5 text-primary" /> Analytics
+        <ChartBar className="h-5 w-5 text-primary" /> Analytics
       </h1>
 
       <div className="grid grid-cols-3 gap-3 mb-6">
         <Card className="p-3 text-center">
-          <Calendar className="h-5 w-5 text-primary mx-auto mb-1" />
+          <CalendarBlank className="h-5 w-5 text-primary mx-auto mb-1" />
           <p className="text-2xl font-bold">{totalEvents}</p>
           <p className="text-xs text-muted-foreground">Today</p>
         </Card>
@@ -71,7 +71,7 @@ export default function AnalyticsPage() {
         </Card>
       ) : (
         <Card className="p-8 text-center">
-          <BarChart3 className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
+          <ChartBar className="h-10 w-10 text-muted-foreground mx-auto mb-3" />
           <p className="text-muted-foreground text-sm">No data yet. Analytics will populate as you use the app.</p>
         </Card>
       )}

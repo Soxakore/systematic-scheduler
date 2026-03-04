@@ -3,7 +3,7 @@ import { useAppContext } from '@/components/AppLayout';
 import { useEvents, useCalendars, useAllEventTags } from '@/hooks/useData';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Plus } from 'lucide-react';
+import { Plus } from '@phosphor-icons/react';
 
 export default function MonthView() {
   const { currentDate, setCurrentDate, setCurrentView, setShowEventDialog, setSelectedDate, setEditingEventId, searchQuery, selectedTagIds } = useAppContext();

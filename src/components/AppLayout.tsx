@@ -2,10 +2,10 @@ import { createContext, useContext, useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import PageTransition from './PageTransition';
 import {
-  CalendarDays, LayoutDashboard, Target, Repeat2,
-  BookOpen, BarChart3, Settings, Sparkles, Sun,
-  Image, Menu, X, Plus,
-} from 'lucide-react';
+  CalendarDots, SquaresFour, SunHorizon, Eye,
+  Target, ArrowsClockwise, CheckSquare, NotePencil,
+  ChartLineUp, GearSix, List, X, Plus,
+} from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useData';
 import { format } from 'date-fns';
@@ -32,16 +32,16 @@ export const useAppContext = () => useContext(AppContext);
 
 /* ── Nav items ─────────────────────────────────────────────── */
 const NAV = [
-  { to: '/',          icon: CalendarDays,    label: 'Calendar'  },
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/morning',   icon: Sun,             label: 'Morning'   },
-  { to: '/vision',    icon: Image,           label: 'Vision'    },
+  { to: '/',          icon: CalendarDots,    label: 'Calendar'  },
+  { to: '/dashboard', icon: SquaresFour,     label: 'Dashboard' },
+  { to: '/morning',   icon: SunHorizon,      label: 'Morning'   },
+  { to: '/vision',    icon: Eye,             label: 'Vision'    },
   { to: '/goals',     icon: Target,          label: 'Goals'     },
-  { to: '/systems',   icon: Repeat2,         label: 'Systems'   },
-  { to: '/habits',    icon: Sparkles,        label: 'Habits'    },
-  { to: '/journal',   icon: BookOpen,        label: 'Journal'   },
-  { to: '/analytics', icon: BarChart3,       label: 'Analytics' },
-  { to: '/settings',  icon: Settings,        label: 'Settings'  },
+  { to: '/systems',   icon: ArrowsClockwise, label: 'Systems'   },
+  { to: '/habits',    icon: CheckSquare,     label: 'Habits'    },
+  { to: '/journal',   icon: NotePencil,      label: 'Journal'   },
+  { to: '/analytics', icon: ChartLineUp,     label: 'Analytics' },
+  { to: '/settings',  icon: GearSix,         label: 'Settings'  },
 ];
 
 /* ── Sidebar ───────────────────────────────────────────────── */
@@ -58,7 +58,7 @@ function Sidebar({ onNewEvent, onClose }: { onNewEvent: () => void; onClose?: ()
       <div className="flex items-center justify-between h-14 px-4 shrink-0" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
         <div className="flex items-center gap-2.5">
           <div className="w-7 h-7 rounded-[8px] bg-primary flex items-center justify-center">
-            <CalendarDays className="h-3.5 w-3.5 text-white" strokeWidth={2.2} />
+            <CalendarDots className="h-3.5 w-3.5 text-white" weight="bold" />
           </div>
           <span className="text-[15px] font-semibold text-foreground" style={{ letterSpacing: '-0.02em' }}>Scheduler</span>
         </div>
@@ -86,7 +86,7 @@ function Sidebar({ onNewEvent, onClose }: { onNewEvent: () => void; onClose?: ()
             onClick={onClose}
             className={cn('nav-item', isActive(to) && 'nav-item-active')}
           >
-            <Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
+            <Icon className="h-4 w-4 shrink-0" weight="bold" />
             {label}
           </Link>
         ))}
@@ -171,7 +171,7 @@ export default function AppLayout() {
               className="md:hidden text-muted-foreground hover:text-foreground p-1.5 rounded-md"
               onClick={() => setMobileSidebarOpen(true)}
             >
-              <Menu className="h-5 w-5" strokeWidth={1.8} />
+              <List className="h-5 w-5" weight="bold" />
             </button>
 
             <div className="flex-1 max-w-sm">
@@ -209,7 +209,7 @@ export default function AppLayout() {
                 'flex items-center justify-center w-10 h-10 rounded-xl transition-colors',
                 active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}>
-                <Icon className="h-5 w-5" strokeWidth={active ? 2 : 1.6} />
+                <Icon className="h-5 w-5" weight={active ? 'bold' : 'regular'} />
               </Link>
             );
           })}
@@ -217,7 +217,7 @@ export default function AppLayout() {
             onClick={handleNewEvent}
             className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-white"
           >
-            <Plus className="h-4 w-4" strokeWidth={2.2} />
+            <Plus className="h-4 w-4" weight="bold" />
           </button>
         </nav>
       </div>

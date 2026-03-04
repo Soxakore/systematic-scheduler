@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Progress } from '@/components/ui/progress';
-import { Target, Plus, Trash2, CheckCircle2, Archive } from 'lucide-react';
+import { Target, Plus, Trash, CheckCircle, Archive } from '@phosphor-icons/react';
 import { useGoals, useCreateGoal, useUpdateGoal, useDeleteGoal } from '@/hooks/useData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
@@ -83,10 +83,10 @@ export default function GoalsPage() {
                       </div>
                       <div className="flex gap-1 ml-2 shrink-0">
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateGoal.mutate({ id: g.id, status: 'completed', progress: 100 })}>
-                          <CheckCircle2 className="h-4 w-4 text-green-500" />
+                          <CheckCircle className="h-4 w-4 text-green-500" />
                         </Button>
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteGoal.mutate(g.id)}>
-                          <Trash2 className="h-4 w-4 text-destructive" />
+                          <Trash className="h-4 w-4 text-destructive" />
                         </Button>
                       </div>
                     </div>
@@ -108,13 +108,13 @@ export default function GoalsPage() {
                 {completedGoals.map(g => (
                   <Card key={g.id} className="p-3 opacity-70">
                     <div className="flex items-center gap-2">
-                      <CheckCircle2 className="h-4 w-4 text-green-500 shrink-0" />
+                      <CheckCircle className="h-4 w-4 text-green-500 shrink-0" />
                       <span className="text-sm text-foreground flex-1 truncate">{g.title}</span>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateGoal.mutate({ id: g.id, status: 'active', progress: 50 })}>
                         <Archive className="h-3 w-3" />
                       </Button>
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteGoal.mutate(g.id)}>
-                        <Trash2 className="h-3 w-3 text-destructive" />
+                        <Trash className="h-3 w-3 text-destructive" />
                       </Button>
                     </div>
                   </Card>

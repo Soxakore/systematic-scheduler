@@ -1,6 +1,6 @@
 import { useSystems, useEvents } from '@/hooks/useData';
 import { Card } from '@/components/ui/card';
-import { Flame, CheckCircle2 } from 'lucide-react';
+import { Fire, CheckCircle } from '@phosphor-icons/react';
 import { startOfDay, endOfDay } from 'date-fns';
 
 export default function HabitsPage() {
@@ -19,7 +19,7 @@ export default function HabitsPage() {
       <Card className="p-4 mb-4">
         <div className="flex items-center gap-3">
           <div className="w-12 h-12 rounded-full bg-primary/10 flex items-center justify-center">
-            <CheckCircle2 className="h-6 w-6 text-primary" />
+            <CheckCircle className="h-6 w-6 text-primary" />
           </div>
           <div>
             <p className="text-sm text-muted-foreground">Today's Systems</p>
@@ -36,7 +36,7 @@ export default function HabitsPage() {
           {activeSystems.map(s => (
             <Card key={s.id} className="p-4">
               <div className="flex items-center gap-3">
-                <Flame className="h-5 w-5 text-orange-500" />
+                <Fire className="h-5 w-5 text-orange-500" />
                 <div>
                   <h3 className="font-medium text-foreground text-sm">{s.name}</h3>
                   <p className="text-xs text-muted-foreground">

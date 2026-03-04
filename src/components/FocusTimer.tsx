@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
-import { Play, Square, RotateCcw, Timer } from 'lucide-react';
+import { Play, Stop, ArrowCounterClockwise, Timer } from '@phosphor-icons/react';
 import { useActiveSession, useStartFocusSession, useEndFocusSession } from '@/hooks/useData';
 
 const PRESETS = [15, 25, 45, 60];
@@ -80,10 +80,10 @@ export default function FocusTimer() {
         ) : (
           <>
             <Button variant="outline" onClick={handleStop} className="gap-2">
-              <Square className="h-4 w-4" /> Cancel
+              <Stop className="h-4 w-4" /> Cancel
             </Button>
             <Button onClick={handleComplete} className="gap-2">
-              <RotateCcw className="h-4 w-4" /> Complete
+              <ArrowCounterClockwise className="h-4 w-4" /> Complete
             </Button>
           </>
         )}

@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CalendarDays } from 'lucide-react';
+import { CalendarDots } from '@phosphor-icons/react';
 
 export default function ResetPasswordPage() {
   const [password, setPassword] = useState('');
@@ -48,7 +48,7 @@ export default function ResetPasswordPage() {
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="text-center space-y-2">
           <div className="flex items-center justify-center gap-2 mb-2">
-            <CalendarDays className="h-8 w-8 text-primary" />
+            <CalendarDots className="h-8 w-8 text-primary" />
           </div>
           <CardTitle className="text-xl">Set new password</CardTitle>
           <CardDescription>Enter your new password below</CardDescription>

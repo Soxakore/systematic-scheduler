@@ -11,7 +11,7 @@ import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
-import { Trash2, Tag, Plus, X } from 'lucide-react';
+import { Trash, Tag, Plus, X } from '@phosphor-icons/react';
 import type { CalendarEvent } from '@/types';
 
 const TAG_COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#6B7280'];
@@ -303,7 +303,7 @@ export default function EventDialog() {
             </Button>
             {editingEventId && (
               <Button variant="destructive" size="icon" onClick={handleDelete} disabled={deleteEvent.isPending}>
-                <Trash2 className="h-4 w-4" />
+                <Trash className="h-4 w-4" />
               </Button>
             )}
           </div>

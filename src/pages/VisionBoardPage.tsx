@@ -5,19 +5,19 @@ import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
-  Eye, Plus, Trophy, Trash2, Check, Sparkles, Heart, Briefcase,
-  Dumbbell, GraduationCap, Home, Plane, DollarSign, Users, Star,
-} from 'lucide-react';
+  Eye, Plus, Trophy, Trash, Check, Sparkle, Heart, Briefcase,
+  Barbell, GraduationCap, House, Airplane, CurrencyDollar, Users, Star,
+} from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 
 const CATEGORIES = [
   { value: 'career',        label: 'Career',        icon: Briefcase,     color: '#6366f1' },
-  { value: 'health',        label: 'Health',         icon: Dumbbell,      color: '#22c55e' },
+  { value: 'health',        label: 'Health',         icon: Barbell,      color: '#22c55e' },
   { value: 'relationships', label: 'Relationships',  icon: Heart,         color: '#ec4899' },
-  { value: 'finance',       label: 'Finance',        icon: DollarSign,    color: '#eab308' },
+  { value: 'finance',       label: 'Finance',        icon: CurrencyDollar,    color: '#eab308' },
   { value: 'learning',      label: 'Learning',       icon: GraduationCap, color: '#3b82f6' },
-  { value: 'travel',        label: 'Travel',         icon: Plane,         color: '#14b8a6' },
-  { value: 'home',          label: 'Home',           icon: Home,          color: '#f97316' },
+  { value: 'travel',        label: 'Travel',         icon: Airplane,         color: '#14b8a6' },
+  { value: 'home',          label: 'House',           icon: House,          color: '#f97316' },
   { value: 'social',        label: 'Social',         icon: Users,         color: '#a855f7' },
   { value: 'general',       label: 'General',        icon: Star,          color: '#64748b' },
 ];
@@ -94,7 +94,7 @@ function VisionCard({ item, onUpdate, onDelete }: {
           className="px-2.5 py-1 rounded-md text-[10px] font-semibold text-red-400 border border-red-900/40 bg-red-900/10 hover:bg-red-900/20 transition-colors ml-auto"
           onClick={onDelete}
         >
-          <Trash2 className="h-3 w-3" />
+          <Trash className="h-3 w-3" />
         </button>
       </div>
     </div>
@@ -171,7 +171,7 @@ export default function VisionBoardPage() {
             <DialogContent>
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
-                  <Sparkles className="h-4 w-4 text-primary" /> New Vision
+                  <Sparkle className="h-4 w-4 text-primary" /> New Vision
                 </DialogTitle>
               </DialogHeader>
               <div className="space-y-3 mt-1">
@@ -288,7 +288,7 @@ export default function VisionBoardPage() {
           </div>
         ) : filteredItems.length === 0 ? (
           <div className="surface p-12 text-center">
-            <Sparkles className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
+            <Sparkle className="h-8 w-8 text-muted-foreground/30 mx-auto mb-3" />
             <h3 className="font-semibold text-foreground text-sm mb-1">
               {filter ? 'No visions here' : 'Your vision board is empty'}
             </h3>

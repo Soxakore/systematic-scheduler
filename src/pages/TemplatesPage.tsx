@@ -3,7 +3,7 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, Plus, Trash2, Clock } from 'lucide-react';
+import { FileText, Plus, Trash, Clock } from '@phosphor-icons/react';
 import { useEventTemplates, useCreateEventTemplate, useDeleteEventTemplate, useCalendars } from '@/hooks/useData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -101,7 +101,7 @@ export default function TemplatesPage() {
                   </div>
                 </div>
                 <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteTemplate.mutate(t.id)}>
-                  <Trash2 className="h-4 w-4 text-destructive" />
+                  <Trash className="h-4 w-4 text-destructive" />
                 </Button>
               </div>
             </Card>

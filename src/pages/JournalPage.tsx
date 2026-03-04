@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { ChevronLeft, ChevronRight, BookOpen, Plus, X, Smile, Zap, Trophy, Lightbulb, Star, Heart } from 'lucide-react';
+import { CaretLeft, CaretRight, BookOpen, Plus, X, Smiley, Lightning, Trophy, Lightbulb, Star, Heart } from '@phosphor-icons/react';
 
 const MOODS = [
   { value: 1, emoji: '😞', label: 'Rough' },
@@ -154,13 +154,13 @@ export default function JournalPage() {
           </div>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => setSelectedDate(subDays(selectedDate, 1))}>
-              <ChevronLeft className="h-4 w-4" />
+              <CaretLeft className="h-4 w-4" />
             </Button>
             <Button variant={isToday ? 'default' : 'outline'} size="sm" onClick={() => setSelectedDate(new Date())}>
               {isToday ? 'Today' : format(selectedDate, 'MMM d')}
             </Button>
             <Button variant="ghost" size="icon" onClick={() => setSelectedDate(addDays(selectedDate, 1))}>
-              <ChevronRight className="h-4 w-4" />
+              <CaretRight className="h-4 w-4" />
             </Button>
           </div>
         </div>
@@ -178,7 +178,7 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Smile className="h-4 w-4 text-amber-500" /> How are you feeling?
+                  <Smiley className="h-4 w-4 text-amber-500" /> How are you feeling?
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -204,7 +204,7 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <Zap className="h-4 w-4 text-yellow-500" /> Energy Level
+                  <Lightning className="h-4 w-4 text-yellow-500" /> Energy Level
                 </CardTitle>
               </CardHeader>
               <CardContent>

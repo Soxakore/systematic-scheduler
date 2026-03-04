@@ -8,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2, Zap, ZapOff, Sparkles } from 'lucide-react';
+import { Plus, PencilSimple, Trash, Lightning, ProhibitInset, Sparkle } from '@phosphor-icons/react';
 import { Link } from 'react-router-dom';
 import type { System } from '@/types';
 
@@ -143,7 +143,7 @@ export default function SystemsPage() {
           <Card className="p-4 hover:bg-accent/50 transition-colors cursor-pointer">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center shrink-0">
-                <Sparkles className="h-5 w-5 text-primary" />
+                <Sparkle className="h-5 w-5 text-primary" />
               </div>
               <div className="flex-1 min-w-0">
                 <h3 className="font-medium text-foreground">Weekly Review</h3>
@@ -181,13 +181,13 @@ export default function SystemsPage() {
                 </div>
                 <div className="flex items-center gap-1 shrink-0">
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleToggleActive(system)}>
-                    {system.is_active ? <ZapOff className="h-4 w-4" /> : <Zap className="h-4 w-4" />}
+                    {system.is_active ? <ProhibitInset className="h-4 w-4" /> : <Lightning className="h-4 w-4" />}
                   </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(system)}>
-                    <Pencil className="h-4 w-4" />
+                    <PencilSimple className="h-4 w-4" />
                   </Button>
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(system.id)}>
-                    <Trash2 className="h-4 w-4" />
+                    <Trash className="h-4 w-4" />
                   </Button>
                 </div>
               </div>

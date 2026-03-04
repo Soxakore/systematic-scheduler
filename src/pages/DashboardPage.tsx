@@ -2,7 +2,7 @@ import { useMemo } from 'react';
 import { useEvents, useSystems, useGoals } from '@/hooks/useData';
 import FocusTimer from '@/components/FocusTimer';
 import { Link } from 'react-router-dom';
-import { Target, Clock, ArrowRight, Calendar, Zap, TrendingUp, Flame, Brain } from 'lucide-react';
+import { Target, Clock, ArrowRight, CalendarBlank, Lightning, TrendUp, Fire, Brain } from '@phosphor-icons/react';
 import { format, startOfDay, endOfDay, parseISO } from 'date-fns';
 
 export default function DashboardPage() {
@@ -29,16 +29,16 @@ export default function DashboardPage() {
   };
 
   const stats = [
-    { icon: Calendar, value: totalEvents,       label: 'Events today',  color: 'text-primary'      },
-    { icon: Zap,      value: systemEvents.length, label: 'System tasks', color: 'text-orange-400'   },
+    { icon: CalendarBlank, value: totalEvents,       label: 'Events today',  color: 'text-primary'      },
+    { icon: Lightning,      value: systemEvents.length, label: 'System tasks', color: 'text-orange-400'   },
     { icon: Target,   value: activeGoals.length,  label: 'Active goals', color: 'text-emerald-400'  },
   ];
 
   const quickLinks = [
     { to: '/goals',     icon: Target,    label: 'Goals',     color: 'text-emerald-400' },
-    { to: '/systems',   icon: Zap,       label: 'Systems',   color: 'text-orange-400'  },
-    { to: '/analytics', icon: TrendingUp, label: 'Analytics', color: 'text-primary'    },
-    { to: '/habits',    icon: Flame,     label: 'Habits',    color: 'text-red-400'     },
+    { to: '/systems',   icon: Lightning,       label: 'Systems',   color: 'text-orange-400'  },
+    { to: '/analytics', icon: TrendUp, label: 'Analytics', color: 'text-primary'    },
+    { to: '/habits',    icon: Fire,     label: 'Habits',    color: 'text-red-400'     },
   ];
 
   return (
@@ -48,7 +48,7 @@ export default function DashboardPage() {
         {/* Greeting */}
         <div className="flex items-center gap-3">
           <div className="h-10 w-10 rounded-2xl bg-primary/10 flex items-center justify-center shrink-0">
-            <Brain className="h-5 w-5 text-primary" strokeWidth={1.8} />
+            <Brain className="h-5 w-5 text-primary" weight="regular" />
           </div>
           <div>
             <h1 className="text-xl font-semibold text-foreground" style={{ letterSpacing: '-0.03em' }}>{greeting()}</h1>
@@ -60,7 +60,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-3 gap-3">
           {stats.map((s, i) => (
             <div key={i} className="surface p-5 text-center">
-              <s.icon className={`h-5 w-5 mx-auto mb-2.5 ${s.color}`} strokeWidth={1.6} />
+              <s.icon className={`h-5 w-5 mx-auto mb-2.5 ${s.color}`} weight="regular" />
               <p className="stat-number">{s.value}</p>
               <p className="text-[11px] text-muted-foreground mt-1.5 leading-tight">{s.label}</p>
             </div>
@@ -71,7 +71,7 @@ export default function DashboardPage() {
         <div>
           <div className="flex items-center justify-between mb-3">
             <span className="section-label flex items-center gap-1.5">
-              <Clock className="h-3.5 w-3.5" strokeWidth={1.8} /> Coming Up
+              <Clock className="h-3.5 w-3.5" weight="regular" /> Coming Up
             </span>
             <Link
               to="/"
@@ -90,7 +90,7 @@ export default function DashboardPage() {
               {upcoming.map(e => (
                 <div key={e.id} className="surface-interactive p-3.5 flex items-center gap-3">
                   <div className="h-8 w-8 rounded-xl bg-primary/10 flex items-center justify-center shrink-0">
-                    <Clock className="h-4 w-4 text-primary" strokeWidth={1.8} />
+                    <Clock className="h-4 w-4 text-primary" weight="regular" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-[13px] font-medium truncate text-foreground">{e.title}</p>
@@ -120,7 +120,7 @@ export default function DashboardPage() {
             {quickLinks.map(item => (
               <Link key={item.to} to={item.to}>
                 <div className="surface-interactive p-4 text-center">
-                  <item.icon className={`h-5 w-5 mx-auto mb-2 ${item.color}`} strokeWidth={1.6} />
+                  <item.icon className={`h-5 w-5 mx-auto mb-2 ${item.color}`} weight="regular" />
                   <p className="text-xs font-medium text-muted-foreground">{item.label}</p>
                 </div>
               </Link>

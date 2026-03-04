@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
-import { Plus, Pencil, Trash2 } from 'lucide-react';
+import { Plus, PencilSimple, Trash } from '@phosphor-icons/react';
 
 const COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#6B7280'];
 
@@ -54,14 +54,14 @@ export default function CalendarsPage() {
             <span className="w-4 h-4 rounded shrink-0" style={{ backgroundColor: cal.color }} />
             <span className="flex-1 text-sm font-medium text-foreground">{cal.name}</span>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(cal)}>
-              <Pencil className="h-3.5 w-3.5" />
+              <PencilSimple className="h-3.5 w-3.5" />
             </Button>
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={async () => {
               if ((calendars?.length || 0) <= 1) { toast.error("Can't delete last calendar"); return; }
               await deleteCalendar.mutateAsync(cal.id);
               toast.success('Deleted');
             }}>
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash className="h-3.5 w-3.5" />
             </Button>
           </Card>
         ))}
