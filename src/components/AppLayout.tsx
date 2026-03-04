@@ -9,7 +9,6 @@ import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useData';
 import { format } from 'date-fns';
 
-
 /* ── App-wide context ──────────────────────────────────────── */
 interface AppContextValue {
   currentDate: Date;
@@ -57,10 +56,10 @@ function Sidebar({ onNewEvent, onClose }: { onNewEvent: () => void; onClose?: ()
       {/* Logo */}
       <div className="flex items-center justify-between h-14 px-4 shrink-0" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
         <div className="flex items-center gap-2.5">
-          <div className="w-6 h-6 rounded-md bg-primary flex items-center justify-center">
-            <CalendarDays className="h-3.5 w-3.5 text-white" />
+          <div className="w-7 h-7 rounded-[8px] bg-primary flex items-center justify-center">
+            <CalendarDays className="h-3.5 w-3.5 text-white" strokeWidth={2.2} />
           </div>
-          <span className="text-sm font-semibold text-foreground tracking-tight">Scheduler</span>
+          <span className="text-[15px] font-semibold text-foreground" style={{ letterSpacing: '-0.02em' }}>Scheduler</span>
         </div>
         {onClose && (
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1 rounded-md">
@@ -71,14 +70,14 @@ function Sidebar({ onNewEvent, onClose }: { onNewEvent: () => void; onClose?: ()
 
       {/* New Event button */}
       <div className="px-3 pt-3 pb-1 shrink-0">
-        <button onClick={onNewEvent} className="btn-primary w-full h-8 text-xs gap-1.5">
+        <button onClick={onNewEvent} className="btn-primary w-full h-9 text-xs gap-1.5">
           <Plus className="h-3.5 w-3.5" />
           New Event
         </button>
       </div>
 
       {/* Nav links */}
-      <nav className="flex-1 overflow-y-auto scrollbar-thin px-2 py-1 space-y-0.5">
+      <nav className="flex-1 overflow-y-auto scrollbar-thin px-2 py-2 space-y-0.5">
         {NAV.map(({ to, icon: Icon, label }) => (
           <Link
             key={to}
@@ -86,7 +85,7 @@ function Sidebar({ onNewEvent, onClose }: { onNewEvent: () => void; onClose?: ()
             onClick={onClose}
             className={cn('nav-item', isActive(to) && 'nav-item-active')}
           >
-            <Icon className="h-4 w-4 shrink-0" />
+            <Icon className="h-4 w-4 shrink-0" strokeWidth={1.8} />
             {label}
           </Link>
         ))}
@@ -94,12 +93,12 @@ function Sidebar({ onNewEvent, onClose }: { onNewEvent: () => void; onClose?: ()
 
       {/* User footer */}
       <div className="px-3 pb-3 pt-2 shrink-0" style={{ borderTop: '1px solid hsl(var(--border))' }}>
-        <div className="flex items-center gap-2 px-1">
-          <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center text-[10px] font-semibold text-primary shrink-0">
+        <div className="flex items-center gap-2.5 px-1">
+          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-[11px] font-semibold text-white shrink-0">
             {profile?.name?.charAt(0)?.toUpperCase() || 'U'}
           </div>
           <div className="min-w-0">
-            <p className="text-xs font-medium text-foreground truncate leading-tight">
+            <p className="text-[13px] font-medium text-foreground truncate leading-tight" style={{ letterSpacing: '-0.01em' }}>
               {profile?.name || 'User'}
             </p>
             <p className="text-[10px] text-muted-foreground leading-tight">
@@ -153,10 +152,10 @@ export default function AppLayout() {
         {mobileSidebarOpen && (
           <div className="fixed inset-0 z-40 md:hidden">
             <div
-              className="absolute inset-0 bg-black/70"
+              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
               onClick={() => setMobileSidebarOpen(false)}
             />
-            <div className="relative z-50 w-56 h-full">
+            <div className="relative z-50 w-56 h-full animate-slide-in-right">
               <Sidebar onNewEvent={handleNewEvent} onClose={() => setMobileSidebarOpen(false)} />
             </div>
           </div>
@@ -165,22 +164,22 @@ export default function AppLayout() {
         {/* Main area */}
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
 
-          {/* Header */}
-          <header className="app-header h-14 flex items-center gap-3 px-4 shrink-0">
+          {/* Header — Apple-style frosted glass */}
+          <header className="app-header h-12 flex items-center gap-3 px-4 shrink-0">
             <button
               className="md:hidden text-muted-foreground hover:text-foreground p-1.5 rounded-md"
               onClick={() => setMobileSidebarOpen(true)}
             >
-              <Menu className="h-5 w-5" />
+              <Menu className="h-5 w-5" strokeWidth={1.8} />
             </button>
 
-            <div className="flex-1 max-w-md">
+            <div className="flex-1 max-w-sm">
               <input
                 type="text"
                 placeholder="Search…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-8 px-3 text-sm rounded-md border border-border bg-background text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-1 focus:ring-primary"
+                className="w-full h-8 px-3 text-[13px] rounded-lg bg-[hsl(0_0%_7%)] text-foreground placeholder:text-muted-foreground border border-transparent focus:border-primary/30 focus:outline-none focus:ring-0 transition-colors"
               />
             </div>
 
@@ -194,24 +193,28 @@ export default function AppLayout() {
         </div>
 
         {/* Mobile bottom nav */}
-        <nav className="fixed bottom-0 left-0 right-0 z-30 md:hidden bg-background flex items-center justify-around px-1 h-14"
-          style={{ borderTop: '1px solid hsl(var(--border))' }}>
+        <nav className="fixed bottom-0 left-0 right-0 z-30 md:hidden flex items-center justify-around px-1 h-14"
+          style={{
+            backgroundColor: 'hsl(0 0% 0% / 0.85)',
+            backdropFilter: 'saturate(180%) blur(20px)',
+            borderTop: '1px solid hsl(0 0% 10%)',
+          }}>
           {NAV.slice(0, 5).map(({ to, icon: Icon }) => {
             const active = to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
             return (
               <Link key={to} to={to} className={cn(
-                'flex items-center justify-center w-10 h-10 rounded-lg transition-colors',
+                'flex items-center justify-center w-10 h-10 rounded-xl transition-colors',
                 active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
               )}>
-                <Icon className="h-5 w-5" />
+                <Icon className="h-5 w-5" strokeWidth={active ? 2 : 1.6} />
               </Link>
             );
           })}
           <button
             onClick={handleNewEvent}
-            className="flex items-center justify-center w-8 h-8 rounded-lg bg-primary text-white"
+            className="flex items-center justify-center w-9 h-9 rounded-full bg-primary text-white"
           >
-            <Plus className="h-4 w-4" />
+            <Plus className="h-4 w-4" strokeWidth={2.2} />
           </button>
         </nav>
       </div>
