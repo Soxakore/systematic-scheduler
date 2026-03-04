@@ -17,77 +17,119 @@
     gap: 48px;
   }
   h1 {
-    color: rgba(255,255,255,0.85);
-    font-size: 15px;
+    font-size: 12px;
     font-weight: 500;
     letter-spacing: 0.12em;
     text-transform: uppercase;
-    color: rgba(255,255,255,0.4);
+    color: rgba(255,255,255,0.32);
   }
   .grid {
     display: grid;
-    grid-template-columns: repeat(5, 1fr);
-    gap: 32px;
+    grid-template-columns: repeat(6, 1fr);
+    gap: 28px 32px;
   }
   .card {
     display: flex;
     flex-direction: column;
     align-items: center;
-    gap: 12px;
+    gap: 10px;
   }
   .card img {
-    width: 72px;
-    height: 72px;
-    image-rendering: crisp-edges;
+    width: 64px;
+    height: 64px;
     transition: transform 0.2s ease, filter 0.2s ease;
+    cursor: pointer;
   }
   .card img:hover {
-    transform: translateY(-3px) scale(1.08);
-    filter: drop-shadow(0 8px 16px rgba(0,0,0,0.5));
+    transform: translateY(-4px) scale(1.10);
+    filter: drop-shadow(0 10px 20px rgba(0,0,0,0.55));
   }
   .card span {
-    font-size: 11px;
+    font-size: 10px;
     font-weight: 500;
-    letter-spacing: 0.08em;
-    color: rgba(255,255,255,0.38);
+    letter-spacing: 0.09em;
+    color: rgba(255,255,255,0.32);
     text-transform: uppercase;
   }
-  .sizes {
+
+  /* Sidebar mockup */
+  .mockup {
     display: flex;
-    align-items: flex-end;
-    gap: 24px;
-    padding: 24px 32px;
-    background: rgba(255,255,255,0.04);
+    gap: 0;
     border-radius: 16px;
-    border: 1px solid rgba(255,255,255,0.07);
+    overflow: hidden;
+    border: 1px solid rgba(255,255,255,0.08);
+    box-shadow: 0 32px 64px rgba(0,0,0,0.6);
   }
-  .sizes img { transition: transform 0.2s ease; }
-  .sizes img:hover { transform: scale(1.05); }
+  .sidebar {
+    width: 180px;
+    background: #0d0d12;
+    padding: 12px 8px;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+    border-right: 1px solid rgba(255,255,255,0.07);
+  }
+  .nav-item {
+    display: flex;
+    align-items: center;
+    gap: 9px;
+    padding: 6px 8px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: background 0.15s;
+    color: rgba(255,255,255,0.45);
+    font-size: 13px;
+    font-weight: 450;
+    letter-spacing: -0.01em;
+  }
+  .nav-item:hover { background: rgba(255,255,255,0.05); color: rgba(255,255,255,0.75); }
+  .nav-item.active {
+    background: rgba(0,113,227,0.18);
+    color: rgba(255,255,255,0.90);
+  }
+  .nav-item img {
+    width: 22px; height: 22px;
+    border-radius: 6px;
+    transition: transform 0.15s;
+  }
+  .nav-item.active img { transform: scale(1.06); box-shadow: 0 0 0 2px rgba(0,113,227,0.5); }
+  .content { width: 280px; background: #0a0a0f; }
 </style>
 </head>
 <body>
   <h1>Systematic Scheduler — Navigation Icons</h1>
 
   <div class="grid">
-    <div class="card"><img src="icon-morning.svg"/><span>Morning</span></div>
+    <div class="card"><img src="icon-calendar.svg"/><span>Calendar</span></div>
     <div class="card"><img src="icon-dashboard.svg"/><span>Dashboard</span></div>
-    <div class="card"><img src="icon-goals.svg"/><span>Goals</span></div>
-    <div class="card"><img src="icon-habits.svg"/><span>Habits</span></div>
-    <div class="card"><img src="icon-systems.svg"/><span>Systems</span></div>
-    <div class="card"><img src="icon-journal.svg"/><span>Journal</span></div>
+    <div class="card"><img src="icon-morning.svg"/><span>Morning</span></div>
     <div class="card"><img src="icon-vision.svg"/><span>Vision</span></div>
+    <div class="card"><img src="icon-goals.svg"/><span>Goals</span></div>
+    <div class="card"><img src="icon-systems.svg"/><span>Systems</span></div>
+    <div class="card"><img src="icon-habits.svg"/><span>Habits</span></div>
+    <div class="card"><img src="icon-journal.svg"/><span>Journal</span></div>
     <div class="card"><img src="icon-analytics.svg"/><span>Analytics</span></div>
     <div class="card"><img src="icon-review.svg"/><span>Review</span></div>
     <div class="card"><img src="icon-templates.svg"/><span>Templates</span></div>
+    <div class="card"><img src="icon-settings.svg"/><span>Settings</span></div>
   </div>
 
-  <!-- size reference -->
-  <div class="sizes">
-    <img src="icon-dashboard.svg" width="24" height="24"/>
-    <img src="icon-dashboard.svg" width="32" height="32"/>
-    <img src="icon-dashboard.svg" width="48" height="48"/>
-    <img src="icon-dashboard.svg" width="64" height="64"/>
-    <img src="icon-dashboard.svg" width="96" height="96"/>
+  <!-- Sidebar mockup -->
+  <div class="mockup">
+    <div class="sidebar">
+      <div class="nav-item active"><img src="icon-calendar.svg"/>Calendar</div>
+      <div class="nav-item"><img src="icon-dashboard.svg"/>Dashboard</div>
+      <div class="nav-item"><img src="icon-morning.svg"/>Morning</div>
+      <div class="nav-item"><img src="icon-vision.svg"/>Vision</div>
+      <div class="nav-item"><img src="icon-goals.svg"/>Goals</div>
+      <div class="nav-item"><img src="icon-systems.svg"/>Systems</div>
+      <div class="nav-item"><img src="icon-habits.svg"/>Habits</div>
+      <div class="nav-item"><img src="icon-journal.svg"/>Journal</div>
+      <div class="nav-item"><img src="icon-analytics.svg"/>Analytics</div>
+      <div class="nav-item"><img src="icon-settings.svg"/>Settings</div>
+    </div>
+    <div class="content"></div>
   </div>
 </body>
 </html>

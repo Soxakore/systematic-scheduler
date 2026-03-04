@@ -1,15 +1,23 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import PageTransition from './PageTransition';
-import {
-  CalendarDots, SquaresFour, SunHorizon, Eye,
-  Target, ArrowsClockwise, CheckSquare, NotePencil,
-  ChartLineUp, GearSix, List, X, Plus, Sun, Moon, Users,
-} from '@phosphor-icons/react';
+import { List, X, Plus, CalendarDots } from '@phosphor-icons/react';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useData';
 import { format } from 'date-fns';
+
+/* ── 3D badge icon imports ─────────────────────────────────── */
+import icoCalendar  from '@/assets/icons/icon-calendar.svg';
+import icoDashboard from '@/assets/icons/icon-dashboard.svg';
+import icoMorning   from '@/assets/icons/icon-morning.svg';
+import icoVision    from '@/assets/icons/icon-vision.svg';
+import icoGoals     from '@/assets/icons/icon-goals.svg';
+import icoSystems   from '@/assets/icons/icon-systems.svg';
+import icoHabits    from '@/assets/icons/icon-habits.svg';
+import icoJournal   from '@/assets/icons/icon-journal.svg';
+import icoAnalytics from '@/assets/icons/icon-analytics.svg';
+import icoSettings  from '@/assets/icons/icon-settings.svg';
 
 /* ── App-wide context ──────────────────────────────────────── */
 interface AppContextValue {
@@ -31,19 +39,18 @@ interface AppContextValue {
 export const AppContext = createContext<AppContextValue>({} as AppContextValue);
 export const useAppContext = () => useContext(AppContext);
 
-/* ── Nav items ─────────────────────────────────────────────── */
+/* ── Nav items (3D badge icons) ─────────────────────────────── */
 const NAV = [
-  { to: '/',          icon: CalendarDots,    label: 'Calendar'  },
-  { to: '/dashboard', icon: SquaresFour,     label: 'Dashboard' },
-  { to: '/morning',   icon: SunHorizon,      label: 'Morning'   },
-  { to: '/vision',    icon: Eye,             label: 'Vision'    },
-  { to: '/goals',     icon: Target,          label: 'Goals'     },
-  { to: '/systems',   icon: ArrowsClockwise, label: 'Systems'   },
-  { to: '/habits',    icon: CheckSquare,     label: 'Habits'    },
-  { to: '/journal',   icon: NotePencil,      label: 'Journal'   },
-  { to: '/analytics', icon: ChartLineUp,     label: 'Analytics' },
-  { to: '/sharing',   icon: Users,           label: 'Sharing'   },
-  { to: '/settings',  icon: GearSix,         label: 'Settings'  },
+  { to: '/',          badge: icoCalendar,  label: 'Calendar'  },
+  { to: '/dashboard', badge: icoDashboard, label: 'Dashboard' },
+  { to: '/morning',   badge: icoMorning,   label: 'Morning'   },
+  { to: '/vision',    badge: icoVision,    label: 'Vision'    },
+  { to: '/goals',     badge: icoGoals,     label: 'Goals'     },
+  { to: '/systems',   badge: icoSystems,   label: 'Systems'   },
+  { to: '/habits',    badge: icoHabits,    label: 'Habits'    },
+  { to: '/journal',   badge: icoJournal,   label: 'Journal'   },
+  { to: '/analytics', badge: icoAnalytics, label: 'Analytics' },
+  { to: '/settings',  badge: icoSettings,  label: 'Settings'  },
 ];
 
 /* ── Theme toggle ──────────────────────────────────────────── */
@@ -95,17 +102,40 @@ function Sidebar({ onNewEvent, onClose }: { onNewEvent: () => void; onClose?: ()
 
       {/* Nav links */}
       <nav className="flex-1 overflow-y-auto scrollbar-thin px-2 py-2 space-y-0.5">
-        {NAV.map(({ to, icon: Icon, label }) => (
-          <Link
-            key={to}
-            to={to}
-            onClick={onClose}
-            className={cn('nav-item', isActive(to) && 'nav-item-active')}
-          >
-            <Icon className="h-4 w-4 shrink-0" weight="bold" />
-            {label}
-          </Link>
-        ))}
+        {NAV.map(({ to, badge, label }) => {
+          const active = isActive(to);
+          return (
+            <Link
+              key={to}
+              to={to}
+              onClick={onClose}
+              className={cn(
+                'nav-item group relative',
+                active && 'nav-item-active'
+              )}
+            >
+              {/* 3D badge icon */}
+              <span className={cn(
+                'relative shrink-0 rounded-[8px] transition-all duration-200',
+                active
+                  ? 'ring-2 ring-primary/50 ring-offset-1 ring-offset-[hsl(var(--background))]'
+                  : 'opacity-80 group-hover:opacity-100'
+              )}>
+                <img
+                  src={badge}
+                  alt={label}
+                  width={22}
+                  height={22}
+                  className={cn(
+                    'block rounded-[6px] transition-transform duration-200',
+                    active ? 'scale-105' : 'group-hover:scale-105'
+                  )}
+                />
+              </span>
+              {label}
+            </Link>
+          );
+        })}
       </nav>
 
       {/* User footer */}
@@ -220,14 +250,17 @@ export default function AppLayout() {
             backdropFilter: 'saturate(180%) blur(20px)',
             borderTop: '1px solid hsl(var(--border))',
           }}>
-          {NAV.slice(0, 5).map(({ to, icon: Icon }) => {
+          {NAV.slice(0, 5).map(({ to, badge, label }) => {
             const active = to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
             return (
               <Link key={to} to={to} className={cn(
-                'flex items-center justify-center w-10 h-10 rounded-xl transition-colors',
-                active ? 'text-primary' : 'text-muted-foreground hover:text-foreground'
+                'flex items-center justify-center w-10 h-10 rounded-xl transition-all duration-200',
+                active ? 'scale-105' : 'opacity-60 hover:opacity-90'
               )}>
-                <Icon className="h-5 w-5" weight={active ? 'bold' : 'regular'} />
+                <img src={badge} alt={label} width={28} height={28} className={cn(
+                  'rounded-[7px] transition-all duration-200',
+                  active ? 'ring-2 ring-primary/60 ring-offset-1 ring-offset-black' : ''
+                )}/>
               </Link>
             );
           })}
