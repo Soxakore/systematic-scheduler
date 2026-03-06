@@ -4,8 +4,9 @@ import PageTransition from './PageTransition';
 import {
   CalendarDots, SquaresFour, SunHorizon, Eye,
   Target, ArrowsClockwise, CheckSquare, NotePencil,
-  ChartLineUp, GearSix, List, X, Plus,
+  ChartLineUp, GearSix, List, X, Plus, Sun, Moon,
 } from '@phosphor-icons/react';
+import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useData';
 import { format } from 'date-fns';
