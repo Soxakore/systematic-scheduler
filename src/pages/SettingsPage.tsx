@@ -105,6 +105,24 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle className="text-base">Appearance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              {theme === 'dark' ? <Moon className="h-4 w-4 text-muted-foreground" weight="bold" /> : <Sun className="h-4 w-4 text-amber-500" weight="bold" />}
+              <div>
+                <p className="text-sm font-medium text-foreground">{theme === 'dark' ? 'Night Mode' : 'Day Mode'}</p>
+                <p className="text-xs text-muted-foreground">Switch between light and dark theme</p>
+              </div>
+            </div>
+            <Switch checked={theme === 'light'} onCheckedChange={toggleTheme} />
+          </div>
+        </CardContent>
+      </Card>
+
       <Card>
         <CardContent className="pt-6">
           <Button variant="outline" onClick={async () => { await signOut(); navigate('/login'); }}>
