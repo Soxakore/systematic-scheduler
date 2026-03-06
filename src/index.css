@@ -67,32 +67,62 @@
     -moz-osx-font-smoothing: grayscale;
   }
 
-  /* Light mode */
+  /* Light mode — Day theme */
   .light {
     --background:     0 0% 100%;
     --foreground:     0 0% 7%;
+
     --card:           0 0% 98%;
     --card-foreground:0 0% 7%;
+
     --popover:        0 0% 100%;
     --popover-foreground: 0 0% 7%;
+
     --primary:        211 100% 50%;
     --primary-foreground: 0 0% 100%;
+
     --secondary:      0 0% 95%;
     --secondary-foreground: 0 0% 30%;
+
     --muted:          0 0% 96%;
     --muted-foreground: 0 0% 45%;
+
+    --accent:         211 40% 94%;
+    --accent-foreground: 211 100% 40%;
+
+    --destructive:    0 72% 51%;
+    --destructive-foreground: 0 0% 100%;
+
     --border:         0 0% 90%;
-    --input:          0 0% 92%;
+    --input:          0 0% 95%;
     --ring:           211 100% 50%;
-    --sidebar-background: 0 0% 98%;
+
+    --sidebar-background: 0 0% 97%;
     --sidebar-foreground: 0 0% 40%;
+    --sidebar-primary: 211 100% 50%;
+    --sidebar-primary-foreground: 0 0% 100%;
+    --sidebar-accent:  211 30% 94%;
+    --sidebar-accent-foreground: 211 100% 40%;
     --sidebar-border: 0 0% 92%;
+    --sidebar-ring:   211 100% 50%;
+
+    --cal-today:        211 30% 95%;
+    --cal-today-border: 211 100% 50%;
+    --cal-hover:        0 0% 96%;
+    --cal-selected:     211 100% 50%;
+    --cal-grid:         0 0% 92%;
+    --cal-time-col:     0 0% 97%;
+    --cal-current-time: 4 90% 58%;
+
+    --system-badge:            152 60% 42%;
+    --system-badge-foreground: 0 0% 100%;
   }
 }
 
 @layer base {
   * { @apply border-border; }
   html { color-scheme: dark; }
+  .light { color-scheme: light; }
   body {
     @apply bg-background text-foreground antialiased;
     font-size: 14px;

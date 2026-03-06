@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useProfile, useUpdateProfile } from '@/hooks/useData';
 import { useAuth } from '@/hooks/useAuth';
+import { useTheme } from '@/hooks/useTheme';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Sun, Moon } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 import { useNavigate } from 'react-router-dom';
 
@@ -19,6 +22,7 @@ export default function SettingsPage() {
   const { data: profile, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
   const { signOut } = useAuth();
+  const { theme, toggleTheme } = useTheme();
   const navigate = useNavigate();
 
   const [name, setName] = useState('');
@@ -98,6 +102,24 @@ export default function SettingsPage() {
             </Select>
           </div>
           <Button onClick={handleSave} disabled={updateProfile.isPending}>Save</Button>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-4">
+        <CardHeader>
+          <CardTitle className="text-base">Appearance</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2.5">
+              {theme === 'dark' ? <Moon className="h-4 w-4 text-muted-foreground" weight="bold" /> : <Sun className="h-4 w-4 text-amber-500" weight="bold" />}
+              <div>
+                <p className="text-sm font-medium text-foreground">{theme === 'dark' ? 'Night Mode' : 'Day Mode'}</p>
+                <p className="text-xs text-muted-foreground">Switch between light and dark theme</p>
+              </div>
+            </div>
+            <Switch checked={theme === 'light'} onCheckedChange={toggleTheme} />
+          </div>
         </CardContent>
       </Card>
 
