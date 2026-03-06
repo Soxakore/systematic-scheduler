@@ -45,6 +45,20 @@ const NAV = [
   { to: '/settings',  icon: GearSix,         label: 'Settings'  },
 ];
 
+/* ── Theme toggle ──────────────────────────────────────────── */
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+      aria-label="Toggle theme"
+    >
+      {theme === 'dark' ? <Sun className="h-4 w-4" weight="bold" /> : <Moon className="h-4 w-4" weight="bold" />}
+    </button>
+  );
+}
+
 /* ── Sidebar ───────────────────────────────────────────────── */
 function Sidebar({ onNewEvent, onClose }: { onNewEvent: () => void; onClose?: () => void }) {
   const location = useLocation();
