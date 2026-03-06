@@ -254,7 +254,7 @@
   }
   .btn-ghost:hover {
     color: hsl(var(--foreground));
-    background-color: hsl(0 0% 8%);
+    background-color: hsl(var(--secondary));
   }
 
   /* ── Inputs ───────────────────────────────────────────────── */
