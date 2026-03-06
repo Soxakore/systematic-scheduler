@@ -1,107 +1,23 @@
-import { useState } from 'react';
+import { useState, useRef } from 'react';
 import { useVisionBoardItems, useCreateVisionBoardItem, useUpdateVisionBoardItem, useDeleteVisionBoardItem } from '@/hooks/useData';
+import { useAuth } from '@/hooks/useAuth';
+import { supabase } from '@/integrations/supabase/client';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import {
-  Eye, Plus, Trophy, Trash, Check, Sparkle, Heart, Briefcase,
-  Barbell, GraduationCap, House, Airplane, CurrencyDollar, Users, Star,
+  Eye, Plus, Sparkle, Link as LinkIcon, ImageSquare, PaintBrush,
+  Briefcase, Barbell, Heart, CurrencyDollar, GraduationCap,
+  Airplane, House, Users, Star, UploadSimple,
 } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
-
-const CATEGORIES = [
-  { value: 'career',        label: 'Career',        icon: Briefcase,     color: '#6366f1' },
-  { value: 'health',        label: 'Health',         icon: Barbell,      color: '#22c55e' },
-  { value: 'relationships', label: 'Relationships',  icon: Heart,         color: '#ec4899' },
-  { value: 'finance',       label: 'Finance',        icon: CurrencyDollar,    color: '#eab308' },
-  { value: 'learning',      label: 'Learning',       icon: GraduationCap, color: '#3b82f6' },
-  { value: 'travel',        label: 'Travel',         icon: Airplane,         color: '#14b8a6' },
-  { value: 'home',          label: 'House',           icon: House,          color: '#f97316' },
-  { value: 'social',        label: 'Social',         icon: Users,         color: '#a855f7' },
-  { value: 'general',       label: 'General',        icon: Star,          color: '#64748b' },
-];
-
-function VisionCard({ item, onUpdate, onDelete }: {
-  item: any;
-  onUpdate: (updates: any) => void;
-  onDelete: () => void;
-}) {
-  const cat = CATEGORIES.find(c => c.value === item.category) || CATEGORIES[8];
-  const Icon = cat.icon;
-
-  return (
-    <div className={cn(
-      'group surface p-4 transition-colors',
-      item.is_achieved && 'opacity-60'
-    )}>
-      {/* Category */}
-      <div className="flex items-center gap-2 mb-3">
-        <div
-          className="h-7 w-7 rounded-md flex items-center justify-center shrink-0"
-          style={{ background: cat.color + '18', border: `1px solid ${cat.color}30` }}
-        >
-          <Icon className="h-3.5 w-3.5" style={{ color: cat.color }} />
-        </div>
-        <span className="text-[10px] font-semibold uppercase tracking-widest" style={{ color: cat.color }}>
-          {cat.label}
-        </span>
-        {item.is_achieved && (
-          <span className="ml-auto flex items-center gap-1 text-[10px] text-emerald-400 font-semibold">
-            <Trophy className="h-3 w-3" weight="fill" /> Done
-          </span>
-        )}
-      </div>
-
-      {/* Title */}
-      <h3 className={cn(
-        'font-semibold text-sm text-foreground mb-1 leading-snug',
-        item.is_achieved && 'line-through text-muted-foreground'
-      )}>
-        {item.title}
-      </h3>
-
-      {/* Description */}
-      {item.description && (
-        <p className="text-xs text-muted-foreground mb-3 leading-relaxed">{item.description}</p>
-      )}
-
-      {/* Image */}
-      {item.image_url && (
-        <div className="mb-3 rounded-md overflow-hidden" style={{ border: '1px solid hsl(var(--border))' }}>
-          <img src={item.image_url} alt={item.title} className="w-full h-28 object-cover" />
-        </div>
-      )}
-
-      {/* Actions — on hover */}
-      <div className="flex gap-1.5 opacity-0 group-hover:opacity-100 transition-opacity pt-1">
-        {!item.is_achieved ? (
-          <button
-            className="flex items-center gap-1 px-2.5 py-1 rounded-md text-[10px] font-semibold text-emerald-400 border border-emerald-700/40 bg-emerald-900/20 hover:bg-emerald-900/40 transition-colors"
-            onClick={() => onUpdate({ is_achieved: true, achieved_at: new Date().toISOString() })}
-          >
-            <Check className="h-3 w-3" weight="bold" /> Achieved
-          </button>
-        ) : (
-          <button
-            className="px-2.5 py-1 rounded-md text-[10px] font-semibold text-muted-foreground border border-border bg-secondary hover:bg-secondary/80 transition-colors"
-            onClick={() => onUpdate({ is_achieved: false, achieved_at: null })}
-          >
-            Undo
-          </button>
-        )}
-        <button
-          className="px-2.5 py-1 rounded-md text-[10px] font-semibold text-red-400 border border-red-900/40 bg-red-900/10 hover:bg-red-900/20 transition-colors ml-auto"
-          onClick={onDelete}
-        >
-          <Trash className="h-3 w-3" weight="bold" />
-        </button>
-      </div>
-    </div>
-  );
-}
+import VisionCard, { CATEGORIES } from '@/components/vision/VisionCard';
+import DrawingCanvas from '@/components/vision/DrawingCanvas';
 
 export default function VisionBoardPage() {
+  const { user } = useAuth();
   const { data: items, isLoading } = useVisionBoardItems();
   const createItem = useCreateVisionBoardItem();
   const updateItem = useUpdateVisionBoardItem();
@@ -113,6 +29,59 @@ export default function VisionBoardPage() {
   const [category, setCategory]       = useState('general');
   const [imageUrl, setImageUrl]       = useState('');
   const [filter, setFilter]           = useState<string | null>(null);
+  const [uploading, setUploading]     = useState(false);
+  const [imageTab, setImageTab]       = useState('upload');
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const CATEGORY_ICONS: Record<string, any> = {
+    career: Briefcase, health: Barbell, relationships: Heart,
+    finance: CurrencyDollar, learning: GraduationCap, travel: Airplane,
+    home: House, social: Users, general: Star,
+  };
+
+  const uploadFile = async (file: File): Promise<string | null> => {
+    if (!user) return null;
+    setUploading(true);
+    try {
+      const ext = file.name.split('.').pop();
+      const path = `${user.id}/${Date.now()}.${ext}`;
+      const { error } = await supabase.storage.from('vision-images').upload(path, file);
+      if (error) throw error;
+      const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
+      return data.publicUrl;
+    } catch (err: any) {
+      toast.error('Upload failed: ' + err.message);
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const url = await uploadFile(file);
+    if (url) setImageUrl(url);
+  };
+
+  const handleDrawingSave = async (dataUrl: string) => {
+    if (!user) return;
+    setUploading(true);
+    try {
+      const res = await fetch(dataUrl);
+      const blob = await res.blob();
+      const path = `${user.id}/drawing-${Date.now()}.png`;
+      const { error } = await supabase.storage.from('vision-images').upload(path, blob, { contentType: 'image/png' });
+      if (error) throw error;
+      const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
+      setImageUrl(data.publicUrl);
+      toast.success('Drawing saved!');
+    } catch (err: any) {
+      toast.error('Drawing upload failed: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
 
   const handleCreate = async () => {
     if (!title.trim()) return;
@@ -168,7 +137,7 @@ export default function VisionBoardPage() {
                 <Plus className="h-3.5 w-3.5" /> Add Vision
               </button>
             </DialogTrigger>
-            <DialogContent>
+            <DialogContent className="max-w-lg">
               <DialogHeader>
                 <DialogTitle className="flex items-center gap-2">
                   <Sparkle className="h-4 w-4 text-primary" /> New Vision
@@ -188,11 +157,13 @@ export default function VisionBoardPage() {
                   placeholder="How will you feel when you achieve this?"
                   className="pro-input min-h-[72px]"
                 />
+
+                {/* Category */}
                 <div>
                   <label className="section-label block mb-2">Category</label>
                   <div className="grid grid-cols-3 gap-1.5">
                     {CATEGORIES.map(cat => {
-                      const CatIcon = cat.icon;
+                      const CatIcon = CATEGORY_ICONS[cat.value] || Star;
                       return (
                         <button
                           key={cat.value}
@@ -211,15 +182,68 @@ export default function VisionBoardPage() {
                     })}
                   </div>
                 </div>
-                <Input
-                  value={imageUrl}
-                  onChange={e => setImageUrl(e.target.value)}
-                  placeholder="Image URL (optional)"
-                  className="pro-input"
-                />
+
+                {/* Image: Upload / URL / Draw */}
+                <div>
+                  <label className="section-label block mb-2">Image</label>
+                  <Tabs value={imageTab} onValueChange={setImageTab}>
+                    <TabsList className="w-full grid grid-cols-3 h-8">
+                      <TabsTrigger value="upload" className="text-xs gap-1">
+                        <UploadSimple className="h-3 w-3" /> Upload
+                      </TabsTrigger>
+                      <TabsTrigger value="url" className="text-xs gap-1">
+                        <LinkIcon className="h-3 w-3" /> URL
+                      </TabsTrigger>
+                      <TabsTrigger value="draw" className="text-xs gap-1">
+                        <PaintBrush className="h-3 w-3" /> Draw
+                      </TabsTrigger>
+                    </TabsList>
+
+                    <TabsContent value="upload" className="mt-2">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        onChange={handleFileChange}
+                      />
+                      <button
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={uploading}
+                        className="w-full h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
+                      >
+                        <ImageSquare className="h-6 w-6" />
+                        <span className="text-xs font-medium">
+                          {uploading ? 'Uploading…' : 'Click to upload an image'}
+                        </span>
+                      </button>
+                    </TabsContent>
+
+                    <TabsContent value="url" className="mt-2">
+                      <Input
+                        value={imageUrl}
+                        onChange={e => setImageUrl(e.target.value)}
+                        placeholder="https://example.com/image.jpg"
+                        className="pro-input"
+                      />
+                    </TabsContent>
+
+                    <TabsContent value="draw" className="mt-2">
+                      <DrawingCanvas onSave={handleDrawingSave} />
+                    </TabsContent>
+                  </Tabs>
+
+                  {/* Preview */}
+                  {imageUrl && (
+                    <div className="mt-2 rounded-md overflow-hidden border border-border">
+                      <img src={imageUrl} alt="Preview" className="w-full h-28 object-cover" />
+                    </div>
+                  )}
+                </div>
+
                 <button
                   onClick={handleCreate}
-                  disabled={!title.trim() || createItem.isPending}
+                  disabled={!title.trim() || createItem.isPending || uploading}
                   className="btn-primary w-full h-9"
                 >
                   {createItem.isPending ? 'Adding…' : 'Add to Vision Board'}
@@ -250,15 +274,14 @@ export default function VisionBoardPage() {
               className={cn(
                 'px-3 h-7 rounded-full text-xs font-medium transition-colors border',
                 filter === null
-                  ? 'bg-primary text-white border-primary/50'
+                  ? 'bg-primary text-primary-foreground border-primary/50'
                   : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
               )}
             >
               All ({totalCount})
             </button>
             {CATEGORIES.filter(c => items?.some(i => i.category === c.value)).map(cat => {
-              const count   = items?.filter(i => i.category === cat.value).length || 0;
-              const CatIcon = cat.icon;
+              const count = items?.filter(i => i.category === cat.value).length || 0;
               return (
                 <button
                   key={cat.value}
@@ -266,12 +289,11 @@ export default function VisionBoardPage() {
                   className={cn(
                     'flex items-center gap-1.5 px-3 h-7 rounded-full text-xs font-medium transition-colors border',
                     filter === cat.value
-                      ? 'text-white border-transparent'
+                      ? 'text-primary-foreground border-transparent'
                       : 'border-border bg-secondary text-muted-foreground hover:text-foreground'
                   )}
                   style={filter === cat.value ? { background: cat.color } : {}}
                 >
-                  <CatIcon className="h-3 w-3" />
                   {cat.label} ({count})
                 </button>
               );
@@ -289,8 +311,8 @@ export default function VisionBoardPage() {
         ) : filteredItems.length === 0 ? (
           <div className="surface p-12 text-center">
             <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-3">
-            <Sparkle className="h-7 w-7 text-primary" weight="duotone" />
-          </div>
+              <Sparkle className="h-7 w-7 text-primary" weight="duotone" />
+            </div>
             <h3 className="font-semibold text-foreground text-sm mb-1">
               {filter ? 'No visions here' : 'Your vision board is empty'}
             </h3>
@@ -323,7 +345,6 @@ export default function VisionBoardPage() {
               ))}
           </div>
         )}
-
       </div>
     </div>
   );
