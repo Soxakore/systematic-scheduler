@@ -147,8 +147,8 @@
 
   /* Raised — frosted glass feel */
   .surface-raised {
-    background-color: hsl(0 0% 7%);
-    border: 1px solid hsl(0 0% 12%);
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
     backdrop-filter: blur(20px);
   }
@@ -163,8 +163,8 @@
     cursor: pointer;
   }
   .surface-interactive:hover {
-    background-color: hsl(0 0% 8%);
-    border-color: hsl(0 0% 15%);
+    background-color: hsl(var(--muted));
+    border-color: hsl(var(--border));
     box-shadow:
       0 0 0 1px hsl(0 0% 15%),
       0 4px 24px hsl(var(--primary) / 0.08),
@@ -182,7 +182,7 @@
 
   /* ── Header ───────────────────────────────────────────────── */
   .app-header {
-    background-color: hsl(0 0% 0% / 0.8);
+    background-color: hsl(var(--background) / 0.8);
     backdrop-filter: saturate(180%) blur(20px);
     border-bottom: 1px solid hsl(var(--border));
   }
@@ -205,11 +205,11 @@
   }
   .nav-item:hover {
     color: hsl(var(--foreground));
-    background-color: hsl(0 0% 8%);
+    background-color: hsl(var(--secondary));
   }
   .nav-item-active {
     color: hsl(var(--foreground));
-    background-color: hsl(0 0% 10%);
+    background-color: hsl(var(--secondary));
   }
 
   /* ── Buttons — Apple-style rounded pill ────────────────────── */
@@ -254,7 +254,7 @@
   }
   .btn-ghost:hover {
     color: hsl(var(--foreground));
-    background-color: hsl(0 0% 8%);
+    background-color: hsl(var(--secondary));
   }
 
   /* ── Inputs ───────────────────────────────────────────────── */

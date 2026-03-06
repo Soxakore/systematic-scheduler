@@ -4,8 +4,9 @@ import PageTransition from './PageTransition';
 import {
   CalendarDots, SquaresFour, SunHorizon, Eye,
   Target, ArrowsClockwise, CheckSquare, NotePencil,
-  ChartLineUp, GearSix, List, X, Plus,
+  ChartLineUp, GearSix, List, X, Plus, Sun, Moon,
 } from '@phosphor-icons/react';
+import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useData';
 import { format } from 'date-fns';
@@ -43,6 +44,20 @@ const NAV = [
   { to: '/analytics', icon: ChartLineUp,     label: 'Analytics' },
   { to: '/settings',  icon: GearSix,         label: 'Settings'  },
 ];
+
+/* ── Theme toggle ──────────────────────────────────────────── */
+function ThemeToggle() {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <button
+      onClick={toggleTheme}
+      className="p-2 rounded-lg text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+      aria-label="Toggle theme"
+    >
+      {theme === 'dark' ? <Sun className="h-4 w-4" weight="bold" /> : <Moon className="h-4 w-4" weight="bold" />}
+    </button>
+  );
+}
 
 /* ── Sidebar ───────────────────────────────────────────────── */
 function Sidebar({ onNewEvent, onClose }: { onNewEvent: () => void; onClose?: () => void }) {
@@ -184,7 +199,9 @@ export default function AppLayout() {
               />
             </div>
 
-            <div className="ml-auto" />
+            <div className="ml-auto flex items-center">
+              <ThemeToggle />
+            </div>
           </header>
 
           {/* Page */}
@@ -198,9 +215,9 @@ export default function AppLayout() {
         {/* Mobile bottom nav */}
         <nav className="fixed bottom-0 left-0 right-0 z-30 md:hidden flex items-center justify-around px-1 h-14"
           style={{
-            backgroundColor: 'hsl(0 0% 0% / 0.85)',
+            backgroundColor: 'hsl(var(--background) / 0.85)',
             backdropFilter: 'saturate(180%) blur(20px)',
-            borderTop: '1px solid hsl(0 0% 10%)',
+            borderTop: '1px solid hsl(var(--border))',
           }}>
           {NAV.slice(0, 5).map(({ to, icon: Icon }) => {
             const active = to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
