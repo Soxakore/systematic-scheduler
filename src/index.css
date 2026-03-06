@@ -205,11 +205,11 @@
   }
   .nav-item:hover {
     color: hsl(var(--foreground));
-    background-color: hsl(0 0% 8%);
+    background-color: hsl(var(--secondary));
   }
   .nav-item-active {
     color: hsl(var(--foreground));
-    background-color: hsl(0 0% 10%);
+    background-color: hsl(var(--secondary));
   }
 
   /* ── Buttons — Apple-style rounded pill ────────────────────── */
