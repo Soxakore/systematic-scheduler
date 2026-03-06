@@ -147,8 +147,8 @@
 
   /* Raised — frosted glass feel */
   .surface-raised {
-    background-color: hsl(0 0% 7%);
-    border: 1px solid hsl(0 0% 12%);
+    background-color: hsl(var(--card));
+    border: 1px solid hsl(var(--border));
     border-radius: var(--radius);
     backdrop-filter: blur(20px);
   }
