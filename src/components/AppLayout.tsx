@@ -215,9 +215,9 @@ export default function AppLayout() {
         {/* Mobile bottom nav */}
         <nav className="fixed bottom-0 left-0 right-0 z-30 md:hidden flex items-center justify-around px-1 h-14"
           style={{
-            backgroundColor: 'hsl(0 0% 0% / 0.85)',
+            backgroundColor: 'hsl(var(--background) / 0.85)',
             backdropFilter: 'saturate(180%) blur(20px)',
-            borderTop: '1px solid hsl(0 0% 10%)',
+            borderTop: '1px solid hsl(var(--border))',
           }}>
           {NAV.slice(0, 5).map(({ to, icon: Icon }) => {
             const active = to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);

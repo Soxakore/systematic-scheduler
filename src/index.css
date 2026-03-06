@@ -182,7 +182,7 @@
 
   /* ── Header ───────────────────────────────────────────────── */
   .app-header {
-    background-color: hsl(0 0% 0% / 0.8);
+    background-color: hsl(var(--background) / 0.8);
     backdrop-filter: saturate(180%) blur(20px);
     border-bottom: 1px solid hsl(var(--border));
   }

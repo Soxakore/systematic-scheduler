@@ -17,7 +17,9 @@ const ThemeContext = createContext<ThemeContextValue>({
 export function ThemeProvider({ children }: { children: ReactNode }) {
   const [theme, setTheme] = useState<Theme>(() => {
     if (typeof window !== 'undefined') {
-      return (localStorage.getItem('app-theme') as Theme) || 'dark';
+      const stored = localStorage.getItem('app-theme') as Theme | null;
+      if (stored) return stored;
+      return window.matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
     }
     return 'dark';
   });
