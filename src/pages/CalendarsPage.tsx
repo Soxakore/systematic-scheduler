@@ -84,7 +84,7 @@ export default function CalendarsPage() {
             </div>
             <div className="space-y-1.5">
               <Label>Color</Label>
-              <div className="flex gap-2">
+            <div className="flex gap-2 items-center flex-wrap">
                 {COLORS.map(c => (
                   <button
                     key={c}
@@ -93,6 +93,18 @@ export default function CalendarsPage() {
                     onClick={() => setColor(c)}
                   />
                 ))}
+                <label
+                  className={`w-7 h-7 rounded-full border-2 transition-all cursor-pointer flex items-center justify-center ${!COLORS.includes(color) ? 'border-foreground scale-110' : 'border-muted-foreground/30'}`}
+                  style={{ background: !COLORS.includes(color) ? color : 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }}
+                  title="Pick custom color"
+                >
+                  <input
+                    type="color"
+                    value={color}
+                    onChange={e => setColor(e.target.value)}
+                    className="sr-only"
+                  />
+                </label>
               </div>
             </div>
             <Button onClick={handleSave} className="w-full">{editingId ? 'Update' : 'Create'}</Button>
