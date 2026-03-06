@@ -180,7 +180,7 @@ export default function AppLayout() {
                 placeholder="Search…"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-8 px-3 text-[13px] rounded-lg bg-[hsl(0_0%_7%)] text-foreground placeholder:text-muted-foreground border border-transparent focus:border-primary/30 focus:outline-none focus:ring-0 transition-colors"
+                className="w-full h-8 px-3 text-[13px] rounded-lg bg-input text-foreground placeholder:text-muted-foreground border border-transparent focus:border-primary/30 focus:outline-none focus:ring-0 transition-colors"
               />
             </div>
 
