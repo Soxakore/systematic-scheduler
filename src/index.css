@@ -163,8 +163,8 @@
     cursor: pointer;
   }
   .surface-interactive:hover {
-    background-color: hsl(0 0% 8%);
-    border-color: hsl(0 0% 15%);
+    background-color: hsl(var(--muted));
+    border-color: hsl(var(--border));
     box-shadow:
       0 0 0 1px hsl(0 0% 15%),
       0 4px 24px hsl(var(--primary) / 0.08),
