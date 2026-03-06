@@ -185,7 +185,9 @@ export default function AppLayout() {
               />
             </div>
 
-            <div className="ml-auto" />
+            <div className="ml-auto flex items-center">
+              <ThemeToggle />
+            </div>
           </header>
 
           {/* Page */}
