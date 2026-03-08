@@ -164,6 +164,17 @@ export default function VisionBoardPage() {
     })();
   }, [user]);
 
+  /* ── Keyboard shortcuts (undo/redo + close color menu) ── */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'Z' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+      if (e.key === 'Escape') setColorMenu(null);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undo, redo]);
+
   /* ── Zoom via wheel / pinch ───────────────────────── */
   useEffect(() => {
     const el = viewportRef.current;
