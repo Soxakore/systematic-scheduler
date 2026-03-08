@@ -1,5 +1,5 @@
-import { useState, useRef, useCallback, useEffect } from 'react';
-import { useVisionBoardItems, useCreateVisionBoardItem, useUpdateVisionBoardItem, useDeleteVisionBoardItem } from '@/hooks/useData';
+import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
+import { useVisionBoardItems, useCreateVisionBoardItem, useUpdateVisionBoardItem, useDeleteVisionBoardItem, useVisionBoardConnections, useCreateVisionBoardConnection, useDeleteVisionBoardConnection } from '@/hooks/useData';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -7,11 +7,12 @@ import {
   Note, ImageSquare, PaintBrush, Eraser,
   Trash, SquaresFour, Star, Hand, Cursor,
   Check, Trophy, MagnifyingGlassPlus, MagnifyingGlassMinus,
+  ArrowRight,
 } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
 
-type ToolMode = 'select' | 'note' | 'pan' | 'draw' | 'eraser';
+type ToolMode = 'select' | 'note' | 'pan' | 'draw' | 'eraser' | 'connect';
 type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | null;
 const MIN_SIZE = 60;
 
@@ -26,6 +27,9 @@ export default function VisionBoardPage() {
   const createItem = useCreateVisionBoardItem();
   const updateItem = useUpdateVisionBoardItem();
   const deleteItem = useDeleteVisionBoardItem();
+  const { data: connections } = useVisionBoardConnections();
+  const createConnection = useCreateVisionBoardConnection();
+  const deleteConnection = useDeleteVisionBoardConnection();
 
   const [toolMode, setToolMode] = useState<ToolMode>('select');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -57,6 +61,10 @@ export default function VisionBoardPage() {
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawColor, setDrawColor] = useState('#1e293b');
   const [brushSize, setBrushSize] = useState(4);
+
+  // Connecting
+  const [connectFromId, setConnectFromId] = useState<string | null>(null);
+  const [connectMousePos, setConnectMousePos] = useState<{ x: number; y: number } | null>(null);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -231,6 +239,11 @@ export default function VisionBoardPage() {
       setResizeSizes(prev => ({ ...prev, [resizingId]: { x: nx, y: ny, w: nw, h: nh } }));
       return;
     }
+    // Track mouse for connect mode preview line
+    if (toolMode === 'connect' && connectFromId) {
+      const world = screenToWorld(e.clientX, e.clientY);
+      setConnectMousePos(world);
+    }
     if (!draggingId) return;
     const dx = (e.clientX - dragStart.current.x) / zoom;
     const dy = (e.clientY - dragStart.current.y) / zoom;
@@ -238,7 +251,7 @@ export default function VisionBoardPage() {
       ...prev,
       [draggingId]: { x: Math.max(0, dragItemStart.current.x + dx), y: Math.max(0, dragItemStart.current.y + dy) },
     }));
-  }, [isDrawing, isDrawMode, isPanning, draggingId, resizingId, resizeHandle, zoom, handleDrawMoveRaw]);
+  }, [isDrawing, isDrawMode, isPanning, draggingId, resizingId, resizeHandle, zoom, handleDrawMoveRaw, toolMode, connectFromId, screenToWorld]);
 
   const handleMouseUp = useCallback(async () => {
     if (isDrawing) { handleDrawEnd(); return; }
@@ -385,11 +398,51 @@ export default function VisionBoardPage() {
   const TOOLS: { id: ToolMode; icon: any; label: string }[] = [
     { id: 'select', icon: Cursor, label: 'Select' },
     { id: 'note', icon: Note, label: 'Note' },
+    { id: 'connect', icon: ArrowRight, label: 'Connect' },
     { id: 'draw', icon: PaintBrush, label: 'Draw' },
     { id: 'eraser', icon: Eraser, label: 'Eraser' },
     { id: 'pan', icon: Hand, label: 'Pan' },
   ];
 
+  /* ── Get center of an item for arrow drawing ───────── */
+  const getItemCenter = useCallback((itemId: string) => {
+    const item = items?.find(i => i.id === itemId);
+    if (!item) return { x: 0, y: 0 };
+    const pos = getItemPos(item);
+    const size = getItemSize(item);
+    return { x: pos.x + size.w / 2, y: pos.y + size.h / 2 };
+  }, [items, getItemPos, getItemSize]);
+
+  /* ── Handle clicking an item in connect mode ────────── */
+  const handleConnectClick = useCallback(async (itemId: string) => {
+    if (toolMode !== 'connect') return;
+    if (!connectFromId) {
+      setConnectFromId(itemId);
+      return;
+    }
+    if (connectFromId === itemId) {
+      setConnectFromId(null);
+      setConnectMousePos(null);
+      return;
+    }
+    // Check for existing connection
+    const exists = connections?.some(c =>
+      (c.from_item_id === connectFromId && c.to_item_id === itemId) ||
+      (c.from_item_id === itemId && c.to_item_id === connectFromId)
+    );
+    if (exists) {
+      toast.error('Already connected');
+      setConnectFromId(null);
+      setConnectMousePos(null);
+      return;
+    }
+    try {
+      await createConnection.mutateAsync({ from_item_id: connectFromId, to_item_id: itemId });
+      toast.success('Connected!');
+    } catch { toast.error('Failed to connect'); }
+    setConnectFromId(null);
+    setConnectMousePos(null);
+  }, [toolMode, connectFromId, connections, createConnection]);
   return (
     <div className="h-full overflow-hidden flex">
       {/* ── Left Toolbar ───────────────────────────────── */}
@@ -397,7 +450,7 @@ export default function VisionBoardPage() {
         {TOOLS.map(tool => (
           <button
             key={tool.id}
-            onClick={() => setToolMode(tool.id)}
+            onClick={() => { setToolMode(tool.id); setConnectFromId(null); setConnectMousePos(null); }}
             className={cn(
               'flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium transition-all gap-0.5',
               toolMode === tool.id ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
@@ -474,7 +527,9 @@ export default function VisionBoardPage() {
           )}
 
           <span className="ml-auto text-[9px] text-muted-foreground">
-            {isDrawMode ? 'Draw freely · Auto-saved' : 'Scroll to pan · Ctrl+scroll to zoom'}
+            {toolMode === 'connect'
+              ? (connectFromId ? 'Click another item to connect · Click same to cancel' : 'Click an item to start connecting')
+              : isDrawMode ? 'Draw freely · Auto-saved' : 'Scroll to pan · Ctrl+scroll to zoom'}
           </span>
         </div>
 
@@ -515,6 +570,51 @@ export default function VisionBoardPage() {
               style={{ position: 'absolute', top: 0, left: 0, width: CANVAS_W, height: CANVAS_H, pointerEvents: 'none' }}
             />
 
+            {/* SVG connection arrows */}
+            <svg style={{ position: 'absolute', top: 0, left: 0, width: CANVAS_W, height: CANVAS_H, pointerEvents: 'none', zIndex: 5 }}>
+              <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--primary))" />
+                </marker>
+              </defs>
+              {/* Existing connections */}
+              {connections?.map(conn => {
+                const from = getItemCenter(conn.from_item_id);
+                const to = getItemCenter(conn.to_item_id);
+                return (
+                  <g key={conn.id}>
+                    <line
+                      x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+                      stroke="hsl(var(--primary))" strokeWidth={2} markerEnd="url(#arrowhead)" opacity={0.6}
+                    />
+                    {/* Invisible wider line for easier click target */}
+                    {toolMode === 'select' && (
+                      <line
+                        x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+                        stroke="transparent" strokeWidth={14}
+                        style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
+                        onClick={() => {
+                          if (confirm('Remove this connection?')) {
+                            deleteConnection.mutateAsync(conn.id);
+                            toast.success('Connection removed');
+                          }
+                        }}
+                      />
+                    )}
+                  </g>
+                );
+              })}
+              {/* Preview line while connecting */}
+              {toolMode === 'connect' && connectFromId && connectMousePos && (
+                <line
+                  x1={getItemCenter(connectFromId).x} y1={getItemCenter(connectFromId).y}
+                  x2={connectMousePos.x} y2={connectMousePos.y}
+                  stroke="hsl(var(--primary))" strokeWidth={2} strokeDasharray="6 4" opacity={0.5}
+                  markerEnd="url(#arrowhead)"
+                />
+              )}
+            </svg>
+
             {/* Cards */}
             {isLoading ? (
               <div className="absolute top-1/3 left-1/2 -translate-x-1/2 text-sm text-muted-foreground animate-pulse">Loading…</div>
@@ -547,11 +647,14 @@ export default function VisionBoardPage() {
                     'absolute group',
                     (isDragging || isResizing) ? 'z-50' : 'z-10',
                     isDragging ? 'cursor-grabbing' : '',
-                    isDrawMode ? 'pointer-events-none opacity-50' : 'cursor-grab',
+                    isDrawMode ? 'pointer-events-none opacity-50' : '',
+                    toolMode === 'connect' ? 'cursor-pointer' : 'cursor-grab',
+                    toolMode === 'connect' && connectFromId === item.id && 'ring-2 ring-primary rounded-lg',
                   )}
                   style={{ left: pos.x, top: pos.y, width: size.w }}
-                  onMouseDown={e => handleCardMouseDown(e, item)}
-                  onDoubleClick={() => !isDrawMode && startEditing(item)}
+                  onMouseDown={e => { if (toolMode !== 'connect') handleCardMouseDown(e, item); }}
+                  onDoubleClick={() => !isDrawMode && toolMode !== 'connect' && startEditing(item)}
+                  onClick={e => { if (toolMode === 'connect') { e.stopPropagation(); handleConnectClick(item.id); } }}
                 >
                   {/* Image items — raw image, no wrapper */}
                   {hasImage && (
