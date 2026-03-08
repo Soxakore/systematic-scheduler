@@ -15,6 +15,8 @@ import { cn } from '@/lib/utils';
 import type { ViewType } from '@/types';
 export default function CalendarPage() {
   const { currentView, setCurrentView, currentDate, setCurrentDate } = useAppContext();
+  const [pickerOpen, setPickerOpen] = useState(false);
+  const isMobile = useIsMobile();
   const isMobile = useIsMobile();
 
   const views: { value: ViewType; label: string }[] = [
