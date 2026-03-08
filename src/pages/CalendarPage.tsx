@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAppContext } from '@/components/AppLayout';
 import MonthView from '@/components/calendar/MonthView';
 import WeekView from '@/components/calendar/WeekView';
@@ -6,12 +7,15 @@ import AgendaView from '@/components/calendar/AgendaView';
 import EventDialog from '@/components/EventDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 import { addMonths, addWeeks, addDays, format, startOfWeek, endOfWeek } from 'date-fns';
+import { cn } from '@/lib/utils';
 import type { ViewType } from '@/types';
-
 export default function CalendarPage() {
   const { currentView, setCurrentView, currentDate, setCurrentDate } = useAppContext();
+  const [pickerOpen, setPickerOpen] = useState(false);
   const isMobile = useIsMobile();
 
   const views: { value: ViewType; label: string }[] = [
@@ -61,9 +65,28 @@ export default function CalendarPage() {
           <Button variant="ghost" size="sm" className="h-7 px-2.5 text-xs font-medium" onClick={navigateToday}>
             Today
           </Button>
-          <span className="text-sm font-semibold text-foreground ml-1 whitespace-nowrap">
-            {getDateLabel()}
-          </span>
+          <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-sm font-semibold text-foreground ml-1 whitespace-nowrap gap-1.5">
+                {getDateLabel()}
+                <CalendarIcon className="h-3.5 w-3.5 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={currentDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setCurrentDate(date);
+                    setPickerOpen(false);
+                  }
+                }}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
