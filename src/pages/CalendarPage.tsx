@@ -6,6 +6,7 @@ import AgendaView from '@/components/calendar/AgendaView';
 import EventDialog from '@/components/EventDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import type { ViewType } from '@/types';
 
 export default function CalendarPage() {
@@ -21,6 +22,25 @@ export default function CalendarPage() {
 
   return (
     <div className="h-full flex flex-col">
+      {/* Desktop view switcher */}
+      {!isMobile && (
+        <div className="flex items-center justify-end px-4 py-2 border-b border-border">
+          <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+            {views.map(v => (
+              <Button
+                key={v.value}
+                variant={currentView === v.value ? 'default' : 'ghost'}
+                size="sm"
+                className="text-xs h-7 px-3"
+                onClick={() => setCurrentView(v.value)}
+              >
+                {v.label}
+              </Button>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* Mobile view switcher */}
       {isMobile && (
         <div className="flex items-center gap-1 p-2 border-b overflow-x-auto">
