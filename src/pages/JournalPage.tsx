@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { CaretLeft, CaretRight, Plus, X, Smiley, SmileySad, SmileyMelting, SmileyMeh, SmileyWink } from '@phosphor-icons/react';
+import { CaretLeft, CaretRight, Plus, X, Smiley, SmileySad, SmileyMelting, SmileyMeh, SmileyWink, Star, Heart, Trophy, Lightbulb } from '@phosphor-icons/react';
 import icoJournal from '@/assets/icons/icon-journal.svg';
 import icoLightning from '@/assets/icons/icon-lightning.svg';
 import icoStar from '@/assets/icons/icon-star.svg';
