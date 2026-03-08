@@ -830,7 +830,7 @@ img{max-width:100%;border-radius:6px;margin-top:8px}</style></head><body>
       return;
     }
     try {
-      await createConnection.mutateAsync({ from_item_id: connectFromId, to_item_id: itemId });
+      await createConnection.mutateAsync({ from_item_id: connectFromId, to_item_id: itemId, board_id: activeBoardId });
       toast.success('Connected!');
     } catch { toast.error('Failed to connect'); }
     setConnectFromId(null);
