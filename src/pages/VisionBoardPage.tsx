@@ -635,10 +635,10 @@ export default function VisionBoardPage() {
 
         <div className="w-7 h-px bg-border my-1.5" />
 
-        {/* Drawing tools group — collapsed shows active or PaintBrush */}
-        {!drawToolsExpanded ? (
+        {/* Drawing tools group — collapsed shows active or PaintBrush, expands as flyout panel to the right */}
+        <div className="relative">
           <button
-            onClick={() => setDrawToolsExpanded(true)}
+            onClick={() => setDrawToolsExpanded(prev => !prev)}
             className={cn(
               'flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium transition-all gap-0.5 relative',
               drawToolActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
@@ -652,23 +652,26 @@ export default function VisionBoardPage() {
             {activeDrawTool ? activeDrawTool.label : 'Draw'}
             <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
           </button>
-        ) : (
-          <div className="flex flex-col items-center gap-0.5 bg-secondary/50 rounded-xl py-1 px-0.5">
-            {DRAW_TOOLS.map(tool => (
-              <button
-                key={tool.id}
-                onClick={() => { switchTool(tool.id); setDrawToolsExpanded(false); }}
-                className={cn(
-                  'flex flex-col items-center justify-center w-10 h-[42px] rounded-lg text-[9px] font-medium transition-all gap-0.5',
-                  toolMode === tool.id ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-background hover:text-foreground'
-                )}
-              >
-                <tool.icon className="h-[16px] w-[16px]" weight={toolMode === tool.id ? 'fill' : 'regular'} />
-                {tool.label}
-              </button>
-            ))}
-          </div>
-        )}
+
+          {/* Flyout panel — appears parallel to the sidebar */}
+          {drawToolsExpanded && (
+            <div className="absolute left-full top-0 ml-1 z-50 flex flex-col items-center gap-0.5 bg-background border border-border rounded-xl py-1.5 px-1 shadow-lg">
+              {DRAW_TOOLS.map(tool => (
+                <button
+                  key={tool.id}
+                  onClick={() => { switchTool(tool.id); setDrawToolsExpanded(false); }}
+                  className={cn(
+                    'flex flex-col items-center justify-center w-11 h-[46px] rounded-lg text-[9px] font-medium transition-all gap-0.5',
+                    toolMode === tool.id ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                  )}
+                >
+                  <tool.icon className="h-[16px] w-[16px]" weight={toolMode === tool.id ? 'fill' : 'regular'} />
+                  {tool.label}
+                </button>
+              ))}
+            </div>
+          )}
+        </div>
 
         <div className="w-7 h-px bg-border my-1.5" />
 
