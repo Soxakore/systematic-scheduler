@@ -1066,6 +1066,43 @@ export default function VisionBoardPage() {
           )}
         </div>
       </div>
+
+      {/* ── Color Picker Context Menu ───────────────────── */}
+      {colorMenu && (
+        <div
+          className="fixed inset-0 z-[100]"
+          onClick={() => setColorMenu(null)}
+          onContextMenu={e => { e.preventDefault(); setColorMenu(null); }}
+        >
+          <div
+            className="absolute bg-popover border border-border rounded-xl shadow-xl p-3 space-y-2"
+            style={{ left: colorMenu.x, top: colorMenu.y }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <Palette className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Note Color</span>
+            </div>
+            <div className="grid grid-cols-5 gap-1.5">
+              {['#6366f1', '#3b82f6', '#22c55e', '#14b8a6', '#eab308', '#f97316', '#ef4444', '#ec4899', '#a855f7', '#64748b'].map(c => (
+                <button
+                  key={c}
+                  className={cn(
+                    'h-7 w-7 rounded-lg border-2 transition-transform hover:scale-110',
+                    items?.find(i => i.id === colorMenu.itemId)?.color === c ? 'border-foreground scale-110' : 'border-transparent',
+                  )}
+                  style={{ background: c }}
+                  onClick={() => {
+                    updateItem.mutateAsync({ id: colorMenu.itemId, color: c });
+                    setColorMenu(null);
+                    toast.success('Color updated');
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
