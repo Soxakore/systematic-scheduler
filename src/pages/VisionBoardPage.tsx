@@ -1035,20 +1035,37 @@ img{max-width:100%;border-radius:6px;margin-top:8px}</style></head><body>
             </button>
 
             {boardMenuOpen && (
-              <div className="absolute top-full left-0 mt-1 z-50 w-56 bg-background border border-border rounded-lg shadow-lg py-1">
-                {/* Default board (items with no board_id) */}
+              <div className="absolute top-full left-0 mt-1 z-50 w-64 bg-background border border-border rounded-lg shadow-lg py-1">
+                {/* Sort tabs */}
+                <div className="flex items-center gap-0.5 px-2 py-1.5 border-b border-border mb-1">
+                  <span className="text-[9px] text-muted-foreground mr-1">Sort:</span>
+                  {([['recent', 'Recent'], ['name', 'Name'], ['created', 'Created']] as const).map(([key, label]) => (
+                    <button
+                      key={key}
+                      onClick={() => setBoardSortBy(key)}
+                      className={cn(
+                        'px-2 py-0.5 rounded text-[9px] font-medium transition-colors',
+                        boardSortBy === key ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-secondary'
+                      )}
+                    >
+                      {label}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Default board */}
                 <button
                   onClick={() => { setActiveBoardId(null); setBoardMenuOpen(false); }}
                   className={cn(
-                    'w-full text-left px-3 py-1.5 text-[11px] font-medium transition-colors flex items-center justify-between',
+                    'w-full text-left px-3 py-2 text-[11px] font-medium transition-colors flex items-center justify-between',
                     !activeBoardId ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-secondary'
                   )}
                 >
-                  Default Board
+                  <span>Default Board</span>
                   {!activeBoardId && <Check className="h-3 w-3" />}
                 </button>
 
-                {boards?.map((board, idx) => (
+                {sortedBoards.map((board) => (
                   <div key={board.id} className="flex items-center group">
                     {renamingBoardId === board.id ? (
                       <input
@@ -1075,12 +1092,20 @@ img{max-width:100%;border-radius:6px;margin-top:8px}</style></head><body>
                       <button
                         onClick={() => { setActiveBoardId(board.id); setBoardMenuOpen(false); }}
                         className={cn(
-                          'flex-1 text-left px-3 py-1.5 text-[11px] font-medium transition-colors flex items-center justify-between',
-                          activeBoardId === board.id ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-secondary'
+                          'flex-1 text-left px-3 py-2 transition-colors',
+                          activeBoardId === board.id ? 'bg-primary/10' : 'hover:bg-secondary'
                         )}
                       >
-                        {board.name}
-                        {activeBoardId === board.id && <Check className="h-3 w-3" />}
+                        <div className="flex items-center justify-between">
+                          <span className={cn('text-[11px] font-medium', activeBoardId === board.id ? 'text-primary' : 'text-foreground')}>
+                            {board.name}
+                          </span>
+                          {activeBoardId === board.id && <Check className="h-3 w-3 text-primary" />}
+                        </div>
+                        <div className="flex items-center gap-1 mt-0.5">
+                          <Clock className="h-2.5 w-2.5 text-muted-foreground/60" />
+                          <span className="text-[9px] text-muted-foreground/60">{formatBoardDate(board.updated_at)}</span>
+                        </div>
                       </button>
                     )}
                     <button
