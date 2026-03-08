@@ -2,23 +2,32 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useVisionBoardItems, useCreateVisionBoardItem, useUpdateVisionBoardItem, useDeleteVisionBoardItem } from '@/hooks/useData';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
 import { toast } from 'sonner';
 import {
-  Note, LinkSimple, ListChecks, LineSegment, SquaresFour,
-  Columns, ChatText, ImageSquare, UploadSimple, PaintBrush,
-  Trash, Plus, Star, MagnifyingGlass, DotsThreeOutline,
+  Note, LinkSimple, ImageSquare, PaintBrush,
+  Trash, Plus, SquaresFour, Star, Hand, Cursor,
+  Check, Trophy, X,
   Briefcase, Barbell, Heart, CurrencyDollar, GraduationCap,
   Airplane, House, Users,
 } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
-import VisionCard, { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
-import DrawingCanvas from '@/components/vision/DrawingCanvas';
+import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
 
-type ToolType = 'note' | 'link' | 'image' | 'draw' | null;
+type ToolMode = 'select' | 'note' | 'draw';
+
+interface CanvasItem {
+  id: string;
+  title: string;
+  description: string | null;
+  category: string | null;
+  color: string | null;
+  image_url: string | null;
+  position_x: number;
+  position_y: number;
+  width: number;
+  height: number;
+  is_achieved: boolean;
+}
 
 export default function VisionBoardPage() {
   const { user } = useAuth();
@@ -27,405 +36,476 @@ export default function VisionBoardPage() {
   const updateItem = useUpdateVisionBoardItem();
   const deleteItem = useDeleteVisionBoardItem();
 
-  const [activeTool, setActiveTool] = useState<ToolType>(null);
-  const [showCreate, setShowCreate] = useState(false);
-  const [title, setTitle] = useState('');
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState('general');
-  const [imageUrl, setImageUrl] = useState('');
+  const [toolMode, setToolMode] = useState<ToolMode>('select');
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editTitle, setEditTitle] = useState('');
+  const [editDesc, setEditDesc] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [imageTab, setImageTab] = useState('upload');
 
-  // Canvas pan/zoom
+  // Dragging
+  const [draggingId, setDraggingId] = useState<string | null>(null);
+  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
+  const [dragItemStart, setDragItemStart] = useState({ x: 0, y: 0 });
+  const [dragPositions, setDragPositions] = useState<Record<string, { x: number; y: number }>>({});
+
   const canvasRef = useRef<HTMLDivElement>(null);
-  const [draggingItem, setDraggingItem] = useState<string | null>(null);
-  const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  /* ── Upload ───────────────────────────────────────────── */
-  const uploadFile = async (file: File): Promise<string | null> => {
-    if (!user) return null;
-    setUploading(true);
-    try {
-      const ext = file.name.split('.').pop();
-      const path = `${user.id}/${Date.now()}.${ext}`;
-      const { error } = await supabase.storage.from('vision-images').upload(path, file);
-      if (error) throw error;
-      const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
-      return data.publicUrl;
-    } catch (err: any) {
-      toast.error('Upload failed: ' + err.message);
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const url = await uploadFile(file);
-    if (url) setImageUrl(url);
-  };
-
-  const handleDrawingSave = async (dataUrl: string) => {
-    if (!user) return;
-    setUploading(true);
-    try {
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      const path = `${user.id}/drawing-${Date.now()}.png`;
-      const { error } = await supabase.storage.from('vision-images').upload(path, blob, { contentType: 'image/png' });
-      if (error) throw error;
-      const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
-      setImageUrl(data.publicUrl);
-      toast.success('Drawing saved!');
-    } catch (err: any) {
-      toast.error('Drawing upload failed: ' + err.message);
-    } finally {
-      setUploading(false);
-    }
-  };
-
-  const handleCreate = async () => {
-    if (!title.trim()) return;
-    const cat = CATEGORIES.find(c => c.value === category) || CATEGORIES[8];
-    const count = items?.length || 0;
-    // Place new items in a grid-like pattern
-    const col = count % 4;
-    const row = Math.floor(count / 4);
-    await createItem.mutateAsync({
-      title: title.trim(),
-      description: description.trim(),
-      category,
-      color: cat.color,
-      icon: 'star',
-      position_x: 40 + col * 280,
-      position_y: 40 + row * 260,
-      width: 240,
-      height: 200,
-      image_url: imageUrl.trim() || null,
-      is_achieved: false,
-      achieved_at: null,
-      sort_order: count,
-    });
-    setTitle(''); setDescription(''); setCategory('general'); setImageUrl('');
-    setShowCreate(false);
-    setActiveTool(null);
-    toast.success('Vision added');
-  };
-
-  const handleToolClick = (tool: ToolType) => {
-    if (tool === activeTool) {
-      setActiveTool(null);
-      return;
-    }
-    setActiveTool(tool);
-    if (tool === 'note' || tool === 'link' || tool === 'image') {
-      setShowCreate(true);
-      if (tool === 'image') setImageTab('upload');
-      if (tool === 'link') setImageTab('url');
-    }
-    if (tool === 'draw') {
-      setShowCreate(true);
-      setImageTab('draw');
-    }
-  };
-
-  /* ── Freeform drag on canvas ─────────────────────── */
-  const handleItemMouseDown = (e: React.MouseEvent, itemId: string, posX: number, posY: number) => {
-    e.preventDefault();
-    const rect = canvasRef.current?.getBoundingClientRect();
-    if (!rect) return;
-    setDraggingItem(itemId);
-    setDragOffset({ x: e.clientX - posX, y: e.clientY - posY });
-  };
-
-  const handleCanvasMouseMove = useCallback((e: React.MouseEvent) => {
-    if (!draggingItem) return;
-    const item = items?.find(i => i.id === draggingItem);
-    if (!item) return;
-    // We update position visually via style, actual save on mouseUp
-  }, [draggingItem, items]);
-
-  const handleCanvasMouseUp = useCallback(async (e: React.MouseEvent) => {
-    if (!draggingItem) return;
-    const newX = Math.max(0, e.clientX - dragOffset.x);
-    const newY = Math.max(0, e.clientY - dragOffset.y);
-    await updateItem.mutateAsync({ id: draggingItem, position_x: Math.round(newX), position_y: Math.round(newY) });
-    setDraggingItem(null);
-  }, [draggingItem, dragOffset, updateItem]);
+  const titleInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
 
   const totalCount = items?.length || 0;
   const achievedCount = items?.filter(i => i.is_achieved).length || 0;
 
+  /* ── Click on canvas to create a note ─────────────── */
+  const handleCanvasClick = async (e: React.MouseEvent) => {
+    // Only create on direct canvas click, not on cards
+    if (e.target !== canvasRef.current && !(e.target as HTMLElement).classList.contains('canvas-bg')) return;
+    if (toolMode !== 'note') return;
+    if (!user) return;
+
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+
+    const scrollLeft = canvasRef.current?.scrollLeft || 0;
+    const scrollTop = canvasRef.current?.scrollTop || 0;
+    const x = e.clientX - rect.left + scrollLeft;
+    const y = e.clientY - rect.top + scrollTop;
+
+    const count = items?.length || 0;
+    const newItem: any = await createItem.mutateAsync({
+      title: '',
+      description: '',
+      category: 'general',
+      color: '#64748b',
+      icon: 'star',
+      position_x: Math.round(x - 120),
+      position_y: Math.round(y - 20),
+      width: 240,
+      height: 160,
+      image_url: null,
+      is_achieved: false,
+      achieved_at: null,
+      sort_order: count,
+    });
+
+    // Focus the new card for editing
+    if (newItem?.id) {
+      setEditingId(newItem.id);
+      setEditTitle('');
+      setEditDesc('');
+      setTimeout(() => {
+        titleInputRefs.current[newItem.id]?.focus();
+      }, 100);
+    }
+  };
+
+  /* ── File drop on canvas ──────────────────────────── */
+  const handleDrop = async (e: React.DragEvent) => {
+    e.preventDefault();
+    if (!user) return;
+
+    const rect = canvasRef.current?.getBoundingClientRect();
+    if (!rect) return;
+    const scrollLeft = canvasRef.current?.scrollLeft || 0;
+    const scrollTop = canvasRef.current?.scrollTop || 0;
+    const x = e.clientX - rect.left + scrollLeft;
+    const y = e.clientY - rect.top + scrollTop;
+
+    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    if (files.length === 0) return;
+
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      setUploading(true);
+      try {
+        const ext = file.name.split('.').pop();
+        const path = `${user.id}/${Date.now()}-${i}.${ext}`;
+        const { error } = await supabase.storage.from('vision-images').upload(path, file);
+        if (error) throw error;
+        const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
+
+        await createItem.mutateAsync({
+          title: file.name.replace(/\.[^/.]+$/, ''),
+          description: '',
+          category: 'general',
+          color: '#64748b',
+          icon: 'star',
+          position_x: Math.round(x + i * 20 - 120),
+          position_y: Math.round(y + i * 20 - 20),
+          width: 260,
+          height: 220,
+          image_url: data.publicUrl,
+          is_achieved: false,
+          achieved_at: null,
+          sort_order: (items?.length || 0) + i,
+        });
+      } catch (err: any) {
+        toast.error('Upload failed: ' + err.message);
+      } finally {
+        setUploading(false);
+      }
+    }
+    toast.success(`${files.length} image(s) added`);
+  };
+
+  /* ── Card dragging ────────────────────────────────── */
+  const handleCardMouseDown = (e: React.MouseEvent, item: CanvasItem) => {
+    if (toolMode !== 'select' || editingId === item.id) return;
+    e.preventDefault();
+    e.stopPropagation();
+    setDraggingId(item.id);
+    setDragStart({ x: e.clientX, y: e.clientY });
+    setDragItemStart({ x: item.position_x, y: item.position_y });
+  };
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (!draggingId) return;
+    const dx = e.clientX - dragStart.x;
+    const dy = e.clientY - dragStart.y;
+    setDragPositions(prev => ({
+      ...prev,
+      [draggingId]: {
+        x: Math.max(0, dragItemStart.x + dx),
+        y: Math.max(0, dragItemStart.y + dy),
+      },
+    }));
+  }, [draggingId, dragStart, dragItemStart]);
+
+  const handleMouseUp = useCallback(async () => {
+    if (!draggingId) return;
+    const pos = dragPositions[draggingId];
+    if (pos) {
+      await updateItem.mutateAsync({
+        id: draggingId,
+        position_x: Math.round(pos.x),
+        position_y: Math.round(pos.y),
+      });
+    }
+    setDraggingId(null);
+    setDragPositions(prev => {
+      const next = { ...prev };
+      delete next[draggingId];
+      return next;
+    });
+  }, [draggingId, dragPositions, updateItem]);
+
+  /* ── Inline editing ───────────────────────────────── */
+  const startEditing = (item: CanvasItem) => {
+    setEditingId(item.id);
+    setEditTitle(item.title || '');
+    setEditDesc(item.description || '');
+  };
+
+  const saveEditing = async () => {
+    if (!editingId) return;
+    await updateItem.mutateAsync({
+      id: editingId,
+      title: editTitle.trim() || 'Untitled',
+      description: editDesc.trim(),
+    });
+    setEditingId(null);
+  };
+
+  /* ── Render ───────────────────────────────────────── */
+  const getItemPos = (item: CanvasItem) => {
+    if (dragPositions[item.id]) return dragPositions[item.id];
+    return { x: item.position_x, y: item.position_y };
+  };
+
   const TOOLS = [
-    { id: 'note' as ToolType, icon: Note, label: 'Note' },
-    { id: 'link' as ToolType, icon: LinkSimple, label: 'Link' },
-    { id: 'image' as ToolType, icon: ImageSquare, label: 'Add image' },
-    { id: 'draw' as ToolType, icon: PaintBrush, label: 'Draw' },
+    { id: 'select' as ToolMode, icon: Cursor, label: 'Select' },
+    { id: 'note' as ToolMode, icon: Note, label: 'Note' },
   ];
 
   return (
     <div className="h-full overflow-hidden flex">
-      {/* ── Left Toolbar (Milanote-style) ──────────────── */}
-      <div className="shrink-0 w-16 border-r border-border bg-background flex flex-col items-center py-3 gap-1">
+      {/* ── Left Toolbar ───────────────────────────────── */}
+      <div className="shrink-0 w-[60px] border-r border-border bg-background flex flex-col items-center py-3 gap-0.5">
         {TOOLS.map(tool => (
           <button
             key={tool.id}
-            onClick={() => handleToolClick(tool.id)}
+            onClick={() => setToolMode(tool.id)}
             className={cn(
-              'flex flex-col items-center justify-center w-12 h-12 rounded-xl text-[10px] font-medium transition-all gap-0.5',
-              activeTool === tool.id
-                ? 'bg-primary/10 text-primary border border-primary/20'
+              'flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium transition-all gap-0.5',
+              toolMode === tool.id
+                ? 'bg-primary/10 text-primary'
                 : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
             )}
           >
-            <tool.icon className="h-5 w-5" weight={activeTool === tool.id ? 'fill' : 'regular'} />
+            <tool.icon className="h-[18px] w-[18px]" weight={toolMode === tool.id ? 'fill' : 'regular'} />
             {tool.label}
           </button>
         ))}
 
-        <div className="w-8 h-px bg-border my-2" />
+        <div className="w-7 h-px bg-border my-1.5" />
 
-        {/* Quick add */}
-        <button
-          onClick={() => { setActiveTool('note'); setShowCreate(true); }}
-          className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-[10px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5"
-        >
-          <Plus className="h-5 w-5" weight="bold" />
-          Add
-        </button>
+        {/* Image upload */}
+        <label className="flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5 cursor-pointer">
+          <ImageSquare className="h-[18px] w-[18px]" />
+          Image
+          <input
+            type="file"
+            accept="image/*"
+            multiple
+            className="hidden"
+            onChange={async (e) => {
+              const files = Array.from(e.target.files || []);
+              if (!files.length || !user) return;
+              for (const file of files) {
+                setUploading(true);
+                try {
+                  const ext = file.name.split('.').pop();
+                  const path = `${user.id}/${Date.now()}.${ext}`;
+                  const { error } = await supabase.storage.from('vision-images').upload(path, file);
+                  if (error) throw error;
+                  const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
+                  await createItem.mutateAsync({
+                    title: file.name.replace(/\.[^/.]+$/, ''),
+                    description: '',
+                    category: 'general',
+                    color: '#64748b',
+                    icon: 'star',
+                    position_x: 40 + Math.random() * 400,
+                    position_y: 40 + Math.random() * 300,
+                    width: 260,
+                    height: 220,
+                    image_url: data.publicUrl,
+                    is_achieved: false,
+                    achieved_at: null,
+                    sort_order: items?.length || 0,
+                  });
+                } catch (err: any) {
+                  toast.error('Upload failed: ' + err.message);
+                } finally {
+                  setUploading(false);
+                }
+              }
+              toast.success('Image(s) added');
+              e.target.value = '';
+            }}
+          />
+        </label>
 
         <div className="mt-auto" />
-
-        {/* Trash zone */}
-        <button className="flex flex-col items-center justify-center w-12 h-12 rounded-xl text-[10px] font-medium text-muted-foreground hover:bg-destructive/10 hover:text-destructive transition-all gap-0.5">
-          <Trash className="h-5 w-5" />
-          Trash
-        </button>
       </div>
 
-      {/* ── Canvas Area ────────────────────────────────── */}
+      {/* ── Canvas ─────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden">
-        {/* Top bar */}
-        <div className="shrink-0 h-12 border-b border-border bg-background flex items-center px-4 gap-3">
-          <h1 className="text-sm font-semibold text-foreground">Vision Board</h1>
+        {/* Minimal top bar */}
+        <div className="shrink-0 h-10 border-b border-border bg-background flex items-center px-4">
+          <h1 className="text-xs font-semibold text-foreground">Vision Board</h1>
           {totalCount > 0 && (
-            <span className="text-[11px] text-muted-foreground">
+            <span className="text-[10px] text-muted-foreground ml-2">
               {achievedCount}/{totalCount} achieved
             </span>
           )}
-          <div className="ml-auto flex items-center gap-2">
-            <button
-              onClick={() => { setActiveTool('note'); setShowCreate(true); }}
-              className="h-7 px-3 rounded-lg bg-primary text-primary-foreground text-xs font-semibold flex items-center gap-1.5 hover:bg-primary/90 transition-colors"
-            >
-              <Plus className="h-3.5 w-3.5" /> Add Vision
-            </button>
-          </div>
+          {uploading && (
+            <span className="text-[10px] text-primary ml-3 animate-pulse">Uploading…</span>
+          )}
         </div>
 
-        {/* Freeform canvas */}
+        {/* Canvas area */}
         <div
           ref={canvasRef}
-          className="flex-1 overflow-auto relative"
+          className={cn(
+            'flex-1 overflow-auto relative',
+            toolMode === 'note' ? 'cursor-crosshair' : 'cursor-default',
+          )}
           style={{
-            backgroundImage: 'radial-gradient(circle, hsl(var(--border)) 1px, transparent 1px)',
-            backgroundSize: '24px 24px',
-            backgroundColor: 'hsl(var(--secondary))',
+            backgroundImage: 'radial-gradient(circle, hsl(var(--border) / 0.5) 1px, transparent 1px)',
+            backgroundSize: '20px 20px',
+            backgroundColor: 'hsl(var(--secondary) / 0.5)',
           }}
-          onMouseMove={handleCanvasMouseMove}
-          onMouseUp={handleCanvasMouseUp}
-          onMouseLeave={() => setDraggingItem(null)}
+          onClick={handleCanvasClick}
+          onMouseMove={handleMouseMove}
+          onMouseUp={handleMouseUp}
+          onMouseLeave={handleMouseUp}
+          onDragOver={(e) => e.preventDefault()}
+          onDrop={handleDrop}
         >
           {isLoading ? (
             <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-sm text-muted-foreground">Loading…</div>
+              <div className="text-sm text-muted-foreground animate-pulse">Loading…</div>
             </div>
           ) : totalCount === 0 ? (
             /* Empty state */
-            <div className="absolute inset-0 flex items-center justify-center">
-              <div className="text-center px-6">
-                <div className="h-20 w-20 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-5">
-                  <SquaresFour className="h-10 w-10 text-primary" weight="duotone" />
+            <div className="canvas-bg absolute inset-0 flex items-center justify-center pointer-events-none">
+              <div className="text-center px-6 pointer-events-auto">
+                <div className="h-16 w-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
+                  <SquaresFour className="h-8 w-8 text-primary" weight="duotone" />
                 </div>
-                <h3 className="font-semibold text-foreground text-lg mb-2">
-                  Start your vision board
+                <h3 className="font-semibold text-foreground text-base mb-1.5">
+                  Your vision board
                 </h3>
-                <p className="text-sm text-muted-foreground mb-6 max-w-sm mx-auto leading-relaxed">
-                  Use the toolbar on the left to add notes, images, links, or drawings. 
-                  Drag items freely on the canvas to arrange your dreams.
+                <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto leading-relaxed">
+                  Select <strong>Note</strong> from the toolbar and click anywhere to write.
+                  <br />
+                  Drag & drop images directly onto the canvas.
                 </p>
-                <div className="flex items-center justify-center gap-3">
-                  <button
-                    onClick={() => { setActiveTool('note'); setShowCreate(true); }}
-                    className="h-9 px-5 rounded-lg bg-primary text-primary-foreground text-sm font-semibold flex items-center gap-2 hover:bg-primary/90 transition-colors"
-                  >
-                    <Note className="h-4 w-4" /> Add a note
-                  </button>
-                  <button
-                    onClick={() => { setActiveTool('image'); setShowCreate(true); setImageTab('upload'); }}
-                    className="h-9 px-5 rounded-lg bg-secondary text-foreground text-sm font-medium flex items-center gap-2 border border-border hover:bg-secondary/80 transition-colors"
-                  >
-                    <ImageSquare className="h-4 w-4" /> Add image
-                  </button>
+                <div className="flex items-center justify-center gap-6 text-muted-foreground text-xs">
+                  <div className="flex items-center gap-1.5">
+                    <Note className="h-4 w-4" /> Click to note
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <ImageSquare className="h-4 w-4" /> Drop images
+                  </div>
+                  <div className="flex items-center gap-1.5">
+                    <Hand className="h-4 w-4" /> Drag to move
+                  </div>
                 </div>
               </div>
             </div>
           ) : (
-            /* Freeform positioned cards */
-            <div className="relative min-w-[1600px] min-h-[1200px]">
-              {items?.map(item => (
-                <div
-                  key={item.id}
-                  className={cn(
-                    'absolute transition-shadow',
-                    draggingItem === item.id ? 'z-50 cursor-grabbing' : 'cursor-grab'
-                  )}
-                  style={{
-                    left: item.position_x,
-                    top: item.position_y,
-                    width: item.width || 240,
-                  }}
-                  onMouseDown={(e) => handleItemMouseDown(e, item.id, item.position_x, item.position_y)}
-                >
-                  <VisionCard
-                    item={item}
-                    isDragging={draggingItem === item.id}
-                    onUpdate={async (updates) => {
-                      await updateItem.mutateAsync({ id: item.id, ...updates });
-                      if (updates.is_achieved) toast.success(`"${item.title}" achieved! 🎉`);
+            <div className="canvas-bg relative" style={{ minWidth: 2000, minHeight: 1400 }}>
+              {items?.map(item => {
+                const pos = getItemPos(item as CanvasItem);
+                const cat = CATEGORIES.find(c => c.value === item.category) || CATEGORIES[8];
+                const CatIcon = CATEGORY_ICONS[item.category || 'general'] || Star;
+                const isEditing = editingId === item.id;
+                const isDragging = draggingId === item.id;
+
+                return (
+                  <div
+                    key={item.id}
+                    className={cn(
+                      'absolute group',
+                      isDragging ? 'z-50' : 'z-10',
+                      isDragging ? 'cursor-grabbing' : toolMode === 'select' ? 'cursor-grab' : '',
+                    )}
+                    style={{
+                      left: pos.x,
+                      top: pos.y,
+                      width: item.width || 240,
                     }}
-                    onDelete={async () => {
-                      await deleteItem.mutateAsync(item.id);
-                      toast.success('Vision removed');
-                    }}
-                  />
-                </div>
-              ))}
+                    onMouseDown={(e) => handleCardMouseDown(e, item as CanvasItem)}
+                    onDoubleClick={() => startEditing(item as CanvasItem)}
+                  >
+                    <div
+                      className={cn(
+                        'bg-card rounded-xl overflow-hidden border transition-all duration-150',
+                        isDragging
+                          ? 'shadow-2xl scale-[1.03] rotate-[0.5deg] border-primary/30'
+                          : 'shadow-sm hover:shadow-lg border-border',
+                        item.is_achieved && 'opacity-60',
+                      )}
+                    >
+                      {/* Image */}
+                      {item.image_url && (
+                        <div className="relative">
+                          <img
+                            src={item.image_url}
+                            alt={item.title}
+                            className="w-full h-36 object-cover"
+                            draggable={false}
+                          />
+                          {item.is_achieved && (
+                            <div className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center">
+                              <Trophy className="h-7 w-7 text-emerald-400" weight="fill" />
+                            </div>
+                          )}
+                        </div>
+                      )}
+
+                      {/* Content */}
+                      <div className="p-3">
+                        {/* Category indicator */}
+                        <div className="flex items-center gap-1.5 mb-1.5">
+                          <CatIcon className="h-3 w-3" style={{ color: cat.color }} weight="duotone" />
+                          <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: cat.color }}>
+                            {cat.label}
+                          </span>
+                          {item.is_achieved && (
+                            <span className="ml-auto text-[9px] font-semibold text-emerald-500 flex items-center gap-0.5">
+                              <Check className="h-3 w-3" weight="bold" /> Done
+                            </span>
+                          )}
+                        </div>
+
+                        {/* Inline editing */}
+                        {isEditing ? (
+                          <div className="space-y-1.5" onClick={e => e.stopPropagation()}>
+                            <textarea
+                              ref={(el) => { titleInputRefs.current[item.id] = el; }}
+                              value={editTitle}
+                              onChange={e => setEditTitle(e.target.value)}
+                              placeholder="Title…"
+                              className="w-full bg-transparent text-sm font-semibold text-foreground resize-none outline-none border-b border-primary/30 pb-1"
+                              rows={1}
+                              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEditing(); } }}
+                              autoFocus
+                            />
+                            <textarea
+                              value={editDesc}
+                              onChange={e => setEditDesc(e.target.value)}
+                              placeholder="Write your thoughts…"
+                              className="w-full bg-transparent text-xs text-muted-foreground resize-none outline-none leading-relaxed"
+                              rows={3}
+                            />
+                            <div className="flex justify-end gap-1 pt-1">
+                              <button
+                                onClick={() => setEditingId(null)}
+                                className="h-6 px-2 rounded text-[10px] text-muted-foreground hover:bg-secondary"
+                              >
+                                Cancel
+                              </button>
+                              <button
+                                onClick={saveEditing}
+                                className="h-6 px-2 rounded text-[10px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90"
+                              >
+                                Save
+                              </button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <h3 className={cn(
+                              'text-sm font-semibold text-foreground leading-snug',
+                              item.is_achieved && 'line-through text-muted-foreground',
+                              !item.title && 'text-muted-foreground italic',
+                            )}>
+                              {item.title || 'Untitled – double click to edit'}
+                            </h3>
+                            {item.description && (
+                              <p className="text-xs text-muted-foreground leading-relaxed mt-1 line-clamp-4">
+                                {item.description}
+                              </p>
+                            )}
+                          </>
+                        )}
+
+                        {/* Hover actions */}
+                        {!isEditing && (
+                          <div className="flex items-center gap-1 mt-2 pt-1.5 border-t border-border/50 opacity-0 group-hover:opacity-100 transition-opacity">
+                            {!item.is_achieved ? (
+                              <button
+                                className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
+                                onClick={(e) => { e.stopPropagation(); updateItem.mutateAsync({ id: item.id, is_achieved: true, achieved_at: new Date().toISOString() }); toast.success('Achieved! 🎉'); }}
+                              >
+                                <Check className="h-3 w-3" weight="bold" /> Done
+                              </button>
+                            ) : (
+                              <button
+                                className="px-1.5 py-0.5 rounded text-[9px] text-muted-foreground hover:bg-secondary transition-colors"
+                                onClick={(e) => { e.stopPropagation(); updateItem.mutateAsync({ id: item.id, is_achieved: false, achieved_at: null }); }}
+                              >
+                                Undo
+                              </button>
+                            )}
+                            <button
+                              className="ml-auto p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
+                              onClick={(e) => { e.stopPropagation(); deleteItem.mutateAsync(item.id); toast.success('Removed'); }}
+                            >
+                              <Trash className="h-3 w-3" />
+                            </button>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           )}
         </div>
       </div>
-
-      {/* ── Create Dialog ──────────────────────────────── */}
-      <Dialog open={showCreate} onOpenChange={(o) => { setShowCreate(o); if (!o) setActiveTool(null); }}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <Note className="h-4 w-4 text-primary" weight="duotone" /> New Vision
-            </DialogTitle>
-          </DialogHeader>
-          <div className="space-y-3 mt-1">
-            <Input
-              value={title}
-              onChange={e => setTitle(e.target.value)}
-              placeholder="Your vision or dream…"
-              className="pro-input"
-              autoFocus
-              onKeyDown={e => { if (e.key === 'Enter' && title.trim()) handleCreate(); }}
-            />
-            <Textarea
-              value={description}
-              onChange={e => setDescription(e.target.value)}
-              placeholder="How will you feel when you achieve this?"
-              className="pro-input min-h-[72px]"
-            />
-
-            {/* Category */}
-            <div>
-              <label className="section-label block mb-2">Category</label>
-              <div className="grid grid-cols-3 gap-1.5">
-                {CATEGORIES.map(cat => {
-                  const CatIcon = CATEGORY_ICONS[cat.value] || Star;
-                  return (
-                    <button
-                      key={cat.value}
-                      onClick={() => setCategory(cat.value)}
-                      className={cn(
-                        'flex items-center gap-2 px-2.5 py-2 rounded-md text-xs transition-colors border',
-                        category === cat.value
-                          ? 'border-primary/40 bg-primary/10 font-semibold text-foreground'
-                          : 'border-border bg-secondary text-muted-foreground hover:text-foreground hover:bg-secondary/80'
-                      )}
-                    >
-                      <CatIcon className="h-3.5 w-3.5 shrink-0" style={{ color: cat.color }} />
-                      {cat.label}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Image */}
-            <div>
-              <label className="section-label block mb-2">Image</label>
-              <Tabs value={imageTab} onValueChange={setImageTab}>
-                <TabsList className="w-full grid grid-cols-3 h-8">
-                  <TabsTrigger value="upload" className="text-xs gap-1">
-                    <UploadSimple className="h-3 w-3" /> Upload
-                  </TabsTrigger>
-                  <TabsTrigger value="url" className="text-xs gap-1">
-                    <LinkSimple className="h-3 w-3" /> URL
-                  </TabsTrigger>
-                  <TabsTrigger value="draw" className="text-xs gap-1">
-                    <PaintBrush className="h-3 w-3" /> Draw
-                  </TabsTrigger>
-                </TabsList>
-
-                <TabsContent value="upload" className="mt-2">
-                  <input
-                    ref={fileInputRef}
-                    type="file"
-                    accept="image/*"
-                    className="hidden"
-                    onChange={handleFileChange}
-                  />
-                  <button
-                    onClick={() => fileInputRef.current?.click()}
-                    disabled={uploading}
-                    className="w-full h-20 rounded-lg border-2 border-dashed border-border hover:border-primary/40 flex flex-col items-center justify-center gap-1 text-muted-foreground hover:text-foreground transition-colors"
-                  >
-                    <ImageSquare className="h-6 w-6" />
-                    <span className="text-xs font-medium">
-                      {uploading ? 'Uploading…' : 'Click to upload an image'}
-                    </span>
-                  </button>
-                </TabsContent>
-
-                <TabsContent value="url" className="mt-2">
-                  <Input
-                    value={imageUrl}
-                    onChange={e => setImageUrl(e.target.value)}
-                    placeholder="https://example.com/image.jpg"
-                    className="pro-input"
-                  />
-                </TabsContent>
-
-                <TabsContent value="draw" className="mt-2">
-                  <DrawingCanvas onSave={handleDrawingSave} />
-                </TabsContent>
-              </Tabs>
-
-              {imageUrl && (
-                <div className="mt-2 rounded-md overflow-hidden border border-border">
-                  <img src={imageUrl} alt="Preview" className="w-full h-28 object-cover" />
-                </div>
-              )}
-            </div>
-
-            <button
-              onClick={handleCreate}
-              disabled={!title.trim() || createItem.isPending || uploading}
-              className="btn-primary w-full h-9"
-            >
-              {createItem.isPending ? 'Adding…' : 'Add to Vision Board'}
-            </button>
-          </div>
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }

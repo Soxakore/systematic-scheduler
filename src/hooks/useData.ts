@@ -675,8 +675,9 @@ export function useCreateVisionBoardItem() {
   const { user } = useAuth();
   return useMutation({
     mutationFn: async (item: Omit<VisionBoardItem, 'id' | 'user_id' | 'created_at' | 'updated_at'>) => {
-      const { error } = await supabase.from('vision_board_items' as any).insert({ ...item, user_id: user!.id } as any);
+      const { data, error } = await supabase.from('vision_board_items' as any).insert({ ...item, user_id: user!.id } as any).select().single();
       if (error) throw error;
+      return data as any as VisionBoardItem;
     },
     onSuccess: () => qc.invalidateQueries({ queryKey: ['vision_board_items'] }),
   });
