@@ -11,9 +11,12 @@ import {
   Stack, Eye, EyeSlash, MagnetStraight,
   ArrowCounterClockwise, ArrowClockwise, Palette,
   VideoCamera, Microphone, Record, Stop, Play, Pause,
+  Export, FilePdf, FileDoc,
 } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
+import { toPng } from 'html-to-image';
+import jsPDF from 'jspdf';
 
 type ToolMode = 'select' | 'note' | 'pan' | 'draw' | 'eraser' | 'connect' | 'text' | 'shape-rect' | 'shape-circle' | 'shape-line';
 type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | null;
@@ -113,10 +116,12 @@ export default function VisionBoardPage() {
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const viewportRef = useRef<HTMLDivElement>(null);
+  const canvasContentRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement>(null);
   const canvasReady = useRef(false);
   const titleInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const persistTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const totalCount = items?.length || 0;
   const achievedCount = items?.filter(i => i.is_achieved).length || 0;
@@ -650,6 +655,113 @@ export default function VisionBoardPage() {
     }
   };
 
+  /* ── Export helpers ─────────────────────────────────── */
+  const getBoardBounds = useCallback(() => {
+    if (!items || items.length === 0) return { x: 0, y: 0, w: 800, h: 600 };
+    let minX = Infinity, minY = Infinity, maxX = -Infinity, maxY = -Infinity;
+    items.forEach(item => {
+      const pos = getItemPos(item);
+      const size = getItemSize(item);
+      minX = Math.min(minX, pos.x);
+      minY = Math.min(minY, pos.y);
+      maxX = Math.max(maxX, pos.x + size.w);
+      maxY = Math.max(maxY, pos.y + size.h);
+    });
+    const padding = 40;
+    return { x: minX - padding, y: minY - padding, w: maxX - minX + padding * 2, h: maxY - minY + padding * 2 };
+  }, [items]);
+
+  const exportAsPDF = useCallback(async () => {
+    if (!canvasContentRef.current || !items?.length) {
+      toast.error('Nothing to export');
+      return;
+    }
+    setExporting(true);
+    try {
+      const bounds = getBoardBounds();
+      const node = canvasContentRef.current;
+      
+      // Temporarily reset transform for capture
+      const origTransform = node.style.transform;
+      node.style.transform = 'none';
+      
+      const dataUrl = await toPng(node, {
+        width: bounds.x + bounds.w,
+        height: bounds.y + bounds.h,
+        backgroundColor: '#ffffff',
+        pixelRatio: 2,
+        filter: (el) => {
+          // Skip resize handles in export
+          if (el instanceof HTMLElement && el.dataset?.resizeHandle) return false;
+          return true;
+        },
+      });
+      
+      node.style.transform = origTransform;
+
+      const img = new Image();
+      img.src = dataUrl;
+      await new Promise((resolve) => { img.onload = resolve; });
+
+      const isLandscape = bounds.w > bounds.h;
+      const pdf = new jsPDF({ orientation: isLandscape ? 'landscape' : 'portrait', unit: 'px', format: [bounds.w, bounds.h] });
+      pdf.addImage(dataUrl, 'PNG', -bounds.x, -bounds.y, bounds.x + bounds.w, bounds.y + bounds.h);
+      pdf.save('vision-board.pdf');
+      toast.success('PDF exported!');
+    } catch (err: any) {
+      toast.error('Export failed: ' + err.message);
+    } finally {
+      setExporting(false);
+    }
+  }, [items, getBoardBounds]);
+
+  const exportAsWord = useCallback(async () => {
+    if (!items?.length) {
+      toast.error('Nothing to export');
+      return;
+    }
+    setExporting(true);
+    try {
+      let html = `<html xmlns:o="urn:schemas-microsoft-com:office:office" xmlns:w="urn:schemas-microsoft-com:office:word" xmlns="http://www.w3.org/TR/REC-html40">
+<head><meta charset="utf-8"><title>Vision Board</title>
+<style>body{font-family:Segoe UI,sans-serif;padding:40px}h1{color:#1e293b}
+.card{border:1px solid #e2e8f0;border-radius:8px;padding:16px;margin:12px 0;page-break-inside:avoid}
+.card h3{margin:0 0 6px;font-size:16px}.card p{margin:0;color:#64748b;font-size:13px}
+.achieved{opacity:0.5;text-decoration:line-through}
+.badge{display:inline-block;font-size:11px;padding:2px 8px;border-radius:10px;background:#f1f5f9;color:#475569;margin-bottom:8px}
+img{max-width:100%;border-radius:6px;margin-top:8px}</style></head><body>
+<h1>🎯 Vision Board</h1>
+<p style="color:#64748b">${new Date().toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })} · ${items.length} items · ${items.filter(i => i.is_achieved).length} achieved</p><hr>`;
+
+      items.forEach(item => {
+        const mediaType = getMediaType(item.image_url);
+        html += `<div class="card${item.is_achieved ? ' achieved' : ''}">`;
+        if (item.category) html += `<span class="badge">${item.category}</span>`;
+        html += `<h3>${item.is_achieved ? '✅ ' : ''}${item.title || 'Untitled'}</h3>`;
+        if (item.description) html += `<p>${item.description}</p>`;
+        if (item.image_url && mediaType === 'image') html += `<img src="${item.image_url}" alt="${item.title}" />`;
+        if (item.image_url && mediaType === 'video') html += `<p>🎥 <a href="${item.image_url}">Video attachment</a></p>`;
+        if (item.image_url && mediaType === 'audio') html += `<p>🎙️ <a href="${item.image_url}">Voice note</a></p>`;
+        html += `</div>`;
+      });
+
+      html += `</body></html>`;
+
+      const blob = new Blob([html], { type: 'application/msword' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'vision-board.doc';
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success('Word document exported!');
+    } catch (err: any) {
+      toast.error('Export failed: ' + err.message);
+    } finally {
+      setExporting(false);
+    }
+  }, [items]);
+
   const switchTool = (id: ToolMode) => { setToolMode(id); setConnectFromId(null); setConnectMousePos(null); setShapeStart(null); setShapeEnd(null); };
 
   const TOOLS: { id: ToolMode; icon: any; label: string }[] = [
@@ -935,7 +1047,28 @@ export default function VisionBoardPage() {
             </div>
           )}
 
-          <span className="ml-auto text-[9px] text-muted-foreground">{statusText}</span>
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              onClick={exportAsPDF}
+              disabled={exporting}
+              className="h-7 px-2.5 rounded-md text-[10px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors flex items-center gap-1 disabled:opacity-50"
+              title="Export as PDF"
+            >
+              <FilePdf className="h-3.5 w-3.5" />
+              PDF
+            </button>
+            <button
+              onClick={exportAsWord}
+              disabled={exporting}
+              className="h-7 px-2.5 rounded-md text-[10px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors flex items-center gap-1 disabled:opacity-50"
+              title="Export as Word"
+            >
+              <FileDoc className="h-3.5 w-3.5" />
+              Word
+            </button>
+            {exporting && <span className="text-[10px] text-primary animate-pulse">Exporting…</span>}
+            <span className="text-[9px] text-muted-foreground ml-2">{statusText}</span>
+          </div>
         </div>
 
         <div className="flex-1 flex overflow-hidden">
@@ -960,6 +1093,7 @@ export default function VisionBoardPage() {
           >
             {/* World layer */}
             <div
+              ref={canvasContentRef}
               style={{
                 transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                 transformOrigin: '0 0',
