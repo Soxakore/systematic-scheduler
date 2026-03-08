@@ -705,6 +705,53 @@ export function useDeleteVisionBoardItem() {
   });
 }
 
+// ========== Vision Board Connections ==========
+export interface VisionBoardConnection {
+  id: string;
+  user_id: string;
+  from_item_id: string;
+  to_item_id: string;
+  created_at: string;
+}
+
+export function useVisionBoardConnections() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['vision_board_connections', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('vision_board_connections' as any).select('*').eq('user_id', user!.id);
+      if (error) throw error;
+      return (data ?? []) as unknown as VisionBoardConnection[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useCreateVisionBoardConnection() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async ({ from_item_id, to_item_id }: { from_item_id: string; to_item_id: string }) => {
+      const { data, error } = await supabase.from('vision_board_connections' as any)
+        .insert({ from_item_id, to_item_id, user_id: user!.id } as any).select().single();
+      if (error) throw error;
+      return data as unknown as VisionBoardConnection;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['vision_board_connections'] }),
+  });
+}
+
+export function useDeleteVisionBoardConnection() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('vision_board_connections' as any).delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['vision_board_connections'] }),
+  });
+}
+
 // ─── Calendar Sharing ────────────────────────────────────────
 
 export function useMyShares() {
