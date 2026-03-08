@@ -104,6 +104,13 @@ export default function VisionBoardPage() {
   const [colorMenu, setColorMenu] = useState<{ itemId: string; x: number; y: number } | null>(null);
   const [drawToolsExpanded, setDrawToolsExpanded] = useState(false);
 
+  // Voice recording
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
+
   const viewportRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement>(null);
   const canvasReady = useRef(false);
