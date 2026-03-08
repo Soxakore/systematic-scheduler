@@ -68,7 +68,7 @@ export default function LandingPage() {
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-black/70 border-b border-white/[0.06]">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-16">
           <Link to="/welcome" className="flex items-center gap-2.5">
-            <img src={icoCalendar} alt="" width={32} height={32} className="rounded-lg" />
+            <img src="/logo.png" alt="System Calendar" width={32} height={32} className="rounded-lg" />
             <span className="text-lg font-semibold tracking-tight">System Calendar</span>
           </Link>
           <Link to="/signup">
