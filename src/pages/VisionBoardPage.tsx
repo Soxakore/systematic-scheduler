@@ -193,89 +193,16 @@ export default function VisionBoardPage() {
     }, 1000); // debounce 1s
   };
 
-  const clearDrawing = () => {
+  const clearDrawing = async () => {
     const canvas = drawCanvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (!ctx || !canvas) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Also clear from storage
+    if (user) {
+      try { await supabase.storage.from('vision-images').remove([`${user.id}/canvas-drawing.png`]); } catch {}
+    }
     toast.success('Drawing cleared');
-  };
-
-  const saveDrawingAsCard = async () => {
-    const canvas = drawCanvasRef.current;
-    if (!canvas || !user) return;
-
-    // Check if canvas has any content
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const hasContent = imageData.data.some((val, i) => i % 4 === 3 && val > 0);
-    if (!hasContent) {
-      toast.error('Nothing drawn yet');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      // Find bounding box of drawn content
-      let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
-      for (let y = 0; y < canvas.height; y++) {
-        for (let x = 0; x < canvas.width; x++) {
-          const alpha = imageData.data[(y * canvas.width + x) * 4 + 3];
-          if (alpha > 0) {
-            minX = Math.min(minX, x);
-            minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x);
-            maxY = Math.max(maxY, y);
-          }
-        }
-      }
-
-      const pad = 20;
-      minX = Math.max(0, minX - pad);
-      minY = Math.max(0, minY - pad);
-      maxX = Math.min(canvas.width, maxX + pad);
-      maxY = Math.min(canvas.height, maxY + pad);
-
-      // Extract region
-      const w = maxX - minX;
-      const h = maxY - minY;
-      const tmpCanvas = document.createElement('canvas');
-      tmpCanvas.width = w;
-      tmpCanvas.height = h;
-      const tmpCtx = tmpCanvas.getContext('2d')!;
-      tmpCtx.drawImage(canvas, minX, minY, w, h, 0, 0, w, h);
-
-      const blob = await new Promise<Blob>((resolve) => tmpCanvas.toBlob(b => resolve(b!), 'image/png'));
-      const path = `${user.id}/drawing-${Date.now()}.png`;
-      const { error } = await supabase.storage.from('vision-images').upload(path, blob, { contentType: 'image/png' });
-      if (error) throw error;
-      const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
-
-      await createItem.mutateAsync({
-        title: 'Drawing',
-        description: '',
-        category: 'general',
-        color: '#64748b',
-        icon: 'star',
-        position_x: Math.round(minX),
-        position_y: Math.round(minY),
-        width: Math.min(Math.round(w), 400),
-        height: Math.min(Math.round(h), 350),
-        image_url: data.publicUrl,
-        is_achieved: false,
-        achieved_at: null,
-        sort_order: items?.length || 0,
-      });
-
-      // Clear the drawing canvas after saving
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      toast.success('Drawing saved as card!');
-    } catch (err: any) {
-      toast.error('Save failed: ' + err.message);
-    } finally {
-      setUploading(false);
-    }
   };
 
   /* ── Click on canvas to create a note ─────────────── */
