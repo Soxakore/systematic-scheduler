@@ -27,6 +27,8 @@ import VisionBoardPage from "@/pages/VisionBoardPage";
 import SharingPage from "@/pages/SharingPage";
 import EventDialog from "@/components/EventDialog";
 import LandingPage from "@/pages/LandingPage";
+import TermsPage from "@/pages/TermsPage";
+import CookiePolicyPage from "@/pages/CookiePolicyPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
