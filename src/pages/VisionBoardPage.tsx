@@ -393,11 +393,51 @@ export default function VisionBoardPage() {
   const TOOLS: { id: ToolMode; icon: any; label: string }[] = [
     { id: 'select', icon: Cursor, label: 'Select' },
     { id: 'note', icon: Note, label: 'Note' },
+    { id: 'connect', icon: ArrowRight, label: 'Connect' },
     { id: 'draw', icon: PaintBrush, label: 'Draw' },
     { id: 'eraser', icon: Eraser, label: 'Eraser' },
     { id: 'pan', icon: Hand, label: 'Pan' },
   ];
 
+  /* ── Get center of an item for arrow drawing ───────── */
+  const getItemCenter = useCallback((itemId: string) => {
+    const item = items?.find(i => i.id === itemId);
+    if (!item) return { x: 0, y: 0 };
+    const pos = getItemPos(item);
+    const size = getItemSize(item);
+    return { x: pos.x + size.w / 2, y: pos.y + size.h / 2 };
+  }, [items, getItemPos, getItemSize]);
+
+  /* ── Handle clicking an item in connect mode ────────── */
+  const handleConnectClick = useCallback(async (itemId: string) => {
+    if (toolMode !== 'connect') return;
+    if (!connectFromId) {
+      setConnectFromId(itemId);
+      return;
+    }
+    if (connectFromId === itemId) {
+      setConnectFromId(null);
+      setConnectMousePos(null);
+      return;
+    }
+    // Check for existing connection
+    const exists = connections?.some(c =>
+      (c.from_item_id === connectFromId && c.to_item_id === itemId) ||
+      (c.from_item_id === itemId && c.to_item_id === connectFromId)
+    );
+    if (exists) {
+      toast.error('Already connected');
+      setConnectFromId(null);
+      setConnectMousePos(null);
+      return;
+    }
+    try {
+      await createConnection.mutateAsync({ from_item_id: connectFromId, to_item_id: itemId });
+      toast.success('Connected!');
+    } catch { toast.error('Failed to connect'); }
+    setConnectFromId(null);
+    setConnectMousePos(null);
+  }, [toolMode, connectFromId, connections, createConnection]);
   return (
     <div className="h-full overflow-hidden flex">
       {/* ── Left Toolbar ───────────────────────────────── */}
