@@ -7,7 +7,6 @@ import {
   Note, ImageSquare, PaintBrush, Eraser,
   Trash, SquaresFour, Star, Hand, Cursor,
   Check, Trophy, MagnifyingGlassPlus, MagnifyingGlassMinus,
-  Palette, FloppyDisk,
 } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
@@ -72,17 +71,29 @@ export default function VisionBoardPage() {
 
   const isDrawMode = toolMode === 'draw' || toolMode === 'eraser';
 
-  /* ── Setup drawing canvas size ────────────────────── */
+  /* ── Setup drawing canvas & load persisted drawing ── */
   useEffect(() => {
     const canvas = drawCanvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !user) return;
     canvas.width = 4000;
     canvas.height = 3000;
     const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-  }, []);
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Load persisted drawing
+    const loadDrawing = async () => {
+      try {
+        const { data } = supabase.storage.from('vision-images').getPublicUrl(`${user.id}/canvas-drawing.png`);
+        if (!data?.publicUrl) return;
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => ctx.drawImage(img, 0, 0);
+        img.src = data.publicUrl + '?t=' + Date.now(); // cache-bust
+      } catch {}
+    };
+    loadDrawing();
+  }, [user]);
 
   /* ── Zoom via wheel / pinch ───────────────────────── */
   useEffect(() => {
@@ -162,91 +173,35 @@ export default function VisionBoardPage() {
     setIsDrawing(false);
     const ctx = drawCanvasRef.current?.getContext('2d');
     if (ctx) ctx.globalCompositeOperation = 'source-over';
+    // Auto-save drawing to storage
+    persistDrawing();
   };
 
-  const clearDrawing = () => {
+  const persistDrawingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const persistDrawing = () => {
+    if (persistDrawingTimeout.current) clearTimeout(persistDrawingTimeout.current);
+    persistDrawingTimeout.current = setTimeout(async () => {
+      const canvas = drawCanvasRef.current;
+      if (!canvas || !user) return;
+      try {
+        const blob = await new Promise<Blob>((resolve) => canvas.toBlob(b => resolve(b!), 'image/png'));
+        const path = `${user.id}/canvas-drawing.png`;
+        // Upsert: try upload, if exists then update
+        await supabase.storage.from('vision-images').upload(path, blob, { contentType: 'image/png', upsert: true });
+      } catch {}
+    }, 1000); // debounce 1s
+  };
+
+  const clearDrawing = async () => {
     const canvas = drawCanvasRef.current;
     const ctx = canvas?.getContext('2d');
     if (!ctx || !canvas) return;
     ctx.clearRect(0, 0, canvas.width, canvas.height);
+    // Also clear from storage
+    if (user) {
+      try { await supabase.storage.from('vision-images').remove([`${user.id}/canvas-drawing.png`]); } catch {}
+    }
     toast.success('Drawing cleared');
-  };
-
-  const saveDrawingAsCard = async () => {
-    const canvas = drawCanvasRef.current;
-    if (!canvas || !user) return;
-
-    // Check if canvas has any content
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
-    const hasContent = imageData.data.some((val, i) => i % 4 === 3 && val > 0);
-    if (!hasContent) {
-      toast.error('Nothing drawn yet');
-      return;
-    }
-
-    setUploading(true);
-    try {
-      // Find bounding box of drawn content
-      let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
-      for (let y = 0; y < canvas.height; y++) {
-        for (let x = 0; x < canvas.width; x++) {
-          const alpha = imageData.data[(y * canvas.width + x) * 4 + 3];
-          if (alpha > 0) {
-            minX = Math.min(minX, x);
-            minY = Math.min(minY, y);
-            maxX = Math.max(maxX, x);
-            maxY = Math.max(maxY, y);
-          }
-        }
-      }
-
-      const pad = 20;
-      minX = Math.max(0, minX - pad);
-      minY = Math.max(0, minY - pad);
-      maxX = Math.min(canvas.width, maxX + pad);
-      maxY = Math.min(canvas.height, maxY + pad);
-
-      // Extract region
-      const w = maxX - minX;
-      const h = maxY - minY;
-      const tmpCanvas = document.createElement('canvas');
-      tmpCanvas.width = w;
-      tmpCanvas.height = h;
-      const tmpCtx = tmpCanvas.getContext('2d')!;
-      tmpCtx.drawImage(canvas, minX, minY, w, h, 0, 0, w, h);
-
-      const blob = await new Promise<Blob>((resolve) => tmpCanvas.toBlob(b => resolve(b!), 'image/png'));
-      const path = `${user.id}/drawing-${Date.now()}.png`;
-      const { error } = await supabase.storage.from('vision-images').upload(path, blob, { contentType: 'image/png' });
-      if (error) throw error;
-      const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
-
-      await createItem.mutateAsync({
-        title: 'Drawing',
-        description: '',
-        category: 'general',
-        color: '#64748b',
-        icon: 'star',
-        position_x: Math.round(minX),
-        position_y: Math.round(minY),
-        width: Math.min(Math.round(w), 400),
-        height: Math.min(Math.round(h), 350),
-        image_url: data.publicUrl,
-        is_achieved: false,
-        achieved_at: null,
-        sort_order: items?.length || 0,
-      });
-
-      // Clear the drawing canvas after saving
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      toast.success('Drawing saved as card!');
-    } catch (err: any) {
-      toast.error('Save failed: ' + err.message);
-    } finally {
-      setUploading(false);
-    }
   };
 
   /* ── Click on canvas to create a note ─────────────── */
@@ -564,15 +519,6 @@ export default function VisionBoardPage() {
 
               <div className="w-px h-5 bg-border" />
 
-              {/* Save drawing */}
-              <button
-                onClick={saveDrawingAsCard}
-                disabled={uploading}
-                className="h-6 px-2.5 rounded-md text-[10px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1"
-              >
-                <FloppyDisk className="h-3 w-3" /> Save as card
-              </button>
-
               {/* Clear */}
               <button
                 onClick={clearDrawing}
@@ -584,7 +530,7 @@ export default function VisionBoardPage() {
           )}
 
           <span className="ml-auto text-[9px] text-muted-foreground">
-            {isDrawMode ? 'Draw on the canvas · Save as card when done' : 'Scroll to pan · Ctrl+scroll to zoom · Double-click to edit'}
+            {isDrawMode ? 'Draw freely · Auto-saved' : 'Scroll to pan · Ctrl+scroll to zoom · Double-click to edit'}
           </span>
         </div>
 
