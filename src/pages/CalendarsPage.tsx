@@ -62,13 +62,20 @@ export default function CalendarsPage() {
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(cal)}>
               <PencilSimple className="h-3.5 w-3.5" weight="bold" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={async () => {
-              if ((calendars?.length || 0) <= 1) { toast.error("Can't delete last calendar"); return; }
-              await deleteCalendar.mutateAsync(cal.id);
-              toast.success('Deleted');
-            }}>
-              <Trash className="h-3.5 w-3.5" weight="bold" />
-            </Button>
+            <ConfirmDialog
+              trigger={
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Trash className="h-3.5 w-3.5" weight="bold" />
+                </Button>
+              }
+              title="Delete calendar?"
+              description="This will permanently delete this calendar and all its events."
+              onConfirm={async () => {
+                if ((calendars?.length || 0) <= 1) { toast.error("Can't delete last calendar"); return; }
+                await deleteCalendar.mutateAsync(cal.id);
+                toast.success('Deleted');
+              }}
+            />
           </Card>
         ))}
       </div>

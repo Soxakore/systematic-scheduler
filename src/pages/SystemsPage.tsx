@@ -197,9 +197,16 @@ export default function SystemsPage() {
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(system)}>
                     <PencilSimple className="h-4 w-4" weight="bold" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(system.id)}>
-                    <Trash className="h-4 w-4" weight="bold" />
-                  </Button>
+                  <ConfirmDialog
+                    trigger={
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Trash className="h-4 w-4" weight="bold" />
+                      </Button>
+                    }
+                    title="Delete system?"
+                    description="This will permanently delete this system. Generated events will remain on your calendar."
+                    onConfirm={() => handleDelete(system.id)}
+                  />
                 </div>
               </div>
             </Card>
