@@ -16,7 +16,6 @@ export default function HabitsPage() {
   const fourteenDaysAgo = subDays(today, 13);
   const { data: recentEvents, isLoading: loadingEvents } = useEvents(startOfDay(fourteenDaysAgo), endOfDay(today));
 
-  if (loadingSystems || loadingEvents) return <HabitsSkeleton />;
   const todayEvents = recentEvents?.filter(e => isSameDay(new Date(e.start_time), today)) || [];
   const systemEvents = todayEvents.filter(e => e.is_system_generated);
 
@@ -27,17 +26,15 @@ export default function HabitsPage() {
     return activeSystems.map(system => {
       const systemEvts = recentEvents.filter(e => e.system_id === system.id);
 
-      // Calculate streak: consecutive days backward from today
       let streak = 0;
       for (let i = 0; i < 14; i++) {
         const day = subDays(today, i);
         const hasEvent = systemEvts.some(e => isSameDay(new Date(e.start_time), day));
         if (hasEvent) streak++;
-        else if (i > 0) break; // allow today to be missing (not yet done)
+        else if (i > 0) break;
         else break;
       }
 
-      // Last 7 days completion grid
       const last7 = Array.from({ length: 7 }, (_, i) => {
         const day = subDays(today, 6 - i);
         const completed = systemEvts.some(e => isSameDay(new Date(e.start_time), day));
@@ -53,6 +50,8 @@ export default function HabitsPage() {
 
   const totalToday = systemEvents.length;
   const totalActive = activeSystems.length;
+
+  if (loadingSystems || loadingEvents) return <HabitsSkeleton />;
   const completedToday = systemStats.filter(s => s.todayDone).length;
 
   return (
