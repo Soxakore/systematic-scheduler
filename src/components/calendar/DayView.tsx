@@ -99,6 +99,7 @@ export default function DayView() {
       endDate.setHours(0, maxMin, 0, 0);
 
       setSelectedDate(startDate);
+      setSelectedEndDate(endDate);
       setEditingEventId(null);
       setShowEventDialog(true);
       setDragCreate(null);
