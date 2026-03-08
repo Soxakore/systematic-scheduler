@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
 
 type ToolMode = 'select' | 'note' | 'pan' | 'draw' | 'eraser';
+type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | null;
+const MIN_SIZE = 60;
 
 const CANVAS_W = 4000;
 const CANVAS_H = 3000;
