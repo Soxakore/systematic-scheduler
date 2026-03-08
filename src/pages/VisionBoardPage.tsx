@@ -581,7 +581,7 @@ export default function VisionBoardPage() {
           color: '#64748b', icon: 'star',
           position_x: 40 + Math.random() * 400, position_y: 40 + Math.random() * 300,
           width: 260, height: 220, image_url: data.publicUrl,
-          is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+          is_achieved: false, achieved_at: null, sort_order: items?.length || 0, board_id: activeBoardId,
         });
       } catch (err: any) { toast.error('Upload failed: ' + err.message); }
       finally { setUploading(false); }
