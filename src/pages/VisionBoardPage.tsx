@@ -9,6 +9,7 @@ import {
   Check, Trophy, MagnifyingGlassPlus, MagnifyingGlassMinus,
   ArrowRight, TextT, Rectangle, Circle, LineSegment,
   Stack, Eye, EyeSlash, MagnetStraight,
+  ArrowCounterClockwise, ArrowClockwise, Palette,
 } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
@@ -81,6 +82,15 @@ export default function VisionBoardPage() {
   const [showLayers, setShowLayers] = useState(false);
   const [layerVisibility, setLayerVisibility] = useState({ items: true, drawing: true, connections: true });
 
+  // Undo/Redo for canvas
+  const undoStack = useRef<ImageData[]>([]);
+  const redoStack = useRef<ImageData[]>([]);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  // Color context menu
+  const [colorMenu, setColorMenu] = useState<{ itemId: string; x: number; y: number } | null>(null);
+
   const viewportRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement>(null);
   const canvasReady = useRef(false);
@@ -92,6 +102,43 @@ export default function VisionBoardPage() {
   const isDrawMode = toolMode === 'draw' || toolMode === 'eraser';
 
   const snap = useCallback((v: number) => snapEnabled ? Math.round(v / GRID_SIZE) * GRID_SIZE : v, [snapEnabled]);
+
+  /* ── Canvas undo/redo helpers ─────────────────────── */
+  const saveCanvasSnapshot = useCallback(() => {
+    const c = drawCanvasRef.current;
+    const ctx = c?.getContext('2d');
+    if (!ctx || !c) return;
+    undoStack.current.push(ctx.getImageData(0, 0, c.width, c.height));
+    if (undoStack.current.length > 50) undoStack.current.shift();
+    redoStack.current = [];
+    setCanUndo(true);
+    setCanRedo(false);
+  }, []);
+
+  const undo = useCallback(() => {
+    const c = drawCanvasRef.current;
+    const ctx = c?.getContext('2d');
+    if (!ctx || !c || !undoStack.current.length) return;
+    // Save current state to redo
+    redoStack.current.push(ctx.getImageData(0, 0, c.width, c.height));
+    const prev = undoStack.current.pop()!;
+    ctx.putImageData(prev, 0, 0);
+    setCanUndo(undoStack.current.length > 0);
+    setCanRedo(true);
+    persistDrawing();
+  }, []);
+
+  const redo = useCallback(() => {
+    const c = drawCanvasRef.current;
+    const ctx = c?.getContext('2d');
+    if (!ctx || !c || !redoStack.current.length) return;
+    undoStack.current.push(ctx.getImageData(0, 0, c.width, c.height));
+    const next = redoStack.current.pop()!;
+    ctx.putImageData(next, 0, 0);
+    setCanUndo(true);
+    setCanRedo(redoStack.current.length > 0);
+    persistDrawing();
+  }, []);
 
   /* ── Init canvas + load saved drawing ─────────────── */
   useEffect(() => {
@@ -116,6 +163,17 @@ export default function VisionBoardPage() {
       } catch {}
     })();
   }, [user]);
+
+  /* ── Keyboard shortcuts (undo/redo + close color menu) ── */
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'z' && !e.shiftKey) { e.preventDefault(); undo(); }
+      if ((e.ctrlKey || e.metaKey) && (e.key === 'Z' || (e.key === 'z' && e.shiftKey))) { e.preventDefault(); redo(); }
+      if (e.key === 'Escape') setColorMenu(null);
+    };
+    window.addEventListener('keydown', handler);
+    return () => window.removeEventListener('keydown', handler);
+  }, [undo, redo]);
 
   /* ── Zoom via wheel / pinch ───────────────────────── */
   useEffect(() => {
@@ -147,7 +205,8 @@ export default function VisionBoardPage() {
   const handleDrawStart = useCallback((clientX: number, clientY: number) => {
     const c = drawCanvasRef.current;
     const ctx = c?.getContext('2d');
-    if (!ctx) return;
+    if (!ctx || !c) return;
+    saveCanvasSnapshot();
     setIsDrawing(true);
     const { x, y } = screenToWorld(clientX, clientY);
     ctx.beginPath();
@@ -162,7 +221,7 @@ export default function VisionBoardPage() {
       ctx.strokeStyle = drawColor;
       ctx.lineWidth = brushSize;
     }
-  }, [screenToWorld, toolMode, drawColor, brushSize]);
+  }, [screenToWorld, toolMode, drawColor, brushSize, saveCanvasSnapshot]);
 
   const handleDrawMoveRaw = useCallback((clientX: number, clientY: number) => {
     const ctx = drawCanvasRef.current?.getContext('2d');
@@ -315,6 +374,7 @@ export default function VisionBoardPage() {
   const handleMouseUp = useCallback(async () => {
     // Shape commit
     if (shapeStart && shapeEnd && isShapeTool(toolMode)) {
+      saveCanvasSnapshot();
       drawShapeToCanvas(shapeStart, shapeEnd);
       persistDrawing();
       setShapeStart(null);
@@ -677,6 +737,23 @@ export default function VisionBoardPage() {
                   </button>
                 </>
               )}
+              <div className="w-px h-5 bg-border" />
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className={cn('h-6 w-6 rounded-md flex items-center justify-center transition-colors', canUndo ? 'text-muted-foreground hover:bg-secondary hover:text-foreground' : 'text-muted-foreground/30')}
+                title="Undo (Ctrl+Z)"
+              >
+                <ArrowCounterClockwise className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className={cn('h-6 w-6 rounded-md flex items-center justify-center transition-colors', canRedo ? 'text-muted-foreground hover:bg-secondary hover:text-foreground' : 'text-muted-foreground/30')}
+                title="Redo (Ctrl+Shift+Z)"
+              >
+                <ArrowClockwise className="h-3.5 w-3.5" />
+              </button>
             </div>
           )}
 
@@ -824,6 +901,12 @@ export default function VisionBoardPage() {
                     onMouseDown={e => { if (toolMode !== 'connect') handleCardMouseDown(e, item); }}
                     onDoubleClick={() => !isDrawMode && toolMode !== 'connect' && startEditing(item)}
                     onClick={e => { if (toolMode === 'connect') { e.stopPropagation(); handleConnectClick(item.id); } }}
+                    onContextMenu={e => {
+                      if (isDrawMode || hasImage) return;
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setColorMenu({ itemId: item.id, x: e.clientX, y: e.clientY });
+                    }}
                   >
                     {hasImage && (
                       <img
@@ -983,6 +1066,43 @@ export default function VisionBoardPage() {
           )}
         </div>
       </div>
+
+      {/* ── Color Picker Context Menu ───────────────────── */}
+      {colorMenu && (
+        <div
+          className="fixed inset-0 z-[100]"
+          onClick={() => setColorMenu(null)}
+          onContextMenu={e => { e.preventDefault(); setColorMenu(null); }}
+        >
+          <div
+            className="absolute bg-popover border border-border rounded-xl shadow-xl p-3 space-y-2"
+            style={{ left: colorMenu.x, top: colorMenu.y }}
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex items-center gap-1.5 mb-1">
+              <Palette className="h-3.5 w-3.5 text-muted-foreground" />
+              <span className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider">Note Color</span>
+            </div>
+            <div className="grid grid-cols-5 gap-1.5">
+              {['#6366f1', '#3b82f6', '#22c55e', '#14b8a6', '#eab308', '#f97316', '#ef4444', '#ec4899', '#a855f7', '#64748b'].map(c => (
+                <button
+                  key={c}
+                  className={cn(
+                    'h-7 w-7 rounded-lg border-2 transition-transform hover:scale-110',
+                    items?.find(i => i.id === colorMenu.itemId)?.color === c ? 'border-foreground scale-110' : 'border-transparent',
+                  )}
+                  style={{ background: c }}
+                  onClick={() => {
+                    updateItem.mutateAsync({ id: colorMenu.itemId, color: c });
+                    setColorMenu(null);
+                    toast.success('Color updated');
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
