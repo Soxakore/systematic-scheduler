@@ -68,6 +68,23 @@ export default function VisionBoardPage() {
   const activeBoard = boards?.find(b => b.id === activeBoardId);
   const activeBoardName = activeBoard?.name || 'Default Board';
 
+  const sortedBoards = useMemo(() => {
+    if (!boards) return [];
+    const sorted = [...boards];
+    if (boardSortBy === 'name') sorted.sort((a, b) => a.name.localeCompare(b.name));
+    else if (boardSortBy === 'recent') sorted.sort((a, b) => new Date(b.updated_at).getTime() - new Date(a.updated_at).getTime());
+    else sorted.sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+    return sorted;
+  }, [boards, boardSortBy]);
+
+  const formatBoardDate = (dateStr: string) => {
+    const date = parseISO(dateStr);
+    if (isThisWeek(date)) return formatDistanceToNow(date, { addSuffix: true });
+    if (isThisMonth(date)) return format(date, 'MMM d');
+    if (isThisYear(date)) return format(date, 'MMM d');
+    return format(date, 'MMM d, yyyy');
+  };
+
   const [toolMode, setToolMode] = useState<ToolMode>('select');
   const [editingId, setEditingId] = useState<string | null>(null);
   const [editTitle, setEditTitle] = useState('');
