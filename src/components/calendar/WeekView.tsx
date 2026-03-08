@@ -60,7 +60,7 @@ export default function WeekView() {
     setSelectedEndDate(null);
     setEditingEventId(null);
     setShowEventDialog(true);
-
+  };
 
   // ── Drag-to-create state ──
   const [dragCreate, setDragCreate] = useState<{
