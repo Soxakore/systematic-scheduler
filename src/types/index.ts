@@ -1,6 +1,7 @@
 export interface Profile {
   id: string;
   name: string;
+  avatar_url: string | null;
   timezone: string;
   week_start_day: number;
   default_view: 'month' | 'week' | 'day' | 'agenda';

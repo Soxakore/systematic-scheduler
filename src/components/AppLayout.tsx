@@ -1,12 +1,15 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from './PageTransition';
-import { List, X, Plus, CalendarDots, Sun, Moon } from '@phosphor-icons/react';
+import { List, X, Plus, CalendarDots, Sun, Moon, SignOut, Camera } from '@phosphor-icons/react';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useData';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 /* ── 3D badge icon imports ─────────────────────────────────── */
 import icoCalendar  from '@/assets/icons/icon-calendar.svg';
@@ -69,12 +72,47 @@ function ThemeToggle() {
 }
 
 /* ── Sidebar ───────────────────────────────────────────────── */
-function Sidebar({ onNewEvent, onClose }: { onNewEvent: () => void; onClose?: () => void }) {
+function Sidebar({ onNewEvent, onClose, onSignOut }: { onNewEvent: () => void; onClose?: () => void; onSignOut: () => void }) {
   const location = useLocation();
-  const { data: profile } = useProfile();
+  const { data: profile, refetch: refetchProfile } = useProfile();
+  const { user } = useAuth();
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const isActive = (to: string) =>
     to === '/' ? location.pathname === '/' : location.pathname.startsWith(to);
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file || !user) return;
+
+    const fileExt = file.name.split('.').pop();
+    const filePath = `${user.id}/avatar.${fileExt}`;
+
+    const { error: uploadError } = await supabase.storage
+      .from('avatars')
+      .upload(filePath, file, { upsert: true });
+
+    if (uploadError) {
+      toast.error('Failed to upload avatar');
+      return;
+    }
+
+    const { data: { publicUrl } } = supabase.storage
+      .from('avatars')
+      .getPublicUrl(filePath);
+
+    const { error: updateError } = await supabase
+      .from('profiles')
+      .update({ avatar_url: publicUrl + '?t=' + Date.now() } as any)
+      .eq('id', user.id);
+
+    if (updateError) {
+      toast.error('Failed to update profile');
+    } else {
+      toast.success('Profile picture updated');
+      refetchProfile();
+    }
+  };
 
   return (
     <div className="app-sidebar flex flex-col h-full w-56 select-none">
@@ -139,13 +177,37 @@ function Sidebar({ onNewEvent, onClose }: { onNewEvent: () => void; onClose?: ()
         })}
       </nav>
 
-      {/* User footer */}
-      <div className="px-3 pb-3 pt-2 shrink-0" style={{ borderTop: '1px solid hsl(var(--border))' }}>
+      {/* User footer with sign out */}
+      <div className="px-3 pb-3 pt-2 shrink-0 space-y-2" style={{ borderTop: '1px solid hsl(var(--border))' }}>
         <div className="flex items-center gap-2.5 px-1">
-          <div className="w-7 h-7 rounded-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-[11px] font-semibold text-white shrink-0">
-            {profile?.name?.charAt(0)?.toUpperCase() || 'U'}
-          </div>
-          <div className="min-w-0">
+          {/* Avatar with upload */}
+          <button
+            onClick={() => fileInputRef.current?.click()}
+            className="relative group w-8 h-8 rounded-full shrink-0 overflow-hidden"
+          >
+            {profile?.avatar_url ? (
+              <img
+                src={profile.avatar_url}
+                alt="Avatar"
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <div className="w-full h-full bg-gradient-to-br from-primary to-primary/60 flex items-center justify-center text-[12px] font-semibold text-white">
+                {profile?.name?.charAt(0)?.toUpperCase() || 'U'}
+              </div>
+            )}
+            <div className="absolute inset-0 bg-black/50 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
+              <Camera className="h-3.5 w-3.5 text-white" weight="bold" />
+            </div>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              className="hidden"
+              onChange={handleAvatarUpload}
+            />
+          </button>
+          <div className="min-w-0 flex-1">
             <p className="text-[13px] font-medium text-foreground truncate leading-tight" style={{ letterSpacing: '-0.01em' }}>
               {profile?.name || 'User'}
             </p>
@@ -154,6 +216,13 @@ function Sidebar({ onNewEvent, onClose }: { onNewEvent: () => void; onClose?: ()
             </p>
           </div>
         </div>
+        <button
+          onClick={onSignOut}
+          className="flex items-center gap-2 w-full px-2 py-1.5 rounded-lg text-[12px] text-muted-foreground hover:text-foreground hover:bg-secondary transition-colors"
+        >
+          <SignOut className="h-3.5 w-3.5" weight="bold" />
+          Sign out
+        </button>
       </div>
     </div>
   );
@@ -169,6 +238,8 @@ export default function AppLayout() {
   const [editingEventId, setEditingEventId]   = useState<string | null>(null);
   const [selectedTagIds, setSelectedTagIds]   = useState<string[]>([]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   const location = useLocation();
   useEffect(() => { setMobileSidebarOpen(false); }, [location.pathname]);
@@ -177,6 +248,11 @@ export default function AppLayout() {
     setSelectedDate(null);
     setEditingEventId(null);
     setShowEventDialog(true);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/welcome');
   };
 
   return (
@@ -193,7 +269,7 @@ export default function AppLayout() {
 
         {/* Desktop sidebar */}
         <div className="hidden md:flex shrink-0">
-          <Sidebar onNewEvent={handleNewEvent} />
+          <Sidebar onNewEvent={handleNewEvent} onSignOut={handleSignOut} />
         </div>
 
         {/* Mobile sidebar overlay */}
@@ -215,7 +291,7 @@ export default function AppLayout() {
                 transition={{ type: 'spring', damping: 28, stiffness: 300 }}
                 className="relative z-50 w-56 h-full"
               >
-                <Sidebar onNewEvent={handleNewEvent} onClose={() => setMobileSidebarOpen(false)} />
+                <Sidebar onNewEvent={handleNewEvent} onClose={() => setMobileSidebarOpen(false)} onSignOut={handleSignOut} />
               </motion.div>
             </div>
           )}
