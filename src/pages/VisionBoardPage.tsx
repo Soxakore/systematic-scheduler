@@ -331,7 +331,27 @@ export default function VisionBoardPage() {
     setEditingId(null);
   };
 
-  const getItemPos = (item: any) => dragPositions[item.id] || { x: item.position_x, y: item.position_y };
+  const getItemPos = (item: any) => {
+    const rs = resizeSizes[item.id];
+    if (rs) return { x: rs.x, y: rs.y };
+    return dragPositions[item.id] || { x: item.position_x, y: item.position_y };
+  };
+  const getItemSize = (item: any) => {
+    const rs = resizeSizes[item.id];
+    if (rs) return { w: rs.w, h: rs.h };
+    return { w: item.width || 240, h: item.height || 200 };
+  };
+
+  const RESIZE_HANDLES: { handle: ResizeHandle; className: string; cursor: string }[] = [
+    { handle: 'nw', className: '-top-1.5 -left-1.5', cursor: 'nwse-resize' },
+    { handle: 'ne', className: '-top-1.5 -right-1.5', cursor: 'nesw-resize' },
+    { handle: 'sw', className: '-bottom-1.5 -left-1.5', cursor: 'nesw-resize' },
+    { handle: 'se', className: '-bottom-1.5 -right-1.5', cursor: 'nwse-resize' },
+    { handle: 'n', className: '-top-1 left-1/2 -translate-x-1/2', cursor: 'ns-resize' },
+    { handle: 's', className: '-bottom-1 left-1/2 -translate-x-1/2', cursor: 'ns-resize' },
+    { handle: 'w', className: 'top-1/2 -left-1 -translate-y-1/2', cursor: 'ew-resize' },
+    { handle: 'e', className: 'top-1/2 -right-1 -translate-y-1/2', cursor: 'ew-resize' },
+  ];
   const zoomIn = () => setZoom(prev => Math.min(3, prev + 0.15));
   const zoomOut = () => setZoom(prev => Math.max(0.2, prev - 0.15));
   const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
