@@ -90,6 +90,7 @@ export default function VisionBoardPage() {
 
   // Color context menu
   const [colorMenu, setColorMenu] = useState<{ itemId: string; x: number; y: number } | null>(null);
+  const [drawToolsExpanded, setDrawToolsExpanded] = useState(false);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -544,19 +545,22 @@ export default function VisionBoardPage() {
 
   const TOOLS: { id: ToolMode; icon: any; label: string }[] = [
     { id: 'select', icon: Cursor, label: 'Select' },
+    { id: 'pan', icon: Hand, label: 'Pan' },
     { id: 'note', icon: Note, label: 'Note' },
     { id: 'text', icon: TextT, label: 'Text' },
     { id: 'connect', icon: ArrowRight, label: 'Connect' },
-    { id: 'draw', icon: PaintBrush, label: 'Draw' },
-    { id: 'eraser', icon: Eraser, label: 'Eraser' },
-    { id: 'pan', icon: Hand, label: 'Pan' },
   ];
 
-  const SHAPE_TOOLS: { id: ToolMode; icon: any; label: string }[] = [
+  const DRAW_TOOLS: { id: ToolMode; icon: any; label: string }[] = [
+    { id: 'draw', icon: PaintBrush, label: 'Draw' },
+    { id: 'eraser', icon: Eraser, label: 'Eraser' },
     { id: 'shape-rect', icon: Rectangle, label: 'Rect' },
     { id: 'shape-circle', icon: Circle, label: 'Circle' },
     { id: 'shape-line', icon: LineSegment, label: 'Line' },
   ];
+
+  const activeDrawTool = DRAW_TOOLS.find(t => t.id === toolMode);
+  const drawToolActive = !!activeDrawTool;
 
   /* ── Get center of an item for arrow drawing ───────── */
   const getItemCenter = useCallback((itemId: string) => {
@@ -618,7 +622,7 @@ export default function VisionBoardPage() {
         {TOOLS.map(tool => (
           <button
             key={tool.id}
-            onClick={() => switchTool(tool.id)}
+            onClick={() => { switchTool(tool.id); setDrawToolsExpanded(false); }}
             className={cn(
               'flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium transition-all gap-0.5',
               toolMode === tool.id ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
@@ -631,20 +635,40 @@ export default function VisionBoardPage() {
 
         <div className="w-7 h-px bg-border my-1.5" />
 
-        {/* Shape tools */}
-        {SHAPE_TOOLS.map(tool => (
+        {/* Drawing tools group — collapsed shows active or PaintBrush */}
+        {!drawToolsExpanded ? (
           <button
-            key={tool.id}
-            onClick={() => switchTool(tool.id)}
+            onClick={() => setDrawToolsExpanded(true)}
             className={cn(
-              'flex flex-col items-center justify-center w-11 h-[42px] rounded-xl text-[9px] font-medium transition-all gap-0.5',
-              toolMode === tool.id ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+              'flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium transition-all gap-0.5 relative',
+              drawToolActive ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
             )}
           >
-            <tool.icon className="h-[16px] w-[16px]" weight={toolMode === tool.id ? 'fill' : 'regular'} />
-            {tool.label}
+            {activeDrawTool ? (
+              <activeDrawTool.icon className="h-[18px] w-[18px]" weight="fill" />
+            ) : (
+              <PaintBrush className="h-[18px] w-[18px]" />
+            )}
+            {activeDrawTool ? activeDrawTool.label : 'Draw'}
+            <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
           </button>
-        ))}
+        ) : (
+          <div className="flex flex-col items-center gap-0.5 bg-secondary/50 rounded-xl py-1 px-0.5">
+            {DRAW_TOOLS.map(tool => (
+              <button
+                key={tool.id}
+                onClick={() => { switchTool(tool.id); setDrawToolsExpanded(false); }}
+                className={cn(
+                  'flex flex-col items-center justify-center w-10 h-[42px] rounded-lg text-[9px] font-medium transition-all gap-0.5',
+                  toolMode === tool.id ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-background hover:text-foreground'
+                )}
+              >
+                <tool.icon className="h-[16px] w-[16px]" weight={toolMode === tool.id ? 'fill' : 'regular'} />
+                {tool.label}
+              </button>
+            ))}
+          </div>
+        )}
 
         <div className="w-7 h-px bg-border my-1.5" />
 
