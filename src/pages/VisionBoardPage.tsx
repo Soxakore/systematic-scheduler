@@ -70,7 +70,7 @@ export default function VisionBoardPage() {
     const y = e.clientY - rect.top + scrollTop;
 
     const count = items?.length || 0;
-    const newItem = await createItem.mutateAsync({
+    const newItem: any = await createItem.mutateAsync({
       title: '',
       description: '',
       category: 'general',
