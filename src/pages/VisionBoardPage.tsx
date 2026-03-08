@@ -103,6 +103,7 @@ export default function VisionBoardPage() {
   // Color context menu
   const [colorMenu, setColorMenu] = useState<{ itemId: string; x: number; y: number } | null>(null);
   const [drawToolsExpanded, setDrawToolsExpanded] = useState(false);
+  const [mediaToolsExpanded, setMediaToolsExpanded] = useState(false);
 
   // Voice recording
   const [isRecording, setIsRecording] = useState(false);
@@ -779,35 +780,53 @@ export default function VisionBoardPage() {
 
         <div className="w-7 h-px bg-border my-1.5" />
 
-        <label className="flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5 cursor-pointer">
-          <ImageSquare className="h-[18px] w-[18px]" />
-          Image
-          <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
-        </label>
+        {/* Media tools group — flyout like draw tools */}
+        <div className="relative">
+          <button
+            onClick={() => setMediaToolsExpanded(prev => !prev)}
+            className={cn(
+              'flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium transition-all gap-0.5 relative',
+              isRecording ? 'bg-destructive/15 text-destructive animate-pulse' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+            )}
+          >
+            {isRecording ? <Stop className="h-[18px] w-[18px]" weight="fill" /> : <ImageSquare className="h-[18px] w-[18px]" />}
+            {isRecording ? `${recordingTime}s` : 'Media'}
+            <span className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-muted-foreground/40" />
+          </button>
 
-        <label className="flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5 cursor-pointer">
-          <VideoCamera className="h-[18px] w-[18px]" />
-          Video
-          <input type="file" accept="video/*" multiple className="hidden" onChange={e => handleMediaUpload(e, 'video')} />
-        </label>
-
-        <label className="flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5 cursor-pointer">
-          <Microphone className="h-[18px] w-[18px]" />
-          Audio
-          <input type="file" accept="audio/*" className="hidden" onChange={e => handleMediaUpload(e, 'audio')} />
-        </label>
-
-        {/* Voice record */}
-        <button
-          onClick={isRecording ? stopRecording : startRecording}
-          className={cn(
-            'flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium transition-all gap-0.5',
-            isRecording ? 'bg-destructive/15 text-destructive animate-pulse' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+          {mediaToolsExpanded && (
+            <div className="absolute left-full top-0 ml-1 z-50 flex flex-col items-center gap-0.5 bg-background border border-border rounded-xl py-1.5 px-1 shadow-lg">
+              <label className="flex flex-col items-center justify-center w-11 h-[46px] rounded-lg text-[9px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5 cursor-pointer"
+                onClick={() => setMediaToolsExpanded(false)}>
+                <ImageSquare className="h-[16px] w-[16px]" />
+                Image
+                <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
+              </label>
+              <label className="flex flex-col items-center justify-center w-11 h-[46px] rounded-lg text-[9px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5 cursor-pointer"
+                onClick={() => setMediaToolsExpanded(false)}>
+                <VideoCamera className="h-[16px] w-[16px]" />
+                Video
+                <input type="file" accept="video/*" multiple className="hidden" onChange={e => handleMediaUpload(e, 'video')} />
+              </label>
+              <label className="flex flex-col items-center justify-center w-11 h-[46px] rounded-lg text-[9px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5 cursor-pointer"
+                onClick={() => setMediaToolsExpanded(false)}>
+                <Microphone className="h-[16px] w-[16px]" />
+                Audio
+                <input type="file" accept="audio/*" className="hidden" onChange={e => handleMediaUpload(e, 'audio')} />
+              </label>
+              <button
+                onClick={() => { setMediaToolsExpanded(false); isRecording ? stopRecording() : startRecording(); }}
+                className={cn(
+                  'flex flex-col items-center justify-center w-11 h-[46px] rounded-lg text-[9px] font-medium transition-all gap-0.5',
+                  isRecording ? 'bg-destructive/15 text-destructive' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+                )}
+              >
+                {isRecording ? <Stop className="h-[16px] w-[16px]" weight="fill" /> : <Record className="h-[16px] w-[16px]" />}
+                {isRecording ? 'Stop' : 'Record'}
+              </button>
+            </div>
           )}
-        >
-          {isRecording ? <Stop className="h-[18px] w-[18px]" weight="fill" /> : <Record className="h-[18px] w-[18px]" />}
-          {isRecording ? `${recordingTime}s` : 'Record'}
-        </button>
+        </div>
 
         <div className="mt-auto" />
 
