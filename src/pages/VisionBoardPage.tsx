@@ -374,6 +374,7 @@ export default function VisionBoardPage() {
   const handleMouseUp = useCallback(async () => {
     // Shape commit
     if (shapeStart && shapeEnd && isShapeTool(toolMode)) {
+      saveCanvasSnapshot();
       drawShapeToCanvas(shapeStart, shapeEnd);
       persistDrawing();
       setShapeStart(null);
