@@ -140,9 +140,19 @@ export interface JournalEntry {
   updated_at: string;
 }
 
+export interface VisionBoard {
+  id: string;
+  user_id: string;
+  name: string;
+  sort_order: number;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface VisionBoardItem {
   id: string;
   user_id: string;
+  board_id: string | null;
   title: string;
   description: string;
   category: string;

@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { useVisionBoardItems, useCreateVisionBoardItem, useUpdateVisionBoardItem, useDeleteVisionBoardItem, useVisionBoardConnections, useCreateVisionBoardConnection, useDeleteVisionBoardConnection } from '@/hooks/useData';
+import { useVisionBoards, useCreateVisionBoard, useUpdateVisionBoard, useDeleteVisionBoard, useVisionBoardItems, useCreateVisionBoardItem, useUpdateVisionBoardItem, useDeleteVisionBoardItem, useVisionBoardConnections, useCreateVisionBoardConnection, useDeleteVisionBoardConnection } from '@/hooks/useData';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
@@ -11,7 +11,7 @@ import {
   Stack, Eye, EyeSlash, MagnetStraight,
   ArrowCounterClockwise, ArrowClockwise, Palette,
   VideoCamera, Microphone, Record, Stop, Play, Pause,
-  Export, FilePdf, FileDoc,
+  Export, FilePdf, FileDoc, Plus, PencilSimple, TrashSimple, CaretDown, DotsSixVertical,
 } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
@@ -43,13 +43,27 @@ const isShapeTool = (t: ToolMode) => t === 'shape-rect' || t === 'shape-circle' 
 
 export default function VisionBoardPage() {
   const { user } = useAuth();
-  const { data: items, isLoading } = useVisionBoardItems();
+
+  // Board management
+  const { data: boards } = useVisionBoards();
+  const createBoard = useCreateVisionBoard();
+  const updateBoard = useUpdateVisionBoard();
+  const deleteBoard = useDeleteVisionBoard();
+  const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
+  const [boardMenuOpen, setBoardMenuOpen] = useState(false);
+  const [renamingBoardId, setRenamingBoardId] = useState<string | null>(null);
+  const [renamingBoardName, setRenamingBoardName] = useState('');
+
+  const { data: items, isLoading } = useVisionBoardItems(activeBoardId);
   const createItem = useCreateVisionBoardItem();
   const updateItem = useUpdateVisionBoardItem();
   const deleteItem = useDeleteVisionBoardItem();
-  const { data: connections } = useVisionBoardConnections();
+  const { data: connections } = useVisionBoardConnections(activeBoardId);
   const createConnection = useCreateVisionBoardConnection();
   const deleteConnection = useDeleteVisionBoardConnection();
+
+  const activeBoard = boards?.find(b => b.id === activeBoardId);
+  const activeBoardName = activeBoard?.name || 'Default Board';
 
   const [toolMode, setToolMode] = useState<ToolMode>('select');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -330,6 +344,7 @@ export default function VisionBoardPage() {
     // Close flyouts when clicking on the canvas
     setDrawToolsExpanded(false);
     setMediaToolsExpanded(false);
+    setBoardMenuOpen(false);
 
     if (isDrawMode) {
       handleDrawStart(e.clientX, e.clientY);
@@ -445,7 +460,7 @@ export default function VisionBoardPage() {
         title: '', description: '', category: 'general', color: '#64748b', icon: 'star',
         position_x: snap(Math.round(x)), position_y: snap(Math.round(y)),
         width: 200, height: 40, image_url: null,
-        is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+        is_achieved: false, achieved_at: null, sort_order: items?.length || 0, board_id: activeBoardId,
       });
       if (newItem?.id) {
         setEditingId(newItem.id);
@@ -462,7 +477,7 @@ export default function VisionBoardPage() {
       title: '', description: '', category: 'general', color: '#64748b', icon: 'star',
       position_x: snap(Math.round(x - 120)), position_y: snap(Math.round(y - 20)),
       width: 240, height: 160, image_url: null,
-      is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+      is_achieved: false, achieved_at: null, sort_order: items?.length || 0, board_id: activeBoardId,
     });
     if (newItem?.id) {
       setEditingId(newItem.id);
@@ -499,7 +514,7 @@ export default function VisionBoardPage() {
           position_x: snap(Math.round(x + i * 20 - 120)), position_y: snap(Math.round(y + i * 20 - 20)),
           width: isVideo ? 320 : 260, height: isVideo ? 240 : isAudio ? 80 : 220,
           image_url: data.publicUrl,
-          is_achieved: false, achieved_at: null, sort_order: (items?.length || 0) + i,
+          is_achieved: false, achieved_at: null, sort_order: (items?.length || 0) + i, board_id: activeBoardId,
         });
       } catch (err: any) { toast.error('Upload failed: ' + err.message); }
       finally { setUploading(false); }
@@ -567,7 +582,7 @@ export default function VisionBoardPage() {
           color: '#64748b', icon: 'star',
           position_x: 40 + Math.random() * 400, position_y: 40 + Math.random() * 300,
           width: 260, height: 220, image_url: data.publicUrl,
-          is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+          is_achieved: false, achieved_at: null, sort_order: items?.length || 0, board_id: activeBoardId,
         });
       } catch (err: any) { toast.error('Upload failed: ' + err.message); }
       finally { setUploading(false); }
@@ -593,7 +608,7 @@ export default function VisionBoardPage() {
           position_x: 40 + Math.random() * 400, position_y: 40 + Math.random() * 300,
           width: type === 'video' ? 320 : 260, height: type === 'video' ? 240 : 80,
           image_url: data.publicUrl,
-          is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+          is_achieved: false, achieved_at: null, sort_order: items?.length || 0, board_id: activeBoardId,
         });
       } catch (err: any) { toast.error('Upload failed: ' + err.message); }
       finally { setUploading(false); }
@@ -633,7 +648,7 @@ export default function VisionBoardPage() {
             color: '#3b82f6', icon: 'star',
             position_x: 40 + Math.random() * 400, position_y: 40 + Math.random() * 300,
             width: 260, height: 80, image_url: data.publicUrl,
-            is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+            is_achieved: false, achieved_at: null, sort_order: items?.length || 0, board_id: activeBoardId,
           });
           toast.success('Voice note saved');
         } catch (err: any) { toast.error('Failed to save: ' + err.message); }
@@ -816,7 +831,7 @@ img{max-width:100%;border-radius:6px;margin-top:8px}</style></head><body>
       return;
     }
     try {
-      await createConnection.mutateAsync({ from_item_id: connectFromId, to_item_id: itemId });
+      await createConnection.mutateAsync({ from_item_id: connectFromId, to_item_id: itemId, board_id: activeBoardId });
       toast.success('Connected!');
     } catch { toast.error('Failed to connect'); }
     setConnectFromId(null);
@@ -988,6 +1003,104 @@ img{max-width:100%;border-radius:6px;margin-top:8px}</style></head><body>
         {/* Top bar */}
         <div className="shrink-0 h-10 border-b border-border bg-background flex items-center px-4 gap-2">
           <h1 className="text-xs font-semibold text-foreground">Vision Board</h1>
+          
+          {/* Board switcher */}
+          <div className="relative">
+            <button
+              onClick={() => setBoardMenuOpen(prev => !prev)}
+              className="flex items-center gap-1 h-7 px-2 rounded-md text-[11px] font-medium text-foreground bg-secondary hover:bg-secondary/80 transition-colors"
+            >
+              {activeBoardName}
+              <CaretDown className="h-3 w-3 text-muted-foreground" />
+            </button>
+
+            {boardMenuOpen && (
+              <div className="absolute top-full left-0 mt-1 z-50 w-56 bg-background border border-border rounded-lg shadow-lg py-1">
+                {/* Default board (items with no board_id) */}
+                <button
+                  onClick={() => { setActiveBoardId(null); setBoardMenuOpen(false); }}
+                  className={cn(
+                    'w-full text-left px-3 py-1.5 text-[11px] font-medium transition-colors flex items-center justify-between',
+                    !activeBoardId ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-secondary'
+                  )}
+                >
+                  Default Board
+                  {!activeBoardId && <Check className="h-3 w-3" />}
+                </button>
+
+                {boards?.map((board, idx) => (
+                  <div key={board.id} className="flex items-center group">
+                    {renamingBoardId === board.id ? (
+                      <input
+                        autoFocus
+                        value={renamingBoardName}
+                        onChange={e => setRenamingBoardName(e.target.value)}
+                        onBlur={async () => {
+                          if (renamingBoardName.trim()) {
+                            await updateBoard.mutateAsync({ id: board.id, name: renamingBoardName.trim() });
+                          }
+                          setRenamingBoardId(null);
+                        }}
+                        onKeyDown={async e => {
+                          if (e.key === 'Enter') {
+                            if (renamingBoardName.trim()) {
+                              await updateBoard.mutateAsync({ id: board.id, name: renamingBoardName.trim() });
+                            }
+                            setRenamingBoardId(null);
+                          }
+                        }}
+                        className="flex-1 px-3 py-1.5 text-[11px] bg-transparent outline-none border-b border-primary"
+                      />
+                    ) : (
+                      <button
+                        onClick={() => { setActiveBoardId(board.id); setBoardMenuOpen(false); }}
+                        className={cn(
+                          'flex-1 text-left px-3 py-1.5 text-[11px] font-medium transition-colors flex items-center justify-between',
+                          activeBoardId === board.id ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-secondary'
+                        )}
+                      >
+                        {board.name}
+                        {activeBoardId === board.id && <Check className="h-3 w-3" />}
+                      </button>
+                    )}
+                    <button
+                      onClick={e => { e.stopPropagation(); setRenamingBoardId(board.id); setRenamingBoardName(board.name); }}
+                      className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <PencilSimple className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={async e => {
+                        e.stopPropagation();
+                        if (confirm(`Delete "${board.name}" and all its items?`)) {
+                          if (activeBoardId === board.id) setActiveBoardId(null);
+                          await deleteBoard.mutateAsync(board.id);
+                        }
+                      }}
+                      className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <TrashSimple className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+
+                <div className="border-t border-border mt-1 pt-1">
+                  <button
+                    onClick={async () => {
+                      const board = await createBoard.mutateAsync({ name: `Board ${(boards?.length || 0) + 1}`, sort_order: (boards?.length || 0) });
+                      setActiveBoardId(board.id);
+                      setBoardMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-[11px] font-medium text-primary hover:bg-primary/5 transition-colors flex items-center gap-1.5"
+                  >
+                    <Plus className="h-3 w-3" />
+                    New Board
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {totalCount > 0 && <span className="text-[10px] text-muted-foreground">{achievedCount}/{totalCount} achieved</span>}
           {uploading && <span className="text-[10px] text-primary animate-pulse">Uploading…</span>}
           {snapEnabled && <span className="text-[9px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">Grid Snap ON</span>}

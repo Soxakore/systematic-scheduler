@@ -631,6 +631,7 @@ export type Database = {
       }
       vision_board_connections: {
         Row: {
+          board_id: string | null
           created_at: string
           from_item_id: string
           id: string
@@ -638,6 +639,7 @@ export type Database = {
           user_id: string
         }
         Insert: {
+          board_id?: string | null
           created_at?: string
           from_item_id: string
           id?: string
@@ -645,6 +647,7 @@ export type Database = {
           user_id: string
         }
         Update: {
+          board_id?: string | null
           created_at?: string
           from_item_id?: string
           id?: string
@@ -652,6 +655,13 @@ export type Database = {
           user_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "vision_board_connections_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "vision_boards"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "vision_board_connections_from_item_id_fkey"
             columns: ["from_item_id"]
@@ -671,6 +681,7 @@ export type Database = {
       vision_board_items: {
         Row: {
           achieved_at: string | null
+          board_id: string | null
           category: string | null
           color: string | null
           created_at: string
@@ -690,6 +701,7 @@ export type Database = {
         }
         Insert: {
           achieved_at?: string | null
+          board_id?: string | null
           category?: string | null
           color?: string | null
           created_at?: string
@@ -709,6 +721,7 @@ export type Database = {
         }
         Update: {
           achieved_at?: string | null
+          board_id?: string | null
           category?: string | null
           color?: string | null
           created_at?: string
@@ -725,6 +738,41 @@ export type Database = {
           updated_at?: string
           user_id?: string
           width?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vision_board_items_board_id_fkey"
+            columns: ["board_id"]
+            isOneToOne: false
+            referencedRelation: "vision_boards"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      vision_boards: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+          sort_order: number
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+          sort_order?: number
+          updated_at?: string
+          user_id?: string
         }
         Relationships: []
       }

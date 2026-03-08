@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Json } from '@/integrations/supabase/types';
-import type { Profile, Calendar, CalendarEvent, Tag, System, Goal, DailyScore, FocusSession, EventTemplate, EventChecklistItem, JournalEntry, VisionBoardItem, CalendarShare, EventSuggestion } from '@/types';
+import type { Profile, Calendar, CalendarEvent, Tag, System, Goal, DailyScore, FocusSession, EventTemplate, EventChecklistItem, JournalEntry, VisionBoard, VisionBoardItem, CalendarShare, EventSuggestion } from '@/types';
 
 // Profile
 export function useProfile() {
@@ -656,13 +656,72 @@ export function useUpsertJournalEntry() {
   });
 }
 
-// ========== Vision Board ==========
-export function useVisionBoardItems() {
+// ========== Vision Boards ==========
+export function useVisionBoards() {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ['vision_board_items', user?.id],
+    queryKey: ['vision_boards', user?.id],
     queryFn: async () => {
-      const { data, error } = await supabase.from('vision_board_items' as any).select('*').eq('user_id', user!.id).order('sort_order');
+      const { data, error } = await supabase.from('vision_boards' as any).select('*').eq('user_id', user!.id).order('sort_order');
+      if (error) throw error;
+      return (data ?? []) as unknown as VisionBoard[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useCreateVisionBoard() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (board: { name: string; sort_order: number }) => {
+      const { data, error } = await supabase.from('vision_boards' as any).insert({ ...board, user_id: user!.id } as any).select().single();
+      if (error) throw error;
+      return data as any as VisionBoard;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['vision_boards'] }),
+  });
+}
+
+export function useUpdateVisionBoard() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, ...updates }: { id: string } & Partial<VisionBoard>) => {
+      const { error } = await supabase.from('vision_boards' as any).update({ ...updates, updated_at: new Date().toISOString() } as any).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['vision_boards'] }),
+  });
+}
+
+export function useDeleteVisionBoard() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('vision_boards' as any).delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['vision_boards'] });
+      qc.invalidateQueries({ queryKey: ['vision_board_items'] });
+      qc.invalidateQueries({ queryKey: ['vision_board_connections'] });
+    },
+  });
+}
+
+// ========== Vision Board Items ==========
+export function useVisionBoardItems(boardId?: string | null) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['vision_board_items', user?.id, boardId],
+    queryFn: async () => {
+      let query = supabase.from('vision_board_items' as any).select('*').eq('user_id', user!.id).order('sort_order');
+      if (boardId) {
+        query = query.eq('board_id', boardId);
+      } else {
+        query = query.is('board_id', null);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as VisionBoardItem[];
     },
@@ -711,15 +770,22 @@ export interface VisionBoardConnection {
   user_id: string;
   from_item_id: string;
   to_item_id: string;
+  board_id: string | null;
   created_at: string;
 }
 
-export function useVisionBoardConnections() {
+export function useVisionBoardConnections(boardId?: string | null) {
   const { user } = useAuth();
   return useQuery({
-    queryKey: ['vision_board_connections', user?.id],
+    queryKey: ['vision_board_connections', user?.id, boardId],
     queryFn: async () => {
-      const { data, error } = await supabase.from('vision_board_connections' as any).select('*').eq('user_id', user!.id);
+      let query = supabase.from('vision_board_connections' as any).select('*').eq('user_id', user!.id);
+      if (boardId) {
+        query = query.eq('board_id', boardId);
+      } else {
+        query = query.is('board_id', null);
+      }
+      const { data, error } = await query;
       if (error) throw error;
       return (data ?? []) as unknown as VisionBoardConnection[];
     },
@@ -731,9 +797,9 @@ export function useCreateVisionBoardConnection() {
   const qc = useQueryClient();
   const { user } = useAuth();
   return useMutation({
-    mutationFn: async ({ from_item_id, to_item_id }: { from_item_id: string; to_item_id: string }) => {
+    mutationFn: async ({ from_item_id, to_item_id, board_id }: { from_item_id: string; to_item_id: string; board_id?: string | null }) => {
       const { data, error } = await supabase.from('vision_board_connections' as any)
-        .insert({ from_item_id, to_item_id, user_id: user!.id } as any).select().single();
+        .insert({ from_item_id, to_item_id, board_id: board_id || null, user_id: user!.id } as any).select().single();
       if (error) throw error;
       return data as unknown as VisionBoardConnection;
     },
