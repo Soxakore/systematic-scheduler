@@ -703,3 +703,134 @@ export function useDeleteVisionBoardItem() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ['vision_board_items'] }),
   });
 }
+
+// ─── Calendar Sharing ────────────────────────────────────────
+
+export function useMyShares() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['calendar_shares', 'mine', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('calendar_shares' as any).select('*').eq('owner_id', user!.id).order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as unknown as CalendarShare[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useSharedWithMe() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['calendar_shares', 'with_me', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('calendar_shares' as any).select('*').eq('shared_with_id', user!.id).order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as unknown as CalendarShare[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useCreateShare() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (share: { calendar_id: string; shared_with_email: string; permission: string }) => {
+      const { data, error } = await supabase.from('calendar_shares' as any).insert({ ...share, owner_id: user!.id }).select().single();
+      if (error) throw error;
+      return data as unknown as CalendarShare;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['calendar_shares'] }),
+  });
+}
+
+export function useDeleteShare() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase.from('calendar_shares' as any).delete().eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['calendar_shares'] }),
+  });
+}
+
+export function useRespondToShare() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from('calendar_shares' as any).update({ status }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['calendar_shares'] }),
+  });
+}
+
+export function useSharedCalendarEvents(calendarIds: string[], startDate?: Date, endDate?: Date) {
+  return useQuery({
+    queryKey: ['shared_events', calendarIds, startDate?.toISOString(), endDate?.toISOString()],
+    queryFn: async () => {
+      if (calendarIds.length === 0) return [];
+      let query = supabase.from('events').select('*').in('calendar_id', calendarIds);
+      if (startDate) query = query.gte('end_time', startDate.toISOString());
+      if (endDate) query = query.lte('start_time', endDate.toISOString());
+      const { data, error } = await query.order('start_time');
+      if (error) throw error;
+      return data as CalendarEvent[];
+    },
+    enabled: calendarIds.length > 0,
+  });
+}
+
+// ─── Event Suggestions ──────────────────────────────────────
+
+export function useIncomingSuggestions() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['event_suggestions', 'incoming', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('event_suggestions' as any).select('*').eq('to_user_id', user!.id).order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as unknown as EventSuggestion[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useOutgoingSuggestions() {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['event_suggestions', 'outgoing', user?.id],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('event_suggestions' as any).select('*').eq('from_user_id', user!.id).order('created_at', { ascending: false });
+      if (error) throw error;
+      return data as unknown as EventSuggestion[];
+    },
+    enabled: !!user,
+  });
+}
+
+export function useCreateSuggestion() {
+  const qc = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: async (suggestion: Omit<EventSuggestion, 'id' | 'from_user_id' | 'status' | 'created_at' | 'updated_at'>) => {
+      const { data, error } = await supabase.from('event_suggestions' as any).insert({ ...suggestion, from_user_id: user!.id }).select().single();
+      if (error) throw error;
+      return data as unknown as EventSuggestion;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['event_suggestions'] }),
+  });
+}
+
+export function useRespondToSuggestion() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, status }: { id: string; status: string }) => {
+      const { error } = await supabase.from('event_suggestions' as any).update({ status }).eq('id', id);
+      if (error) throw error;
+    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ['event_suggestions'] }),
+  });
+}
