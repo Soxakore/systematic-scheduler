@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, forwardRef } from 'react';
 import { useAppContext } from '@/components/AppLayout';
 import { useCalendars, useCreateEvent, useUpdateEvent, useDeleteEvent, useEvents, useTags, useCreateTag, useEventTags, useSetEventTags } from '@/hooks/useData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
