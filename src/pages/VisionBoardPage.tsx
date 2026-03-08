@@ -450,7 +450,7 @@ export default function VisionBoardPage() {
         {TOOLS.map(tool => (
           <button
             key={tool.id}
-            onClick={() => setToolMode(tool.id)}
+            onClick={() => { setToolMode(tool.id); setConnectFromId(null); setConnectMousePos(null); }}
             className={cn(
               'flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium transition-all gap-0.5',
               toolMode === tool.id ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
