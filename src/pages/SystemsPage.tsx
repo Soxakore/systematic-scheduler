@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Plus, PencilSimple, Trash, Lightning, ProhibitInset, Sparkle } from '@phosphor-icons/react';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { Link } from 'react-router-dom';
 import type { System } from '@/types';
 
