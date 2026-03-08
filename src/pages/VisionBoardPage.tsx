@@ -779,6 +779,30 @@ export default function VisionBoardPage() {
           <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
         </label>
 
+        <label className="flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5 cursor-pointer">
+          <VideoCamera className="h-[18px] w-[18px]" />
+          Video
+          <input type="file" accept="video/*" multiple className="hidden" onChange={e => handleMediaUpload(e, 'video')} />
+        </label>
+
+        <label className="flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5 cursor-pointer">
+          <Microphone className="h-[18px] w-[18px]" />
+          Audio
+          <input type="file" accept="audio/*" className="hidden" onChange={e => handleMediaUpload(e, 'audio')} />
+        </label>
+
+        {/* Voice record */}
+        <button
+          onClick={isRecording ? stopRecording : startRecording}
+          className={cn(
+            'flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium transition-all gap-0.5',
+            isRecording ? 'bg-destructive/15 text-destructive animate-pulse' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+          )}
+        >
+          {isRecording ? <Stop className="h-[18px] w-[18px]" weight="fill" /> : <Record className="h-[18px] w-[18px]" />}
+          {isRecording ? `${recordingTime}s` : 'Record'}
+        </button>
+
         <div className="mt-auto" />
 
         {/* Snap toggle */}
