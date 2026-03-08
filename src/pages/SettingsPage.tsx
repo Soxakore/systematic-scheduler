@@ -1,6 +1,5 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useProfile, useUpdateProfile } from '@/hooks/useData';
-import { useAuth } from '@/hooks/useAuth';
 import { useTheme } from '@/hooks/useTheme';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,7 +9,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Sun, Moon } from '@phosphor-icons/react';
 import { toast } from 'sonner';
-import { useNavigate } from 'react-router-dom';
 
 const TIMEZONES = [
   'UTC', 'America/New_York', 'America/Chicago', 'America/Denver', 'America/Los_Angeles',
@@ -21,23 +19,21 @@ const TIMEZONES = [
 export default function SettingsPage() {
   const { data: profile, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
-  const { signOut } = useAuth();
   const { theme, toggleTheme } = useTheme();
-  const navigate = useNavigate();
 
   const [name, setName] = useState('');
   const [timezone, setTimezone] = useState('');
   const [weekStart, setWeekStart] = useState('');
   const [defaultView, setDefaultView] = useState('');
-  const [initialized, setInitialized] = useState(false);
 
-  if (profile && !initialized) {
-    setName(profile.name);
-    setTimezone(profile.timezone);
-    setWeekStart(profile.week_start_day.toString());
-    setDefaultView(profile.default_view);
-    setInitialized(true);
-  }
+  useEffect(() => {
+    if (profile) {
+      setName(profile.name);
+      setTimezone(profile.timezone);
+      setWeekStart(profile.week_start_day.toString());
+      setDefaultView(profile.default_view);
+    }
+  }, [profile]);
 
   const handleSave = async () => {
     try {
