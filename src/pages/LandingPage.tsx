@@ -258,7 +258,7 @@ export default function LandingPage() {
         <div className="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <div className="flex items-center gap-2 text-white/30 text-sm">
             <img src={icoCalendar} alt="" width={20} height={20} className="rounded opacity-50" />
-            <span>© 2026 System Calendar. All rights reserved.</span>
+            <span>© 2026 DayBlock. All rights reserved.</span>
           </div>
           <div className="flex gap-6 text-sm text-white/30">
             <Link to="/terms" className="hover:text-white/60 transition-colors">Terms</Link>

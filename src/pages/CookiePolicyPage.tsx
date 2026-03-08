@@ -57,7 +57,7 @@ export default function CookiePolicyPage() {
         </ul>
 
         <h2>4. Cookies We Do NOT Use</h2>
-        <p>System Calendar does <strong>not</strong> use:</p>
+        <p>DayBlock does <strong>not</strong> use:</p>
         <ul>
           <li>Advertising or tracking cookies</li>
           <li>Analytics cookies that track behavior across websites</li>

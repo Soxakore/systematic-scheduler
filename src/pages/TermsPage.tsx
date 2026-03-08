@@ -7,8 +7,8 @@ export default function TermsPage() {
       <nav className="border-b border-border">
         <div className="max-w-3xl mx-auto flex items-center justify-between px-6 h-14">
           <Link to="/welcome" className="flex items-center gap-2">
-            <img src={icoCalendar} alt="" width={28} height={28} className="rounded-lg" />
-            <span className="font-semibold text-foreground">System Calendar</span>
+            <img src="/logo.png" alt="DayBlock" width={28} height={28} className="rounded-lg" />
+            <span className="font-semibold text-foreground">DayBlock</span>
           </Link>
           <Link to="/welcome" className="text-sm text-primary hover:underline">Back to Home</Link>
         </div>
