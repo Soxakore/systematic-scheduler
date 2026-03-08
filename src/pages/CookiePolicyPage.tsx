@@ -7,8 +7,8 @@ export default function CookiePolicyPage() {
       <nav className="border-b border-border">
         <div className="max-w-3xl mx-auto flex items-center justify-between px-6 h-14">
           <Link to="/welcome" className="flex items-center gap-2">
-            <img src={icoCalendar} alt="" width={28} height={28} className="rounded-lg" />
-            <span className="font-semibold text-foreground">System Calendar</span>
+            <img src="/logo.png" alt="DayBlock" width={28} height={28} className="rounded-lg" />
+            <span className="font-semibold text-foreground">DayBlock</span>
           </Link>
           <Link to="/welcome" className="text-sm text-primary hover:underline">Back to Home</Link>
         </div>
@@ -24,7 +24,7 @@ export default function CookiePolicyPage() {
         </p>
 
         <h2>2. How We Use Cookies</h2>
-        <p>System Calendar uses cookies and similar technologies for the following purposes:</p>
+        <p>DayBlock uses cookies and similar technologies for the following purposes:</p>
 
         <h3>Essential Cookies (Required)</h3>
         <p>These cookies are necessary for the Service to function and cannot be disabled.</p>
@@ -57,7 +57,7 @@ export default function CookiePolicyPage() {
         </ul>
 
         <h2>4. Cookies We Do NOT Use</h2>
-        <p>System Calendar does <strong>not</strong> use:</p>
+        <p>DayBlock does <strong>not</strong> use:</p>
         <ul>
           <li>Advertising or tracking cookies</li>
           <li>Analytics cookies that track behavior across websites</li>

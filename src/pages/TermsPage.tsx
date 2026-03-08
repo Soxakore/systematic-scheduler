@@ -7,8 +7,8 @@ export default function TermsPage() {
       <nav className="border-b border-border">
         <div className="max-w-3xl mx-auto flex items-center justify-between px-6 h-14">
           <Link to="/welcome" className="flex items-center gap-2">
-            <img src={icoCalendar} alt="" width={28} height={28} className="rounded-lg" />
-            <span className="font-semibold text-foreground">System Calendar</span>
+            <img src="/logo.png" alt="DayBlock" width={28} height={28} className="rounded-lg" />
+            <span className="font-semibold text-foreground">DayBlock</span>
           </Link>
           <Link to="/welcome" className="text-sm text-primary hover:underline">Back to Home</Link>
         </div>
@@ -20,12 +20,12 @@ export default function TermsPage() {
 
         <h2>1. Acceptance of Terms</h2>
         <p>
-          By accessing or using System Calendar ("the Service"), you agree to be bound by these Terms of Service. If you do not agree, you may not use the Service.
+          By accessing or using DayBlock ("the Service"), you agree to be bound by these Terms of Service. If you do not agree, you may not use the Service.
         </p>
 
         <h2>2. Description of Service</h2>
         <p>
-          System Calendar is a personal productivity platform that provides calendar management, habit tracking, goal setting, journaling, vision boards, focus timers, weekly reviews, morning briefings, and analytics tools. The Service is designed for individual use to help users organize and optimize their daily routines.
+          DayBlock is a personal productivity platform that provides calendar management, habit tracking, goal setting, journaling, vision boards, focus timers, weekly reviews, morning briefings, and analytics tools. The Service is designed for individual use to help users organize and optimize their daily routines.
         </p>
 
         <h2>3. User Accounts</h2>
@@ -56,7 +56,7 @@ export default function TermsPage() {
 
         <h2>6. Intellectual Property</h2>
         <p>
-          The Service, including its design, logos, icons, and code, is owned by System Calendar and protected by intellectual property laws. You may not copy, modify, or distribute any part of the Service without prior written consent.
+          The Service, including its design, logos, icons, and code, is owned by DayBlock and protected by intellectual property laws. You may not copy, modify, or distribute any part of the Service without prior written consent.
         </p>
 
         <h2>7. Service Availability</h2>
