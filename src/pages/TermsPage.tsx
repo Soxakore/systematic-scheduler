@@ -56,7 +56,7 @@ export default function TermsPage() {
 
         <h2>6. Intellectual Property</h2>
         <p>
-          The Service, including its design, logos, icons, and code, is owned by System Calendar and protected by intellectual property laws. You may not copy, modify, or distribute any part of the Service without prior written consent.
+          The Service, including its design, logos, icons, and code, is owned by DayBlock and protected by intellectual property laws. You may not copy, modify, or distribute any part of the Service without prior written consent.
         </p>
 
         <h2>7. Service Availability</h2>
