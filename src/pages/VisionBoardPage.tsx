@@ -1142,9 +1142,13 @@ export default function VisionBoardPage() {
                         <audio
                           src={item.image_url!}
                           controls
-                          className="w-full h-8"
+                          className="w-full h-8 pointer-events-auto"
                           style={{ minWidth: 0 }}
-                          onMouseDown={e => e.stopPropagation()}
+                          onMouseDown={e => {
+                            // Only stop propagation on the audio controls, not the surrounding card
+                            e.stopPropagation();
+                          }}
+                          onClick={e => e.stopPropagation()}
                         />
                       </div>
                     )}
