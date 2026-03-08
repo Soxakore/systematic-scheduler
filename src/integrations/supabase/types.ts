@@ -629,6 +629,45 @@ export type Database = {
         }
         Relationships: []
       }
+      vision_board_connections: {
+        Row: {
+          created_at: string
+          from_item_id: string
+          id: string
+          to_item_id: string
+          user_id: string
+        }
+        Insert: {
+          created_at?: string
+          from_item_id: string
+          id?: string
+          to_item_id: string
+          user_id: string
+        }
+        Update: {
+          created_at?: string
+          from_item_id?: string
+          id?: string
+          to_item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "vision_board_connections_from_item_id_fkey"
+            columns: ["from_item_id"]
+            isOneToOne: false
+            referencedRelation: "vision_board_items"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "vision_board_connections_to_item_id_fkey"
+            columns: ["to_item_id"]
+            isOneToOne: false
+            referencedRelation: "vision_board_items"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       vision_board_items: {
         Row: {
           achieved_at: string | null
