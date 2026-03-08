@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { Check, Star } from '@phosphor-icons/react';
+import { ArrowRight, Check, Star } from '@phosphor-icons/react';
 import HeroLoginSection from '@/components/landing/HeroLoginSection';
 
 import icoLightning from '@/assets/icons/icon-lightning.svg';
