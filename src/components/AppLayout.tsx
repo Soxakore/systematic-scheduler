@@ -35,6 +35,8 @@ interface AppContextValue {
   setShowEventDialog: (v: boolean) => void;
   selectedDate: Date | null;
   setSelectedDate: (d: Date | null) => void;
+  selectedEndDate: Date | null;
+  setSelectedEndDate: (d: Date | null) => void;
   editingEventId: string | null;
   setEditingEventId: (id: string | null) => void;
   selectedTagIds: string[];
