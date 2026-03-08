@@ -10,6 +10,7 @@ import {
   ArrowRight, TextT, Rectangle, Circle, LineSegment,
   Stack, Eye, EyeSlash, MagnetStraight,
   ArrowCounterClockwise, ArrowClockwise, Palette,
+  VideoCamera, Microphone, Record, Stop, Play, Pause,
 } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
@@ -22,6 +23,17 @@ const GRID_SIZE = 20;
 const CANVAS_W = 4000;
 const CANVAS_H = 3000;
 const DRAW_COLORS = ['#1e293b', '#ef4444', '#3b82f6', '#22c55e', '#eab308', '#8b5cf6', '#ec4899', '#f8fafc'];
+
+const getMediaType = (url: string | null): 'image' | 'video' | 'audio' | null => {
+  if (!url) return null;
+  const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
+  if (['mp4', 'webm', 'mov', 'ogg'].includes(ext || '')) return 'video';
+  if (['mp3', 'wav', 'webm-audio', 'm4a', 'ogg-audio'].includes(ext || '')) return 'audio';
+  // webm could be audio or video - check path for hints
+  if (ext === 'webm' && url.includes('voice-')) return 'audio';
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext || '')) return 'image';
+  return 'image';
+};
 const BRUSH_SIZES = [2, 4, 8, 14];
 
 const isShapeTool = (t: ToolMode) => t === 'shape-rect' || t === 'shape-circle' || t === 'shape-line';
@@ -91,6 +103,13 @@ export default function VisionBoardPage() {
   // Color context menu
   const [colorMenu, setColorMenu] = useState<{ itemId: string; x: number; y: number } | null>(null);
   const [drawToolsExpanded, setDrawToolsExpanded] = useState(false);
+
+  // Voice recording
+  const [isRecording, setIsRecording] = useState(false);
+  const [recordingTime, setRecordingTime] = useState(0);
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+  const audioChunksRef = useRef<Blob[]>([]);
+  const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement>(null);
@@ -448,22 +467,28 @@ export default function VisionBoardPage() {
     e.preventDefault();
     if (!user) return;
     const { x, y } = screenToWorld(e.clientX, e.clientY);
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    const files = Array.from(e.dataTransfer.files).filter(f =>
+      f.type.startsWith('image/') || f.type.startsWith('video/') || f.type.startsWith('audio/')
+    );
     if (!files.length) return;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      const isVideo = file.type.startsWith('video/');
+      const isAudio = file.type.startsWith('audio/');
       setUploading(true);
       try {
         const ext = file.name.split('.').pop();
-        const path = `${user.id}/${Date.now()}-${i}.${ext}`;
+        const prefix = isAudio ? 'voice-' : '';
+        const path = `${user.id}/${prefix}${Date.now()}-${i}.${ext}`;
         const { error } = await supabase.storage.from('vision-images').upload(path, file);
         if (error) throw error;
         const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
         await createItem.mutateAsync({
           title: file.name.replace(/\.[^/.]+$/, ''), description: '', category: 'general',
-          color: '#64748b', icon: 'star',
+          color: isVideo ? '#8b5cf6' : isAudio ? '#3b82f6' : '#64748b', icon: 'star',
           position_x: snap(Math.round(x + i * 20 - 120)), position_y: snap(Math.round(y + i * 20 - 20)),
-          width: 260, height: 220, image_url: data.publicUrl,
+          width: isVideo ? 320 : 260, height: isVideo ? 240 : isAudio ? 80 : 220,
+          image_url: data.publicUrl,
           is_achieved: false, achieved_at: null, sort_order: (items?.length || 0) + i,
         });
       } catch (err: any) { toast.error('Upload failed: ' + err.message); }
@@ -539,6 +564,85 @@ export default function VisionBoardPage() {
     }
     toast.success('Image(s) added');
     e.target.value = '';
+  };
+  /* ── Video/audio upload from toolbar ─────────────── */
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'video' | 'audio') => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !user) return;
+    for (const file of files) {
+      setUploading(true);
+      try {
+        const ext = file.name.split('.').pop();
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error } = await supabase.storage.from('vision-images').upload(path, file);
+        if (error) throw error;
+        const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
+        await createItem.mutateAsync({
+          title: file.name.replace(/\.[^/.]+$/, ''), description: '', category: 'general',
+          color: type === 'video' ? '#8b5cf6' : '#3b82f6', icon: 'star',
+          position_x: 40 + Math.random() * 400, position_y: 40 + Math.random() * 300,
+          width: type === 'video' ? 320 : 260, height: type === 'video' ? 240 : 80,
+          image_url: data.publicUrl,
+          is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+        });
+      } catch (err: any) { toast.error('Upload failed: ' + err.message); }
+      finally { setUploading(false); }
+    }
+    toast.success(`${type === 'video' ? 'Video' : 'Audio'}(s) added`);
+    e.target.value = '';
+  };
+
+  /* ── Voice recording ────────────────────────────────── */
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+        setRecordingTime(0);
+
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        if (!user || blob.size === 0) return;
+
+        setUploading(true);
+        try {
+          const path = `${user.id}/voice-${Date.now()}.webm`;
+          const { error } = await supabase.storage.from('vision-images').upload(path, blob, { contentType: 'audio/webm' });
+          if (error) throw error;
+          const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
+          await createItem.mutateAsync({
+            title: `Voice note`, description: '', category: 'general',
+            color: '#3b82f6', icon: 'star',
+            position_x: 40 + Math.random() * 400, position_y: 40 + Math.random() * 300,
+            width: 260, height: 80, image_url: data.publicUrl,
+            is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+          });
+          toast.success('Voice note saved');
+        } catch (err: any) { toast.error('Failed to save: ' + err.message); }
+        finally { setUploading(false); }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      recordingTimerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000);
+    } catch {
+      toast.error('Microphone access denied');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
   };
 
   const switchTool = (id: ToolMode) => { setToolMode(id); setConnectFromId(null); setConnectMousePos(null); setShapeStart(null); setShapeEnd(null); };
@@ -680,6 +784,30 @@ export default function VisionBoardPage() {
           Image
           <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
         </label>
+
+        <label className="flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5 cursor-pointer">
+          <VideoCamera className="h-[18px] w-[18px]" />
+          Video
+          <input type="file" accept="video/*" multiple className="hidden" onChange={e => handleMediaUpload(e, 'video')} />
+        </label>
+
+        <label className="flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5 cursor-pointer">
+          <Microphone className="h-[18px] w-[18px]" />
+          Audio
+          <input type="file" accept="audio/*" className="hidden" onChange={e => handleMediaUpload(e, 'audio')} />
+        </label>
+
+        {/* Voice record */}
+        <button
+          onClick={isRecording ? stopRecording : startRecording}
+          className={cn(
+            'flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium transition-all gap-0.5',
+            isRecording ? 'bg-destructive/15 text-destructive animate-pulse' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+          )}
+        >
+          {isRecording ? <Stop className="h-[18px] w-[18px]" weight="fill" /> : <Record className="h-[18px] w-[18px]" />}
+          {isRecording ? `${recordingTime}s` : 'Record'}
+        </button>
 
         <div className="mt-auto" />
 
@@ -910,7 +1038,8 @@ export default function VisionBoardPage() {
                 const isEditing = editingId === item.id;
                 const isDragging = draggingId === item.id;
                 const isResizing = resizingId === item.id;
-                const hasImage = !!item.image_url;
+                const hasMedia = !!item.image_url;
+                const mediaType = getMediaType(item.image_url);
 
                 return (
                   <div
@@ -929,13 +1058,14 @@ export default function VisionBoardPage() {
                     onDoubleClick={() => !isDrawMode && toolMode !== 'connect' && startEditing(item)}
                     onClick={e => { if (toolMode === 'connect') { e.stopPropagation(); handleConnectClick(item.id); } }}
                     onContextMenu={e => {
-                      if (isDrawMode || hasImage) return;
+                      if (isDrawMode || hasMedia) return;
                       e.preventDefault();
                       e.stopPropagation();
                       setColorMenu({ itemId: item.id, x: e.clientX, y: e.clientY });
                     }}
                   >
-                    {hasImage && (
+                    {/* Image */}
+                    {hasMedia && mediaType === 'image' && (
                       <img
                         src={item.image_url!}
                         alt={item.title}
@@ -949,7 +1079,49 @@ export default function VisionBoardPage() {
                       />
                     )}
 
-                    {!hasImage && (
+                    {/* Video */}
+                    {hasMedia && mediaType === 'video' && (
+                      <div className={cn(
+                        'rounded-lg overflow-hidden select-none transition-shadow duration-150 bg-black',
+                        isDragging ? 'shadow-2xl scale-[1.02]' : 'shadow-md hover:shadow-xl',
+                        item.is_achieved && 'opacity-50 grayscale',
+                      )} style={{ height: size.h }}>
+                        <video
+                          src={item.image_url!}
+                          controls
+                          className="w-full h-full object-contain"
+                          onMouseDown={e => e.stopPropagation()}
+                        />
+                      </div>
+                    )}
+
+                    {/* Audio / Voice note */}
+                    {hasMedia && mediaType === 'audio' && (
+                      <div
+                        className={cn(
+                          'rounded-lg p-3 select-none transition-shadow duration-150 flex flex-col gap-2',
+                          isDragging ? 'shadow-2xl scale-[1.02]' : 'shadow-sm hover:shadow-lg',
+                          item.is_achieved && 'opacity-50',
+                        )}
+                        style={{ backgroundColor: 'hsl(var(--secondary))', borderLeft: '3px solid hsl(var(--primary))' }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Microphone className="h-4 w-4 text-primary shrink-0" weight="duotone" />
+                          <span className="text-xs font-medium text-foreground truncate">{item.title || 'Voice note'}</span>
+                        </div>
+                        <audio
+                          src={item.image_url!}
+                          controls
+                          className="w-full h-8"
+                          style={{ minWidth: 0 }}
+                          onMouseDown={e => e.stopPropagation()}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* No media — text/note card */}
+
+                    {!hasMedia && (
                       <div
                         className={cn(
                           'rounded-lg p-3 select-none transition-shadow duration-150',
