@@ -1032,7 +1032,8 @@ export default function VisionBoardPage() {
                 const isEditing = editingId === item.id;
                 const isDragging = draggingId === item.id;
                 const isResizing = resizingId === item.id;
-                const hasImage = !!item.image_url;
+                const hasMedia = !!item.image_url;
+                const mediaType = getMediaType(item.image_url);
 
                 return (
                   <div
@@ -1051,13 +1052,14 @@ export default function VisionBoardPage() {
                     onDoubleClick={() => !isDrawMode && toolMode !== 'connect' && startEditing(item)}
                     onClick={e => { if (toolMode === 'connect') { e.stopPropagation(); handleConnectClick(item.id); } }}
                     onContextMenu={e => {
-                      if (isDrawMode || hasImage) return;
+                      if (isDrawMode || hasMedia) return;
                       e.preventDefault();
                       e.stopPropagation();
                       setColorMenu({ itemId: item.id, x: e.clientX, y: e.clientY });
                     }}
                   >
-                    {hasImage && (
+                    {/* Image */}
+                    {hasMedia && mediaType === 'image' && (
                       <img
                         src={item.image_url!}
                         alt={item.title}
@@ -1070,6 +1072,48 @@ export default function VisionBoardPage() {
                         draggable={false}
                       />
                     )}
+
+                    {/* Video */}
+                    {hasMedia && mediaType === 'video' && (
+                      <div className={cn(
+                        'rounded-lg overflow-hidden select-none transition-shadow duration-150 bg-black',
+                        isDragging ? 'shadow-2xl scale-[1.02]' : 'shadow-md hover:shadow-xl',
+                        item.is_achieved && 'opacity-50 grayscale',
+                      )} style={{ height: size.h }}>
+                        <video
+                          src={item.image_url!}
+                          controls
+                          className="w-full h-full object-contain"
+                          onMouseDown={e => e.stopPropagation()}
+                        />
+                      </div>
+                    )}
+
+                    {/* Audio / Voice note */}
+                    {hasMedia && mediaType === 'audio' && (
+                      <div
+                        className={cn(
+                          'rounded-lg p-3 select-none transition-shadow duration-150 flex flex-col gap-2',
+                          isDragging ? 'shadow-2xl scale-[1.02]' : 'shadow-sm hover:shadow-lg',
+                          item.is_achieved && 'opacity-50',
+                        )}
+                        style={{ backgroundColor: 'hsl(var(--secondary))', borderLeft: '3px solid hsl(var(--primary))' }}
+                      >
+                        <div className="flex items-center gap-2">
+                          <Microphone className="h-4 w-4 text-primary shrink-0" weight="duotone" />
+                          <span className="text-xs font-medium text-foreground truncate">{item.title || 'Voice note'}</span>
+                        </div>
+                        <audio
+                          src={item.image_url!}
+                          controls
+                          className="w-full h-8"
+                          style={{ minWidth: 0 }}
+                          onMouseDown={e => e.stopPropagation()}
+                        />
+                      </div>
+                    )}
+                    
+                    {/* No media — text/note card */}
 
                     {!hasImage && (
                       <div
