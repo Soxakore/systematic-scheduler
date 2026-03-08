@@ -12,6 +12,7 @@ import { Badge } from '@/components/ui/badge';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { toast } from 'sonner';
 import { Trash, Tag, Plus, X } from '@phosphor-icons/react';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import type { CalendarEvent } from '@/types';
 
 const TAG_COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#6B7280'];
