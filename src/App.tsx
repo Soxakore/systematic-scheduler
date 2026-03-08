@@ -24,6 +24,7 @@ import GoalsPage from "@/pages/GoalsPage";
 import MorningBriefingPage from "@/pages/MorningBriefingPage";
 import JournalPage from "@/pages/JournalPage";
 import VisionBoardPage from "@/pages/VisionBoardPage";
+import SharingPage from "@/pages/SharingPage";
 import EventDialog from "@/components/EventDialog";
 import NotFound from "./pages/NotFound";
 
@@ -65,6 +66,7 @@ function AppRoutes() {
         <Route path="briefing" element={<Navigate to="/morning" replace />} />
         <Route path="journal" element={<JournalPage />} />
         <Route path="vision" element={<VisionBoardPage />} />
+        <Route path="sharing" element={<SharingPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />

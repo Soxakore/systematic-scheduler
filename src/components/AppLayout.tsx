@@ -4,7 +4,7 @@ import PageTransition from './PageTransition';
 import {
   CalendarDots, SquaresFour, SunHorizon, Eye,
   Target, ArrowsClockwise, CheckSquare, NotePencil,
-  ChartLineUp, GearSix, List, X, Plus, Sun, Moon,
+  ChartLineUp, GearSix, List, X, Plus, Sun, Moon, Users,
 } from '@phosphor-icons/react';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
@@ -42,6 +42,7 @@ const NAV = [
   { to: '/habits',    icon: CheckSquare,     label: 'Habits'    },
   { to: '/journal',   icon: NotePencil,      label: 'Journal'   },
   { to: '/analytics', icon: ChartLineUp,     label: 'Analytics' },
+  { to: '/sharing',   icon: Users,           label: 'Sharing'   },
   { to: '/settings',  icon: GearSix,         label: 'Settings'  },
 ];
 
