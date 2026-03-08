@@ -600,11 +600,14 @@ export default function VisionBoardPage() {
                     'absolute group',
                     (isDragging || isResizing) ? 'z-50' : 'z-10',
                     isDragging ? 'cursor-grabbing' : '',
-                    isDrawMode ? 'pointer-events-none opacity-50' : 'cursor-grab',
+                    isDrawMode ? 'pointer-events-none opacity-50' : '',
+                    toolMode === 'connect' ? 'cursor-pointer' : 'cursor-grab',
+                    toolMode === 'connect' && connectFromId === item.id && 'ring-2 ring-primary rounded-lg',
                   )}
                   style={{ left: pos.x, top: pos.y, width: size.w }}
-                  onMouseDown={e => handleCardMouseDown(e, item)}
-                  onDoubleClick={() => !isDrawMode && startEditing(item)}
+                  onMouseDown={e => { if (toolMode !== 'connect') handleCardMouseDown(e, item); }}
+                  onDoubleClick={() => !isDrawMode && toolMode !== 'connect' && startEditing(item)}
+                  onClick={e => { if (toolMode === 'connect') { e.stopPropagation(); handleConnectClick(item.id); } }}
                 >
                   {/* Image items — raw image, no wrapper */}
                   {hasImage && (
