@@ -467,22 +467,28 @@ export default function VisionBoardPage() {
     e.preventDefault();
     if (!user) return;
     const { x, y } = screenToWorld(e.clientX, e.clientY);
-    const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
+    const files = Array.from(e.dataTransfer.files).filter(f =>
+      f.type.startsWith('image/') || f.type.startsWith('video/') || f.type.startsWith('audio/')
+    );
     if (!files.length) return;
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
+      const isVideo = file.type.startsWith('video/');
+      const isAudio = file.type.startsWith('audio/');
       setUploading(true);
       try {
         const ext = file.name.split('.').pop();
-        const path = `${user.id}/${Date.now()}-${i}.${ext}`;
+        const prefix = isAudio ? 'voice-' : '';
+        const path = `${user.id}/${prefix}${Date.now()}-${i}.${ext}`;
         const { error } = await supabase.storage.from('vision-images').upload(path, file);
         if (error) throw error;
         const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
         await createItem.mutateAsync({
           title: file.name.replace(/\.[^/.]+$/, ''), description: '', category: 'general',
-          color: '#64748b', icon: 'star',
+          color: isVideo ? '#8b5cf6' : isAudio ? '#3b82f6' : '#64748b', icon: 'star',
           position_x: snap(Math.round(x + i * 20 - 120)), position_y: snap(Math.round(y + i * 20 - 20)),
-          width: 260, height: 220, image_url: data.publicUrl,
+          width: isVideo ? 320 : 260, height: isVideo ? 240 : isAudio ? 80 : 220,
+          image_url: data.publicUrl,
           is_achieved: false, achieved_at: null, sort_order: (items?.length || 0) + i,
         });
       } catch (err: any) { toast.error('Upload failed: ' + err.message); }
