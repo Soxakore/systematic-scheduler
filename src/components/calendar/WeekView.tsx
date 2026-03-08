@@ -56,6 +56,44 @@ export default function WeekView() {
     return m;
   }, [calendars]);
 
+  // ── Multi-day / all-day banner events ──
+  const bannerRows = useMemo(() => {
+    if (!filteredEvents.length) return [];
+    
+    const multiDayEvents = filteredEvents.filter(e => {
+      const s = new Date(e.start_time);
+      const end = new Date(e.end_time);
+      return e.is_all_day || !isSameDay(s, end);
+    });
+
+    // For each event, compute startCol/endCol (0-6) clipped to the week
+    type BannerItem = { event: CalendarEvent; startCol: number; endCol: number };
+    const items: BannerItem[] = multiDayEvents.map(e => {
+      const s = startOfDay(new Date(e.start_time));
+      const end = startOfDay(new Date(e.end_time));
+      const clippedStart = max([s, weekStart]);
+      const clippedEnd = min([end, days[6]]);
+      const startCol = Math.round((clippedStart.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24));
+      const endCol = Math.round((clippedEnd.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24));
+      return { event: e, startCol: Math.max(0, startCol), endCol: Math.min(6, endCol) };
+    }).filter(item => item.startCol <= 6 && item.endCol >= 0);
+
+    // Pack into rows (greedy)
+    const rows: BannerItem[][] = [];
+    for (const item of items) {
+      let placed = false;
+      for (const row of rows) {
+        if (!row.some(r => r.startCol <= item.endCol && r.endCol >= item.startCol)) {
+          row.push(item);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) rows.push([item]);
+    }
+    return rows;
+  }, [filteredEvents, weekStart, days]);
+
   const handleCellClick = (day: Date, hour: number) => {
     const d = new Date(day);
     d.setHours(hour, 0, 0, 0);
