@@ -197,17 +197,29 @@ export default function AppLayout() {
         </div>
 
         {/* Mobile sidebar overlay */}
-        {mobileSidebarOpen && (
-          <div className="fixed inset-0 z-40 md:hidden">
-            <div
-              className="absolute inset-0 bg-black/80 backdrop-blur-sm"
-              onClick={() => setMobileSidebarOpen(false)}
-            />
-            <div className="relative z-50 w-56 h-full animate-slide-in-right">
-              <Sidebar onNewEvent={handleNewEvent} onClose={() => setMobileSidebarOpen(false)} />
+        <AnimatePresence>
+          {mobileSidebarOpen && (
+            <div className="fixed inset-0 z-40 md:hidden">
+              <motion.div
+                initial={{ opacity: 0 }}
+                animate={{ opacity: 1 }}
+                exit={{ opacity: 0 }}
+                transition={{ duration: 0.25, ease: 'easeOut' }}
+                className="absolute inset-0 bg-black/80 backdrop-blur-sm"
+                onClick={() => setMobileSidebarOpen(false)}
+              />
+              <motion.div
+                initial={{ x: '-100%' }}
+                animate={{ x: 0 }}
+                exit={{ x: '-100%' }}
+                transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+                className="relative z-50 w-56 h-full"
+              >
+                <Sidebar onNewEvent={handleNewEvent} onClose={() => setMobileSidebarOpen(false)} />
+              </motion.div>
             </div>
-          </div>
-        )}
+          )}
+        </AnimatePresence>
 
         {/* Main area */}
         <div className="flex flex-col flex-1 min-w-0 overflow-hidden">
