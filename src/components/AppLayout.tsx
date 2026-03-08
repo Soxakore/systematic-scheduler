@@ -1,12 +1,15 @@
-import { createContext, useContext, useState, useEffect } from 'react';
-import { Link, Outlet, useLocation } from 'react-router-dom';
+import { createContext, useContext, useState, useEffect, useRef } from 'react';
+import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from './PageTransition';
-import { List, X, Plus, CalendarDots, Sun, Moon } from '@phosphor-icons/react';
+import { List, X, Plus, CalendarDots, Sun, Moon, SignOut, Camera } from '@phosphor-icons/react';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useData';
+import { supabase } from '@/integrations/supabase/client';
 import { format } from 'date-fns';
+import { toast } from 'sonner';
 
 /* ── 3D badge icon imports ─────────────────────────────────── */
 import icoCalendar  from '@/assets/icons/icon-calendar.svg';
