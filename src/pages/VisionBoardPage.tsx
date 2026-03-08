@@ -783,7 +783,7 @@ export default function VisionBoardPage() {
         {/* Media tools group — flyout like draw tools */}
         <div className="relative">
           <button
-            onClick={() => setMediaToolsExpanded(prev => !prev)}
+            onClick={() => isRecording ? stopRecording() : setMediaToolsExpanded(prev => !prev)}
             className={cn(
               'flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium transition-all gap-0.5 relative',
               isRecording ? 'bg-destructive/15 text-destructive animate-pulse' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
