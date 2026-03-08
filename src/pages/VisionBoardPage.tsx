@@ -544,19 +544,23 @@ export default function VisionBoardPage() {
 
   const TOOLS: { id: ToolMode; icon: any; label: string }[] = [
     { id: 'select', icon: Cursor, label: 'Select' },
+    { id: 'pan', icon: Hand, label: 'Pan' },
     { id: 'note', icon: Note, label: 'Note' },
     { id: 'text', icon: TextT, label: 'Text' },
     { id: 'connect', icon: ArrowRight, label: 'Connect' },
-    { id: 'draw', icon: PaintBrush, label: 'Draw' },
-    { id: 'eraser', icon: Eraser, label: 'Eraser' },
-    { id: 'pan', icon: Hand, label: 'Pan' },
   ];
 
-  const SHAPE_TOOLS: { id: ToolMode; icon: any; label: string }[] = [
+  const DRAW_TOOLS: { id: ToolMode; icon: any; label: string }[] = [
+    { id: 'draw', icon: PaintBrush, label: 'Draw' },
+    { id: 'eraser', icon: Eraser, label: 'Eraser' },
     { id: 'shape-rect', icon: Rectangle, label: 'Rect' },
     { id: 'shape-circle', icon: Circle, label: 'Circle' },
     { id: 'shape-line', icon: LineSegment, label: 'Line' },
   ];
+
+  const [drawToolsExpanded, setDrawToolsExpanded] = useState(false);
+  const activeDrawTool = DRAW_TOOLS.find(t => t.id === toolMode);
+  const drawToolActive = !!activeDrawTool;
 
   /* ── Get center of an item for arrow drawing ───────── */
   const getItemCenter = useCallback((itemId: string) => {
