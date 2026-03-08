@@ -459,7 +459,7 @@ export default function VisionBoardPage() {
         title: '', description: '', category: 'general', color: '#64748b', icon: 'star',
         position_x: snap(Math.round(x)), position_y: snap(Math.round(y)),
         width: 200, height: 40, image_url: null,
-        is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+        is_achieved: false, achieved_at: null, sort_order: items?.length || 0, board_id: activeBoardId,
       });
       if (newItem?.id) {
         setEditingId(newItem.id);
