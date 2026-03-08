@@ -9,6 +9,7 @@ import { useGoals, useCreateGoal, useUpdateGoal, useDeleteGoal } from '@/hooks/u
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Slider } from '@/components/ui/slider';
 import { format, parseISO } from 'date-fns';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import type { Goal } from '@/types';
 
 export default function GoalsPage() {
@@ -90,9 +91,12 @@ export default function GoalsPage() {
                         <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateGoal.mutate({ id: g.id, status: 'completed', progress: 100 })}>
                           <CheckCircle className="h-4 w-4 text-green-500" weight="fill" />
                         </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteGoal.mutate(g.id)}>
-                          <Trash className="h-4 w-4 text-destructive" />
-                        </Button>
+                        <ConfirmDialog
+                          trigger={<Button variant="ghost" size="icon" className="h-7 w-7"><Trash className="h-4 w-4 text-destructive" /></Button>}
+                          title="Delete goal?"
+                          description={`"${g.title}" will be permanently deleted.`}
+                          onConfirm={() => deleteGoal.mutate(g.id)}
+                        />
                       </div>
                     </div>
                     <div className="flex items-center gap-3">
@@ -118,9 +122,12 @@ export default function GoalsPage() {
                       <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => updateGoal.mutate({ id: g.id, status: 'active', progress: 50 })}>
                         <Archive className="h-3 w-3" />
                       </Button>
-                      <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => deleteGoal.mutate(g.id)}>
-                        <Trash className="h-3 w-3 text-destructive" />
-                      </Button>
+                      <ConfirmDialog
+                        trigger={<Button variant="ghost" size="icon" className="h-7 w-7"><Trash className="h-3 w-3 text-destructive" /></Button>}
+                        title="Delete goal?"
+                        description={`"${g.title}" will be permanently deleted.`}
+                        onConfirm={() => deleteGoal.mutate(g.id)}
+                      />
                     </div>
                   </Card>
                 ))}

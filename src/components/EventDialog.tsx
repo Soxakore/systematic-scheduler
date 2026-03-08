@@ -304,9 +304,12 @@ export default function EventDialog() {
               {editingEventId ? 'Update' : 'Create'}
             </Button>
             {editingEventId && (
-              <Button variant="destructive" size="icon" onClick={handleDelete} disabled={deleteEvent.isPending}>
-                <Trash className="h-4 w-4" />
-              </Button>
+              <ConfirmDialog
+                trigger={<Button variant="destructive" size="icon" disabled={deleteEvent.isPending}><Trash className="h-4 w-4" /></Button>}
+                title="Delete event?"
+                description="This event will be permanently deleted."
+                onConfirm={handleDelete}
+              />
             )}
           </div>
         </div>
