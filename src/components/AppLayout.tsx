@@ -329,15 +329,7 @@ export default function AppLayout() {
               <List className="h-5 w-5" weight="bold" />
             </button>
 
-            <div className="flex-1 max-w-sm">
-              <input
-                type="text"
-                placeholder="Search…"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full h-8 px-3 text-[13px] rounded-lg bg-input text-foreground placeholder:text-muted-foreground border border-transparent focus:border-primary/30 focus:outline-none focus:ring-0 transition-colors"
-              />
-            </div>
+            <GlobalSearch />
 
             <div className="ml-auto flex items-center">
               <ThemeToggle />
