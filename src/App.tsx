@@ -55,6 +55,8 @@ function AppRoutes() {
       <Route path="/signup" element={<PublicRoute><SignupPage /></PublicRoute>} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/cookies" element={<CookiePolicyPage />} />
       <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route index element={<CalendarPage />} />
         <Route path="systems" element={<SystemsPage />} />

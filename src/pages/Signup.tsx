@@ -97,6 +97,12 @@ export default function SignupPage() {
               Already have an account? <Link to="/login" className="text-primary hover:underline">Sign in</Link>
             </p>
           </form>
+          <p className="text-[11px] text-muted-foreground text-center mt-4">
+            By creating an account, you agree to our{' '}
+            <Link to="/terms" className="underline hover:text-foreground">Terms of Service</Link>
+            {' '}and{' '}
+            <Link to="/cookies" className="underline hover:text-foreground">Cookie Policy</Link>.
+          </p>
         </CardContent>
       </Card>
     </div>

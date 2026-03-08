@@ -174,6 +174,8 @@ export default function LandingPage() {
             <span>© 2026 System Calendar. All rights reserved.</span>
           </div>
           <div className="flex gap-6 text-sm text-white/30">
+            <Link to="/terms" className="hover:text-white/60 transition-colors">Terms</Link>
+            <Link to="/cookies" className="hover:text-white/60 transition-colors">Cookies</Link>
             <Link to="/welcome" className="hover:text-white/60 transition-colors">Sign in</Link>
             <Link to="/signup" className="hover:text-white/60 transition-colors">Sign up</Link>
           </div>
