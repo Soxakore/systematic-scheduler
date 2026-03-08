@@ -82,6 +82,15 @@ export default function VisionBoardPage() {
   const [showLayers, setShowLayers] = useState(false);
   const [layerVisibility, setLayerVisibility] = useState({ items: true, drawing: true, connections: true });
 
+  // Undo/Redo for canvas
+  const undoStack = useRef<ImageData[]>([]);
+  const redoStack = useRef<ImageData[]>([]);
+  const [canUndo, setCanUndo] = useState(false);
+  const [canRedo, setCanRedo] = useState(false);
+
+  // Color context menu
+  const [colorMenu, setColorMenu] = useState<{ itemId: string; x: number; y: number } | null>(null);
+
   const viewportRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement>(null);
   const canvasReady = useRef(false);
