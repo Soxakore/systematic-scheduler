@@ -322,6 +322,10 @@ export default function VisionBoardPage() {
 
   /* ── Mouse handling ───────────────────────────────── */
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Close flyouts when clicking on the canvas
+    setDrawToolsExpanded(false);
+    setMediaToolsExpanded(false);
+
     if (isDrawMode) {
       handleDrawStart(e.clientX, e.clientY);
       return;
@@ -1108,8 +1112,15 @@ export default function VisionBoardPage() {
                         <video
                           src={item.image_url!}
                           controls
-                          className="w-full h-full object-contain"
-                          onMouseDown={e => e.stopPropagation()}
+                          className="w-full h-full object-contain pointer-events-auto"
+                          onMouseDown={e => {
+                            // Allow controls interaction but don't block card drag on the surrounding area
+                            const rect = (e.target as HTMLElement).getBoundingClientRect();
+                            const bottomBarHeight = 40;
+                            if (e.clientY > rect.bottom - bottomBarHeight) {
+                              e.stopPropagation();
+                            }
+                          }}
                         />
                       </div>
                     )}
@@ -1131,9 +1142,13 @@ export default function VisionBoardPage() {
                         <audio
                           src={item.image_url!}
                           controls
-                          className="w-full h-8"
+                          className="w-full h-8 pointer-events-auto"
                           style={{ minWidth: 0 }}
-                          onMouseDown={e => e.stopPropagation()}
+                          onMouseDown={e => {
+                            // Only stop propagation on the audio controls, not the surrounding card
+                            e.stopPropagation();
+                          }}
+                          onClick={e => e.stopPropagation()}
                         />
                       </div>
                     )}
