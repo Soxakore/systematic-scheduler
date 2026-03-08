@@ -72,17 +72,29 @@ export default function VisionBoardPage() {
 
   const isDrawMode = toolMode === 'draw' || toolMode === 'eraser';
 
-  /* ── Setup drawing canvas size ────────────────────── */
+  /* ── Setup drawing canvas & load persisted drawing ── */
   useEffect(() => {
     const canvas = drawCanvasRef.current;
-    if (!canvas) return;
+    if (!canvas || !user) return;
     canvas.width = 4000;
     canvas.height = 3000;
     const ctx = canvas.getContext('2d');
-    if (ctx) {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-    }
-  }, []);
+    if (!ctx) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Load persisted drawing
+    const loadDrawing = async () => {
+      try {
+        const { data } = supabase.storage.from('vision-images').getPublicUrl(`${user.id}/canvas-drawing.png`);
+        if (!data?.publicUrl) return;
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        img.onload = () => ctx.drawImage(img, 0, 0);
+        img.src = data.publicUrl + '?t=' + Date.now(); // cache-bust
+      } catch {}
+    };
+    loadDrawing();
+  }, [user]);
 
   /* ── Zoom via wheel / pinch ───────────────────────── */
   useEffect(() => {
