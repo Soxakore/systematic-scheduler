@@ -113,6 +113,17 @@ export default function VisionBoardPage() {
   }, [pan, zoom]);
 
   /* ── Drawing directly on canvas ───────────────────── */
+  const getDrawCoords = useCallback((e: React.MouseEvent) => {
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return { x: 0, y: 0 };
+    const rect = canvas.getBoundingClientRect();
+    // Map screen coords to canvas pixel coords, accounting for CSS scaling
+    return {
+      x: (e.clientX - rect.left) * (canvas.width / rect.width),
+      y: (e.clientY - rect.top) * (canvas.height / rect.height),
+    };
+  }, []);
+
   const handleDrawStart = (e: React.MouseEvent) => {
     if (!isDrawMode) return;
     const canvas = drawCanvasRef.current;
@@ -120,7 +131,7 @@ export default function VisionBoardPage() {
     if (!ctx || !canvas) return;
 
     setIsDrawing(true);
-    const { x, y } = screenToCanvas(e.clientX, e.clientY);
+    const { x, y } = getDrawCoords(e);
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineCap = 'round';
@@ -141,7 +152,7 @@ export default function VisionBoardPage() {
     const ctx = canvas?.getContext('2d');
     if (!ctx) return;
 
-    const { x, y } = screenToCanvas(e.clientX, e.clientY);
+    const { x, y } = getDrawCoords(e);
     ctx.lineTo(x, y);
     ctx.stroke();
   };
