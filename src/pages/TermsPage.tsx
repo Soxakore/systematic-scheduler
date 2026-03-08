@@ -20,7 +20,7 @@ export default function TermsPage() {
 
         <h2>1. Acceptance of Terms</h2>
         <p>
-          By accessing or using System Calendar ("the Service"), you agree to be bound by these Terms of Service. If you do not agree, you may not use the Service.
+          By accessing or using DayBlock ("the Service"), you agree to be bound by these Terms of Service. If you do not agree, you may not use the Service.
         </p>
 
         <h2>2. Description of Service</h2>
