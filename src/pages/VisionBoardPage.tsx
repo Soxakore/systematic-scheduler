@@ -12,6 +12,8 @@ import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
 
 type ToolMode = 'select' | 'note' | 'pan' | 'draw' | 'eraser';
+type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | null;
+const MIN_SIZE = 60;
 
 const CANVAS_W = 4000;
 const CANVAS_H = 3000;
@@ -43,6 +45,13 @@ export default function VisionBoardPage() {
   const dragStart = useRef({ x: 0, y: 0 });
   const dragItemStart = useRef({ x: 0, y: 0 });
   const [dragPositions, setDragPositions] = useState<Record<string, { x: number; y: number }>>({});
+
+  // Resizing
+  const [resizingId, setResizingId] = useState<string | null>(null);
+  const [resizeHandle, setResizeHandle] = useState<ResizeHandle>(null);
+  const resizeStart = useRef({ x: 0, y: 0 });
+  const resizeItemStart = useRef({ x: 0, y: 0, w: 0, h: 0 });
+  const [resizeSizes, setResizeSizes] = useState<Record<string, { x: number; y: number; w: number; h: number }>>({});
 
   // Drawing
   const [isDrawing, setIsDrawing] = useState(false);
@@ -188,6 +197,16 @@ export default function VisionBoardPage() {
     }
   }, [isDrawMode, toolMode, pan, handleDrawStart]);
 
+  /* ── Resize start ──────────────────────────────────── */
+  const handleResizeStart = useCallback((e: React.MouseEvent, item: any, handle: ResizeHandle) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizingId(item.id);
+    setResizeHandle(handle);
+    resizeStart.current = { x: e.clientX, y: e.clientY };
+    resizeItemStart.current = { x: item.position_x, y: item.position_y, w: item.width || 240, h: item.height || 200 };
+  }, []);
+
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (isDrawing && isDrawMode) {
       handleDrawMoveRaw(e.clientX, e.clientY);
@@ -200,6 +219,18 @@ export default function VisionBoardPage() {
       });
       return;
     }
+    if (resizingId && resizeHandle) {
+      const dx = (e.clientX - resizeStart.current.x) / zoom;
+      const dy = (e.clientY - resizeStart.current.y) / zoom;
+      const s = resizeItemStart.current;
+      let nx = s.x, ny = s.y, nw = s.w, nh = s.h;
+      if (resizeHandle.includes('e')) nw = Math.max(MIN_SIZE, s.w + dx);
+      if (resizeHandle.includes('w')) { nw = Math.max(MIN_SIZE, s.w - dx); nx = s.x + s.w - nw; }
+      if (resizeHandle.includes('s')) nh = Math.max(MIN_SIZE, s.h + dy);
+      if (resizeHandle.includes('n')) { nh = Math.max(MIN_SIZE, s.h - dy); ny = s.y + s.h - nh; }
+      setResizeSizes(prev => ({ ...prev, [resizingId]: { x: nx, y: ny, w: nw, h: nh } }));
+      return;
+    }
     if (!draggingId) return;
     const dx = (e.clientX - dragStart.current.x) / zoom;
     const dy = (e.clientY - dragStart.current.y) / zoom;
@@ -207,11 +238,22 @@ export default function VisionBoardPage() {
       ...prev,
       [draggingId]: { x: Math.max(0, dragItemStart.current.x + dx), y: Math.max(0, dragItemStart.current.y + dy) },
     }));
-  }, [isDrawing, isDrawMode, isPanning, draggingId, zoom, handleDrawMoveRaw]);
+  }, [isDrawing, isDrawMode, isPanning, draggingId, resizingId, resizeHandle, zoom, handleDrawMoveRaw]);
 
   const handleMouseUp = useCallback(async () => {
     if (isDrawing) { handleDrawEnd(); return; }
     if (isPanning) { setIsPanning(false); return; }
+    if (resizingId) {
+      const sz = resizeSizes[resizingId];
+      if (sz) {
+        await updateItem.mutateAsync({ id: resizingId, width: Math.round(sz.w), height: Math.round(sz.h), position_x: Math.round(sz.x), position_y: Math.round(sz.y) });
+      }
+      const rid = resizingId;
+      setResizingId(null);
+      setResizeHandle(null);
+      setResizeSizes(prev => { const n = { ...prev }; delete n[rid]; return n; });
+      return;
+    }
     if (!draggingId) return;
     const pos = dragPositions[draggingId];
     if (pos) {
@@ -220,7 +262,7 @@ export default function VisionBoardPage() {
     const id = draggingId;
     setDraggingId(null);
     setDragPositions(prev => { const n = { ...prev }; delete n[id]; return n; });
-  }, [isDrawing, isPanning, draggingId, dragPositions, updateItem, handleDrawEnd]);
+  }, [isDrawing, isPanning, draggingId, resizingId, dragPositions, resizeSizes, updateItem, handleDrawEnd]);
 
   /* ── Canvas click → create note ───────────────────── */
   const handleCanvasClick = async (e: React.MouseEvent) => {
@@ -289,7 +331,27 @@ export default function VisionBoardPage() {
     setEditingId(null);
   };
 
-  const getItemPos = (item: any) => dragPositions[item.id] || { x: item.position_x, y: item.position_y };
+  const getItemPos = (item: any) => {
+    const rs = resizeSizes[item.id];
+    if (rs) return { x: rs.x, y: rs.y };
+    return dragPositions[item.id] || { x: item.position_x, y: item.position_y };
+  };
+  const getItemSize = (item: any) => {
+    const rs = resizeSizes[item.id];
+    if (rs) return { w: rs.w, h: rs.h };
+    return { w: item.width || 240, h: item.height || 200 };
+  };
+
+  const RESIZE_HANDLES: { handle: ResizeHandle; className: string; cursor: string }[] = [
+    { handle: 'nw', className: '-top-1.5 -left-1.5', cursor: 'nwse-resize' },
+    { handle: 'ne', className: '-top-1.5 -right-1.5', cursor: 'nesw-resize' },
+    { handle: 'sw', className: '-bottom-1.5 -left-1.5', cursor: 'nesw-resize' },
+    { handle: 'se', className: '-bottom-1.5 -right-1.5', cursor: 'nwse-resize' },
+    { handle: 'n', className: '-top-1 left-1/2 -translate-x-1/2', cursor: 'ns-resize' },
+    { handle: 's', className: '-bottom-1 left-1/2 -translate-x-1/2', cursor: 'ns-resize' },
+    { handle: 'w', className: 'top-1/2 -left-1 -translate-y-1/2', cursor: 'ew-resize' },
+    { handle: 'e', className: 'top-1/2 -right-1 -translate-y-1/2', cursor: 'ew-resize' },
+  ];
   const zoomIn = () => setZoom(prev => Math.min(3, prev + 0.15));
   const zoomOut = () => setZoom(prev => Math.max(0.2, prev - 0.15));
   const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
@@ -471,8 +533,10 @@ export default function VisionBoardPage() {
             {/* Render items — freeform, no card chrome */}
             {items?.map(item => {
               const pos = getItemPos(item);
+              const size = getItemSize(item);
               const isEditing = editingId === item.id;
               const isDragging = draggingId === item.id;
+              const isResizing = resizingId === item.id;
               const hasImage = !!item.image_url;
 
               return (
@@ -481,10 +545,11 @@ export default function VisionBoardPage() {
                   data-card
                   className={cn(
                     'absolute group',
-                    isDragging ? 'z-50 cursor-grabbing' : 'z-10',
+                    (isDragging || isResizing) ? 'z-50' : 'z-10',
+                    isDragging ? 'cursor-grabbing' : '',
                     isDrawMode ? 'pointer-events-none opacity-50' : 'cursor-grab',
                   )}
-                  style={{ left: pos.x, top: pos.y, width: item.width || 240 }}
+                  style={{ left: pos.x, top: pos.y, width: size.w }}
                   onMouseDown={e => handleCardMouseDown(e, item)}
                   onDoubleClick={() => !isDrawMode && startEditing(item)}
                 >
@@ -498,7 +563,7 @@ export default function VisionBoardPage() {
                         isDragging ? 'shadow-2xl scale-[1.02]' : 'shadow-md hover:shadow-xl',
                         item.is_achieved && 'opacity-50 grayscale',
                       )}
-                      style={{ height: item.height || 200 }}
+                      style={{ height: size.h }}
                       draggable={false}
                     />
                   )}
@@ -574,6 +639,23 @@ export default function VisionBoardPage() {
                         <Trash className="h-3 w-3" />
                       </button>
                     </div>
+                  )}
+
+                  {/* Resize handles */}
+                  {!isDrawMode && !isEditing && toolMode === 'select' && (
+                    <>
+                      {RESIZE_HANDLES.map(({ handle, className: cls, cursor }) => (
+                        <div
+                          key={handle}
+                          className={cn(
+                            'absolute w-3 h-3 rounded-full bg-primary border-2 border-background opacity-0 group-hover:opacity-100 transition-opacity z-20',
+                            cls,
+                          )}
+                          style={{ cursor }}
+                          onMouseDown={e => handleResizeStart(e, item, handle)}
+                        />
+                      ))}
+                    </>
                   )}
                 </div>
               );
