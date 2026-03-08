@@ -2,18 +2,17 @@ import { useState, useRef, useCallback, useEffect } from 'react';
 import { useVisionBoardItems, useCreateVisionBoardItem, useUpdateVisionBoardItem, useDeleteVisionBoardItem } from '@/hooks/useData';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { toast } from 'sonner';
 import {
-  Note, ImageSquare, PaintBrush,
+  Note, ImageSquare, PaintBrush, Eraser,
   Trash, SquaresFour, Star, Hand, Cursor,
   Check, Trophy, MagnifyingGlassPlus, MagnifyingGlassMinus,
+  Palette, FloppyDisk,
 } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
-import DrawingCanvas from '@/components/vision/DrawingCanvas';
 
-type ToolMode = 'select' | 'note' | 'pan';
+type ToolMode = 'select' | 'note' | 'pan' | 'draw' | 'eraser';
 
 interface CanvasItem {
   id: string;
@@ -29,6 +28,9 @@ interface CanvasItem {
   is_achieved: boolean;
 }
 
+const DRAW_COLORS = ['#1a1a2e', '#ef4444', '#3b82f6', '#22c55e', '#eab308', '#8b5cf6', '#ec4899', '#ffffff'];
+const BRUSH_SIZES = [2, 4, 8, 14];
+
 export default function VisionBoardPage() {
   const { user } = useAuth();
   const { data: items, isLoading } = useVisionBoardItems();
@@ -41,7 +43,6 @@ export default function VisionBoardPage() {
   const [editTitle, setEditTitle] = useState('');
   const [editDesc, setEditDesc] = useState('');
   const [uploading, setUploading] = useState(false);
-  const [showDraw, setShowDraw] = useState(false);
 
   // Zoom & Pan
   const [zoom, setZoom] = useState(1);
@@ -56,33 +57,47 @@ export default function VisionBoardPage() {
   const [dragItemStart, setDragItemStart] = useState({ x: 0, y: 0 });
   const [dragPositions, setDragPositions] = useState<Record<string, { x: number; y: number }>>({});
 
+  // Drawing state
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [drawColor, setDrawColor] = useState('#1a1a2e');
+  const [brushSize, setBrushSize] = useState(4);
+  const [showDrawOptions, setShowDrawOptions] = useState(false);
+
   const canvasRef = useRef<HTMLDivElement>(null);
+  const drawCanvasRef = useRef<HTMLCanvasElement>(null);
   const titleInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
 
   const totalCount = items?.length || 0;
   const achievedCount = items?.filter(i => i.is_achieved).length || 0;
 
+  const isDrawMode = toolMode === 'draw' || toolMode === 'eraser';
+
+  /* ── Setup drawing canvas size ────────────────────── */
+  useEffect(() => {
+    const canvas = drawCanvasRef.current;
+    if (!canvas) return;
+    canvas.width = 4000;
+    canvas.height = 3000;
+    const ctx = canvas.getContext('2d');
+    if (ctx) {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+    }
+  }, []);
+
   /* ── Zoom via wheel / pinch ───────────────────────── */
   useEffect(() => {
     const el = canvasRef.current;
     if (!el) return;
-
     const handleWheel = (e: WheelEvent) => {
       if (e.ctrlKey || e.metaKey) {
-        // Pinch-to-zoom or Ctrl+scroll
         e.preventDefault();
         const delta = -e.deltaY * 0.002;
         setZoom(prev => Math.min(3, Math.max(0.2, prev + delta)));
       } else {
-        // Regular scroll → pan
         e.preventDefault();
-        setPan(prev => ({
-          x: prev.x - e.deltaX,
-          y: prev.y - e.deltaY,
-        }));
+        setPan(prev => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
       }
     };
-
     el.addEventListener('wheel', handleWheel, { passive: false });
     return () => el.removeEventListener('wheel', handleWheel);
   }, []);
@@ -97,10 +112,136 @@ export default function VisionBoardPage() {
     };
   }, [pan, zoom]);
 
+  /* ── Drawing directly on canvas ───────────────────── */
+  const handleDrawStart = (e: React.MouseEvent) => {
+    if (!isDrawMode) return;
+    const canvas = drawCanvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!ctx || !canvas) return;
+
+    setIsDrawing(true);
+    const { x, y } = screenToCanvas(e.clientX, e.clientY);
+    ctx.beginPath();
+    ctx.moveTo(x, y);
+    ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+    ctx.lineWidth = brushSize;
+    ctx.strokeStyle = toolMode === 'eraser' ? 'rgba(0,0,0,0)' : drawColor;
+    if (toolMode === 'eraser') {
+      ctx.globalCompositeOperation = 'destination-out';
+      ctx.lineWidth = brushSize * 3;
+    } else {
+      ctx.globalCompositeOperation = 'source-over';
+    }
+  };
+
+  const handleDrawMove = (e: React.MouseEvent) => {
+    if (!isDrawing || !isDrawMode) return;
+    const canvas = drawCanvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!ctx) return;
+
+    const { x, y } = screenToCanvas(e.clientX, e.clientY);
+    ctx.lineTo(x, y);
+    ctx.stroke();
+  };
+
+  const handleDrawEnd = () => {
+    if (!isDrawing) return;
+    setIsDrawing(false);
+    const ctx = drawCanvasRef.current?.getContext('2d');
+    if (ctx) ctx.globalCompositeOperation = 'source-over';
+  };
+
+  const clearDrawing = () => {
+    const canvas = drawCanvasRef.current;
+    const ctx = canvas?.getContext('2d');
+    if (!ctx || !canvas) return;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    toast.success('Drawing cleared');
+  };
+
+  const saveDrawingAsCard = async () => {
+    const canvas = drawCanvasRef.current;
+    if (!canvas || !user) return;
+
+    // Check if canvas has any content
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+    const hasContent = imageData.data.some((val, i) => i % 4 === 3 && val > 0);
+    if (!hasContent) {
+      toast.error('Nothing drawn yet');
+      return;
+    }
+
+    setUploading(true);
+    try {
+      // Find bounding box of drawn content
+      let minX = canvas.width, minY = canvas.height, maxX = 0, maxY = 0;
+      for (let y = 0; y < canvas.height; y++) {
+        for (let x = 0; x < canvas.width; x++) {
+          const alpha = imageData.data[(y * canvas.width + x) * 4 + 3];
+          if (alpha > 0) {
+            minX = Math.min(minX, x);
+            minY = Math.min(minY, y);
+            maxX = Math.max(maxX, x);
+            maxY = Math.max(maxY, y);
+          }
+        }
+      }
+
+      const pad = 20;
+      minX = Math.max(0, minX - pad);
+      minY = Math.max(0, minY - pad);
+      maxX = Math.min(canvas.width, maxX + pad);
+      maxY = Math.min(canvas.height, maxY + pad);
+
+      // Extract region
+      const w = maxX - minX;
+      const h = maxY - minY;
+      const tmpCanvas = document.createElement('canvas');
+      tmpCanvas.width = w;
+      tmpCanvas.height = h;
+      const tmpCtx = tmpCanvas.getContext('2d')!;
+      tmpCtx.drawImage(canvas, minX, minY, w, h, 0, 0, w, h);
+
+      const blob = await new Promise<Blob>((resolve) => tmpCanvas.toBlob(b => resolve(b!), 'image/png'));
+      const path = `${user.id}/drawing-${Date.now()}.png`;
+      const { error } = await supabase.storage.from('vision-images').upload(path, blob, { contentType: 'image/png' });
+      if (error) throw error;
+      const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
+
+      await createItem.mutateAsync({
+        title: 'Drawing',
+        description: '',
+        category: 'general',
+        color: '#64748b',
+        icon: 'star',
+        position_x: Math.round(minX),
+        position_y: Math.round(minY),
+        width: Math.min(Math.round(w), 400),
+        height: Math.min(Math.round(h), 350),
+        image_url: data.publicUrl,
+        is_achieved: false,
+        achieved_at: null,
+        sort_order: items?.length || 0,
+      });
+
+      // Clear the drawing canvas after saving
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      toast.success('Drawing saved as card!');
+    } catch (err: any) {
+      toast.error('Save failed: ' + err.message);
+    } finally {
+      setUploading(false);
+    }
+  };
+
   /* ── Click on canvas to create a note ─────────────── */
   const handleCanvasClick = async (e: React.MouseEvent) => {
     const target = e.target as HTMLElement;
-    if (!target.classList.contains('canvas-surface')) return;
+    if (!target.classList.contains('canvas-surface') && target.tagName !== 'CANVAS') return;
     if (toolMode !== 'note') return;
     if (!user) return;
 
@@ -171,9 +312,12 @@ export default function VisionBoardPage() {
     toast.success(`${files.length} image(s) added`);
   };
 
-  /* ── Pan (middle-click or pan tool) ───────────────── */
+  /* ── Pan ──────────────────────────────────────────── */
   const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    // Middle mouse button or pan tool
+    if (isDrawMode) {
+      handleDrawStart(e);
+      return;
+    }
     if (e.button === 1 || (toolMode === 'pan' && e.button === 0)) {
       e.preventDefault();
       setIsPanning(true);
@@ -193,6 +337,10 @@ export default function VisionBoardPage() {
   };
 
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (isDrawing && isDrawMode) {
+      handleDrawMove(e);
+      return;
+    }
     if (isPanning) {
       const dx = e.clientX - panStart.x;
       const dy = e.clientY - panStart.y;
@@ -209,9 +357,13 @@ export default function VisionBoardPage() {
         y: Math.max(0, dragItemStart.y + dy),
       },
     }));
-  }, [isPanning, panStart, panOrigin, draggingId, dragStart, dragItemStart, zoom]);
+  }, [isDrawing, isDrawMode, isPanning, panStart, panOrigin, draggingId, dragStart, dragItemStart, zoom, pan, drawColor, brushSize, toolMode]);
 
   const handleMouseUp = useCallback(async () => {
+    if (isDrawing) {
+      handleDrawEnd();
+      return;
+    }
     if (isPanning) {
       setIsPanning(false);
       return;
@@ -231,42 +383,7 @@ export default function VisionBoardPage() {
       delete next[draggingId];
       return next;
     });
-  }, [isPanning, draggingId, dragPositions, updateItem]);
-
-  /* ── Drawing save ─────────────────────────────────── */
-  const handleDrawingSave = async (dataUrl: string) => {
-    if (!user) return;
-    setUploading(true);
-    try {
-      const res = await fetch(dataUrl);
-      const blob = await res.blob();
-      const path = `${user.id}/drawing-${Date.now()}.png`;
-      const { error } = await supabase.storage.from('vision-images').upload(path, blob, { contentType: 'image/png' });
-      if (error) throw error;
-      const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
-      await createItem.mutateAsync({
-        title: 'Drawing',
-        description: '',
-        category: 'general',
-        color: '#64748b',
-        icon: 'star',
-        position_x: 40 + Math.random() * 400,
-        position_y: 40 + Math.random() * 300,
-        width: 280,
-        height: 240,
-        image_url: data.publicUrl,
-        is_achieved: false,
-        achieved_at: null,
-        sort_order: items?.length || 0,
-      });
-      setShowDraw(false);
-      toast.success('Drawing added to board!');
-    } catch (err: any) {
-      toast.error('Drawing upload failed: ' + err.message);
-    } finally {
-      setUploading(false);
-    }
-  };
+  }, [isDrawing, isPanning, draggingId, dragPositions, updateItem]);
 
   /* ── Inline editing ───────────────────────────────── */
   const startEditing = (item: CanvasItem) => {
@@ -285,19 +402,18 @@ export default function VisionBoardPage() {
     setEditingId(null);
   };
 
-  const getItemPos = (item: CanvasItem) => {
-    if (dragPositions[item.id]) return dragPositions[item.id];
-    return { x: item.position_x, y: item.position_y };
-  };
+  const getItemPos = (item: CanvasItem) => dragPositions[item.id] || { x: item.position_x, y: item.position_y };
 
   const zoomIn = () => setZoom(prev => Math.min(3, prev + 0.15));
   const zoomOut = () => setZoom(prev => Math.max(0.2, prev - 0.15));
   const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
 
-  const TOOLS = [
-    { id: 'select' as ToolMode, icon: Cursor, label: 'Select' },
-    { id: 'note' as ToolMode, icon: Note, label: 'Note' },
-    { id: 'pan' as ToolMode, icon: Hand, label: 'Pan' },
+  const TOOLS: { id: ToolMode; icon: any; label: string }[] = [
+    { id: 'select', icon: Cursor, label: 'Select' },
+    { id: 'note', icon: Note, label: 'Note' },
+    { id: 'draw', icon: PaintBrush, label: 'Draw' },
+    { id: 'eraser', icon: Eraser, label: 'Eraser' },
+    { id: 'pan', icon: Hand, label: 'Pan' },
   ];
 
   return (
@@ -307,7 +423,11 @@ export default function VisionBoardPage() {
         {TOOLS.map(tool => (
           <button
             key={tool.id}
-            onClick={() => setToolMode(tool.id)}
+            onClick={() => {
+              setToolMode(tool.id);
+              if (tool.id === 'draw') setShowDrawOptions(true);
+              else if (tool.id !== 'eraser') setShowDrawOptions(false);
+            }}
             className={cn(
               'flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium transition-all gap-0.5',
               toolMode === tool.id
@@ -369,15 +489,6 @@ export default function VisionBoardPage() {
           />
         </label>
 
-        {/* Draw */}
-        <button
-          onClick={() => setShowDraw(true)}
-          className="flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5"
-        >
-          <PaintBrush className="h-[18px] w-[18px]" />
-          Draw
-        </button>
-
         <div className="mt-auto" />
 
         {/* Zoom controls */}
@@ -385,10 +496,7 @@ export default function VisionBoardPage() {
           <button onClick={zoomIn} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
             <MagnifyingGlassPlus className="h-4 w-4" />
           </button>
-          <button
-            onClick={resetView}
-            className="text-[9px] font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer"
-          >
+          <button onClick={resetView} className="text-[9px] font-semibold text-muted-foreground hover:text-foreground transition-colors cursor-pointer">
             {Math.round(zoom * 100)}%
           </button>
           <button onClick={zoomOut} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
@@ -400,18 +508,72 @@ export default function VisionBoardPage() {
       {/* ── Canvas ─────────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
-        <div className="shrink-0 h-10 border-b border-border bg-background flex items-center px-4">
+        <div className="shrink-0 h-10 border-b border-border bg-background flex items-center px-4 gap-2">
           <h1 className="text-xs font-semibold text-foreground">Vision Board</h1>
           {totalCount > 0 && (
-            <span className="text-[10px] text-muted-foreground ml-2">
-              {achievedCount}/{totalCount} achieved
-            </span>
+            <span className="text-[10px] text-muted-foreground">{achievedCount}/{totalCount} achieved</span>
           )}
-          {uploading && (
-            <span className="text-[10px] text-primary ml-3 animate-pulse">Uploading…</span>
+          {uploading && <span className="text-[10px] text-primary animate-pulse">Uploading…</span>}
+
+          {/* Draw options bar — shown when draw/eraser active */}
+          {isDrawMode && (
+            <div className="ml-4 flex items-center gap-2 border-l border-border pl-4">
+              {/* Colors */}
+              <div className="flex items-center gap-1">
+                {DRAW_COLORS.map(c => (
+                  <button
+                    key={c}
+                    onClick={() => { setDrawColor(c); setToolMode('draw'); }}
+                    className={cn(
+                      'h-5 w-5 rounded-full border transition-transform',
+                      drawColor === c && toolMode === 'draw' ? 'scale-125 border-primary ring-1 ring-primary' : 'border-border hover:scale-110'
+                    )}
+                    style={{ background: c }}
+                  />
+                ))}
+              </div>
+
+              <div className="w-px h-5 bg-border" />
+
+              {/* Brush sizes */}
+              <div className="flex items-center gap-1">
+                {BRUSH_SIZES.map(s => (
+                  <button
+                    key={s}
+                    onClick={() => setBrushSize(s)}
+                    className={cn(
+                      'flex items-center justify-center h-6 w-6 rounded-md transition-colors',
+                      brushSize === s ? 'bg-primary/20' : 'hover:bg-secondary'
+                    )}
+                  >
+                    <div className="rounded-full bg-foreground" style={{ width: s, height: s }} />
+                  </button>
+                ))}
+              </div>
+
+              <div className="w-px h-5 bg-border" />
+
+              {/* Save drawing */}
+              <button
+                onClick={saveDrawingAsCard}
+                disabled={uploading}
+                className="h-6 px-2.5 rounded-md text-[10px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1"
+              >
+                <FloppyDisk className="h-3 w-3" /> Save as card
+              </button>
+
+              {/* Clear */}
+              <button
+                onClick={clearDrawing}
+                className="h-6 px-2 rounded-md text-[10px] font-medium text-muted-foreground hover:bg-secondary transition-colors flex items-center gap-1"
+              >
+                <Trash className="h-3 w-3" /> Clear
+              </button>
+            </div>
           )}
+
           <span className="ml-auto text-[9px] text-muted-foreground">
-            Scroll to pan · Ctrl+scroll to zoom · Double-click to edit
+            {isDrawMode ? 'Draw on the canvas · Save as card when done' : 'Scroll to pan · Ctrl+scroll to zoom · Double-click to edit'}
           </span>
         </div>
 
@@ -423,15 +585,15 @@ export default function VisionBoardPage() {
             toolMode === 'note' && 'cursor-crosshair',
             toolMode === 'pan' && (isPanning ? 'cursor-grabbing' : 'cursor-grab'),
             toolMode === 'select' && 'cursor-default',
+            toolMode === 'draw' && 'cursor-crosshair',
+            toolMode === 'eraser' && 'cursor-crosshair',
           )}
-          style={{
-            backgroundColor: 'hsl(var(--secondary) / 0.5)',
-          }}
-          onClick={handleCanvasClick}
+          style={{ backgroundColor: 'hsl(var(--secondary) / 0.5)' }}
+          onClick={!isDrawMode ? handleCanvasClick : undefined}
           onMouseDown={handleCanvasMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          onMouseLeave={handleMouseUp}
+          onMouseLeave={() => { handleMouseUp(); handleDrawEnd(); }}
           onDragOver={(e) => e.preventDefault()}
           onDrop={handleDrop}
         >
@@ -446,13 +608,20 @@ export default function VisionBoardPage() {
               height: 3000,
             }}
           >
+            {/* Drawing canvas overlay */}
+            <canvas
+              ref={drawCanvasRef}
+              className={cn(
+                'absolute inset-0',
+                isDrawMode ? 'pointer-events-auto z-40' : 'pointer-events-none z-5',
+              )}
+              style={{ width: 4000, height: 3000 }}
+            />
+
             {isLoading ? (
-              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 text-sm text-muted-foreground animate-pulse">
-                Loading…
-              </div>
-            ) : totalCount === 0 ? (
-              /* Empty state */
-              <div className="absolute top-1/4 left-1/2 -translate-x-1/2 text-center px-6 pointer-events-auto">
+              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 text-sm text-muted-foreground animate-pulse z-50">Loading…</div>
+            ) : totalCount === 0 && !isDrawMode ? (
+              <div className="absolute top-1/4 left-1/2 -translate-x-1/2 text-center px-6 pointer-events-auto z-30">
                 <div className="h-16 w-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
                   <SquaresFour className="h-8 w-8 text-primary" weight="duotone" />
                 </div>
@@ -460,7 +629,7 @@ export default function VisionBoardPage() {
                 <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto leading-relaxed">
                   Select <strong>Note</strong> and click anywhere to write.
                   <br />Drag & drop images onto the canvas.
-                  <br />Use <strong>Draw</strong> to sketch ideas.
+                  <br />Use <strong>Draw</strong> to sketch directly.
                 </p>
                 <div className="flex items-center justify-center gap-6 text-muted-foreground text-xs">
                   <div className="flex items-center gap-1.5"><Note className="h-4 w-4" /> Click to note</div>
@@ -480,8 +649,10 @@ export default function VisionBoardPage() {
                   <div
                     key={item.id}
                     className={cn(
-                      'absolute group',
-                      isDragging ? 'z-50 cursor-grabbing' : toolMode === 'select' ? 'cursor-grab' : '',
+                      'absolute group z-10',
+                      isDragging && 'z-50 cursor-grabbing',
+                      !isDragging && toolMode === 'select' && 'cursor-grab',
+                      isDrawMode && 'pointer-events-none',
                     )}
                     style={{ left: pos.x, top: pos.y, width: item.width || 240 }}
                     onMouseDown={(e) => handleCardMouseDown(e, item as CanvasItem)}
@@ -587,18 +758,6 @@ export default function VisionBoardPage() {
           </div>
         </div>
       </div>
-
-      {/* ── Drawing Dialog ─────────────────────────────── */}
-      <Dialog open={showDraw} onOpenChange={setShowDraw}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-base">
-              <PaintBrush className="h-4 w-4 text-primary" weight="duotone" /> Draw on Canvas
-            </DialogTitle>
-          </DialogHeader>
-          <DrawingCanvas onSave={handleDrawingSave} />
-        </DialogContent>
-      </Dialog>
     </div>
   );
 }
