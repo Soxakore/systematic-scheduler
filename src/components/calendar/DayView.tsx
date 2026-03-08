@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useAppContext } from '@/components/AppLayout';
 import { useEvents, useCalendars, useUpdateEvent, useAllEventTags } from '@/hooks/useData';
 import { startOfDay, endOfDay, format, isToday, differenceInMinutes } from 'date-fns';
@@ -7,6 +7,11 @@ import { GearSix } from '@phosphor-icons/react';
 
 const HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const SNAP_MINUTES = 15;
+
+function snapToGrid(minutes: number) {
+  return Math.round(minutes / SNAP_MINUTES) * SNAP_MINUTES;
+}
 
 export default function DayView() {
   const { currentDate, setShowEventDialog, setSelectedDate, setEditingEventId, searchQuery, selectedTagIds } = useAppContext();
@@ -48,6 +53,73 @@ export default function DayView() {
   const now = new Date();
   const nowTop = (now.getHours() * 60 + now.getMinutes()) / 60 * HOUR_HEIGHT;
 
+  // ── Drag-to-create state ──
+  const [dragCreate, setDragCreate] = useState<{
+    startMinutes: number;
+    currentMinutes: number;
+  } | null>(null);
+  const dragCreateRef = useRef(dragCreate);
+  dragCreateRef.current = dragCreate;
+
+  const getMinutesFromY = useCallback((clientY: number) => {
+    if (!scrollRef.current) return 0;
+    const rect = scrollRef.current.getBoundingClientRect();
+    const y = clientY - rect.top + scrollRef.current.scrollTop;
+    const minutes = (y / HOUR_HEIGHT) * 60;
+    return Math.max(0, Math.min(24 * 60, snapToGrid(minutes)));
+  }, []);
+
+  const handleGridMouseDown = useCallback((e: React.MouseEvent) => {
+    if (e.button !== 0) return;
+    const minutes = getMinutesFromY(e.clientY);
+    setDragCreate({ startMinutes: minutes, currentMinutes: minutes });
+
+    const handleMove = (me: MouseEvent) => {
+      const cur = getMinutesFromY(me.clientY);
+      setDragCreate(prev => prev ? { ...prev, currentMinutes: cur } : null);
+    };
+
+    const handleUp = () => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleUp);
+      const state = dragCreateRef.current;
+      if (!state) return;
+
+      const minMin = Math.min(state.startMinutes, state.currentMinutes);
+      const maxMin = Math.max(state.startMinutes, state.currentMinutes);
+
+      if (maxMin - minMin < SNAP_MINUTES) {
+        setDragCreate(null);
+        return;
+      }
+
+      const startDate = new Date(currentDate);
+      startDate.setHours(0, minMin, 0, 0);
+      const endDate = new Date(currentDate);
+      endDate.setHours(0, maxMin, 0, 0);
+
+      setSelectedDate(startDate);
+      setEditingEventId(null);
+      setShowEventDialog(true);
+      setDragCreate(null);
+    };
+
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleUp);
+  }, [currentDate, getMinutesFromY, setSelectedDate, setEditingEventId, setShowEventDialog]);
+
+  // Drag preview calculation
+  const dragPreview = dragCreate
+    ? (() => {
+        const minMin = Math.min(dragCreate.startMinutes, dragCreate.currentMinutes);
+        const maxMin = Math.max(dragCreate.startMinutes, dragCreate.currentMinutes);
+        if (maxMin - minMin < SNAP_MINUTES) return null;
+        const top = (minMin / 60) * HOUR_HEIGHT;
+        const height = ((maxMin - minMin) / 60) * HOUR_HEIGHT;
+        return { top, height, startMin: minMin, endMin: maxMin };
+      })()
+    : null;
+
   return (
     <div className="h-full flex flex-col">
       <div className="py-3 px-4 border-b text-center shrink-0">
@@ -69,21 +141,38 @@ export default function DayView() {
               </div>
             ))}
           </div>
-          <div className="flex-1 relative border-l">
+          <div
+            className="flex-1 relative border-l"
+            onMouseDown={handleGridMouseDown}
+          >
             {HOURS.map(h => (
               <div
                 key={h}
-                className="absolute w-full border-t cal-grid-line cursor-pointer"
+                className="absolute w-full border-t cal-grid-line cursor-crosshair"
                 style={{ top: h * HOUR_HEIGHT, height: HOUR_HEIGHT }}
                 onClick={() => {
-                  const d = new Date(currentDate);
-                  d.setHours(h, 0, 0, 0);
-                  setSelectedDate(d);
-                  setEditingEventId(null);
-                  setShowEventDialog(true);
+                  if (!dragCreate) {
+                    const d = new Date(currentDate);
+                    d.setHours(h, 0, 0, 0);
+                    setSelectedDate(d);
+                    setEditingEventId(null);
+                    setShowEventDialog(true);
+                  }
                 }}
               />
             ))}
+
+            {/* Drag-to-create preview */}
+            {dragPreview && (
+              <div
+                className="absolute left-1 right-4 rounded-md border-2 border-primary bg-primary/15 z-20 pointer-events-none flex items-start px-2 py-0.5"
+                style={{ top: dragPreview.top, height: dragPreview.height }}
+              >
+                <span className="text-xs font-medium text-primary">
+                  {format(new Date(0, 0, 0, 0, dragPreview.startMin), 'h:mm a')} – {format(new Date(0, 0, 0, 0, dragPreview.endMin), 'h:mm a')}
+                </span>
+              </div>
+            )}
 
             {isToday(currentDate) && (
               <div className="absolute w-full z-20 pointer-events-none" style={{ top: nowTop }}>
@@ -107,6 +196,7 @@ export default function DayView() {
                   key={event.id}
                   className="absolute left-1 right-4 rounded-md px-2 py-1 text-sm overflow-hidden cursor-pointer z-10 shadow-sm text-primary-foreground"
                   style={{ top, height, backgroundColor: calMap.get(event.calendar_id) || '#3B82F6' }}
+                  onMouseDown={e => e.stopPropagation()}
                   onClick={e => {
                     e.stopPropagation();
                     setEditingEventId(event.id);

@@ -1,4 +1,4 @@
-import { useMemo, useRef, useEffect } from 'react';
+import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useAppContext } from '@/components/AppLayout';
 import { useEvents, useCalendars, useUpdateEvent, useAllEventTags } from '@/hooks/useData';
 import { startOfWeek, endOfWeek, addDays, format, isSameDay, isToday, differenceInMinutes } from 'date-fns';
@@ -7,6 +7,11 @@ import { GearSix } from '@phosphor-icons/react';
 
 const HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
+const SNAP_MINUTES = 15;
+
+function snapToGrid(minutes: number) {
+  return Math.round(minutes / SNAP_MINUTES) * SNAP_MINUTES;
+}
 
 export default function WeekView() {
   const { currentDate, setShowEventDialog, setSelectedDate, setEditingEventId, searchQuery, selectedTagIds } = useAppContext();
@@ -56,44 +61,101 @@ export default function WeekView() {
     setShowEventDialog(true);
   };
 
-  // Drag state
+  // ── Drag-to-create state ──
+  const [dragCreate, setDragCreate] = useState<{
+    dayIndex: number;
+    startMinutes: number;
+    currentMinutes: number;
+  } | null>(null);
+  const dragCreateRef = useRef(dragCreate);
+  dragCreateRef.current = dragCreate;
+
+  const getMinutesFromY = useCallback((clientY: number) => {
+    if (!scrollRef.current) return 0;
+    const rect = scrollRef.current.getBoundingClientRect();
+    const y = clientY - rect.top + scrollRef.current.scrollTop;
+    const minutes = (y / HOUR_HEIGHT) * 60;
+    return Math.max(0, Math.min(24 * 60, snapToGrid(minutes)));
+  }, []);
+
+  const handleGridMouseDown = useCallback((e: React.MouseEvent, dayIndex: number) => {
+    // Only left-click on empty area
+    if (e.button !== 0) return;
+    const minutes = getMinutesFromY(e.clientY);
+    setDragCreate({ dayIndex, startMinutes: minutes, currentMinutes: minutes });
+
+    const handleMove = (me: MouseEvent) => {
+      const cur = getMinutesFromY(me.clientY);
+      setDragCreate(prev => prev ? { ...prev, currentMinutes: cur } : null);
+    };
+
+    const handleUp = (ue: MouseEvent) => {
+      document.removeEventListener('mousemove', handleMove);
+      document.removeEventListener('mouseup', handleUp);
+      const state = dragCreateRef.current;
+      if (!state) return;
+
+      const minMin = Math.min(state.startMinutes, state.currentMinutes);
+      const maxMin = Math.max(state.startMinutes, state.currentMinutes);
+
+      // If drag distance is tiny, treat as click (handled by hour cell onClick)
+      if (maxMin - minMin < SNAP_MINUTES) {
+        setDragCreate(null);
+        return;
+      }
+
+      const day = days[state.dayIndex];
+      const startDate = new Date(day);
+      startDate.setHours(0, minMin, 0, 0);
+      const endDate = new Date(day);
+      endDate.setHours(0, maxMin, 0, 0);
+
+      setSelectedDate(startDate);
+      setEditingEventId(null);
+      setShowEventDialog(true);
+      setDragCreate(null);
+    };
+
+    document.addEventListener('mousemove', handleMove);
+    document.addEventListener('mouseup', handleUp);
+  }, [days, getMinutesFromY, setSelectedDate, setEditingEventId, setShowEventDialog]);
+
+  // ── Event drag (reposition) ──
   const dragRef = useRef<{ eventId: string; startY: number; startTop: number; dayIndex: number } | null>(null);
 
   const handleDragStart = (e: React.MouseEvent, eventId: string, dayIndex: number, top: number) => {
     e.stopPropagation();
     dragRef.current = { eventId, startY: e.clientY, startTop: top, dayIndex };
-    
-    const handleMove = (me: MouseEvent) => {
-      // Visual feedback handled via CSS
-    };
-    
+
+    const handleMove = (_me: MouseEvent) => {};
+
     const handleUp = async (ue: MouseEvent) => {
       document.removeEventListener('mousemove', handleMove);
       document.removeEventListener('mouseup', handleUp);
       if (!dragRef.current || !scrollRef.current) return;
-      
+
       const rect = scrollRef.current.getBoundingClientRect();
       const scrollTop = scrollRef.current.scrollTop;
       const y = ue.clientY - rect.top + scrollTop;
       const dayWidth = (rect.width - 56) / 7;
       const x = ue.clientX - rect.left - 56;
       const newDayIndex = Math.min(6, Math.max(0, Math.floor(x / dayWidth)));
-      
+
       const minutesFromTop = (y / HOUR_HEIGHT) * 60;
       const snappedMinutes = Math.round(minutesFromTop / 15) * 15;
-      
+
       const ev = filteredEvents.find(e => e.id === dragRef.current!.eventId);
       if (!ev) return;
-      
+
       const oldStart = new Date(ev.start_time);
       const duration = differenceInMinutes(new Date(ev.end_time), oldStart);
-      
+
       const newDay = days[newDayIndex];
       const newStart = new Date(newDay);
       newStart.setHours(0, snappedMinutes, 0, 0);
       const newEnd = new Date(newStart);
       newEnd.setMinutes(newEnd.getMinutes() + duration);
-      
+
       try {
         await updateEvent.mutateAsync({
           id: ev.id,
@@ -102,10 +164,10 @@ export default function WeekView() {
           ...(ev.is_system_generated ? { is_customized: true } : {}),
         });
       } catch {}
-      
+
       dragRef.current = null;
     };
-    
+
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
   };
@@ -155,17 +217,47 @@ export default function WeekView() {
               return isSameDay(s, day) && !e.is_all_day;
             });
 
+            // Drag-to-create preview for this column
+            const dragPreview = dragCreate && dragCreate.dayIndex === dayIndex
+              ? (() => {
+                  const minMin = Math.min(dragCreate.startMinutes, dragCreate.currentMinutes);
+                  const maxMin = Math.max(dragCreate.startMinutes, dragCreate.currentMinutes);
+                  if (maxMin - minMin < SNAP_MINUTES) return null;
+                  const top = (minMin / 60) * HOUR_HEIGHT;
+                  const height = ((maxMin - minMin) / 60) * HOUR_HEIGHT;
+                  return { top, height, startMin: minMin, endMin: maxMin };
+                })()
+              : null;
+
             return (
-              <div key={day.toISOString()} className="flex-1 relative border-l">
+              <div
+                key={day.toISOString()}
+                className="flex-1 relative border-l"
+                onMouseDown={e => handleGridMouseDown(e, dayIndex)}
+              >
                 {/* Hour grid lines */}
                 {HOURS.map(h => (
                   <div
                     key={h}
-                    className="absolute w-full border-t cal-grid-line cursor-pointer"
+                    className="absolute w-full border-t cal-grid-line cursor-crosshair"
                     style={{ top: h * HOUR_HEIGHT, height: HOUR_HEIGHT }}
-                    onClick={() => handleCellClick(day, h)}
+                    onClick={() => {
+                      if (!dragCreate) handleCellClick(day, h);
+                    }}
                   />
                 ))}
+
+                {/* Drag-to-create preview */}
+                {dragPreview && (
+                  <div
+                    className="absolute left-0.5 right-1 rounded border-2 border-primary bg-primary/15 z-20 pointer-events-none flex items-start px-1.5 py-0.5"
+                    style={{ top: dragPreview.top, height: dragPreview.height }}
+                  >
+                    <span className="text-[10px] font-medium text-primary">
+                      {format(new Date(0, 0, 0, 0, dragPreview.startMin), 'h:mm a')} – {format(new Date(0, 0, 0, 0, dragPreview.endMin), 'h:mm a')}
+                    </span>
+                  </div>
+                )}
 
                 {/* Current time line */}
                 {isToday(day) && (
