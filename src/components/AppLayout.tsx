@@ -238,6 +238,7 @@ export default function AppLayout() {
   const [searchQuery, setSearchQuery]         = useState('');
   const [showEventDialog, setShowEventDialog] = useState(false);
   const [selectedDate, setSelectedDate]       = useState<Date | null>(null);
+  const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
   const [editingEventId, setEditingEventId]   = useState<string | null>(null);
   const [selectedTagIds, setSelectedTagIds]   = useState<string[]>([]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
