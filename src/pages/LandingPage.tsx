@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Check, Star } from '@phosphor-icons/react';
+import { motion } from 'framer-motion';
 import HeroLoginSection from '@/components/landing/HeroLoginSection';
+import CursorSparkle from '@/components/landing/CursorSparkle';
+import FloatingOrbs from '@/components/landing/FloatingOrbs';
+import GlowCard from '@/components/landing/GlowCard';
 
 import icoLightning from '@/assets/icons/icon-lightning.svg';
 import icoSystems from '@/assets/icons/icon-systems.svg';
@@ -19,6 +23,15 @@ import icoAnalytics from '@/assets/icons/icon-analytics.svg';
 import icoMorning from '@/assets/icons/icon-morning.svg';
 import icoReview from '@/assets/icons/icon-review.svg';
 import icoVision from '@/assets/icons/icon-vision.svg';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] },
+  }),
+};
 
 const FEATURES = [
   { badge: icoDashboard, title: 'Command Center', desc: 'See your entire day at a glance — events, habits, goals, and priorities unified in one dashboard.' },
