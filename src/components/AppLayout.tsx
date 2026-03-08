@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
+import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from './PageTransition';
 import { List, X, Plus, CalendarDots, Sun, Moon } from '@phosphor-icons/react';
 import { useTheme } from '@/hooks/useTheme';
