@@ -13,8 +13,6 @@ export default function DashboardPage() {
   const { data: systems, isLoading: loadingSystems }     = useSystems();
   const { data: goals, isLoading: loadingGoals }       = useGoals();
 
-  if (loadingEvents || loadingSystems || loadingGoals) return <DashboardSkeleton />;
-
   const systemEvents  = todayEvents?.filter(e => e.is_system_generated) || [];
   const totalEvents   = todayEvents?.length || 0;
   const activeGoals   = goals?.filter(g => g.status === 'active') || [];
@@ -23,6 +21,8 @@ export default function DashboardPage() {
     const now = new Date();
     return (todayEvents || []).filter(e => new Date(e.start_time) > now).slice(0, 4);
   }, [todayEvents]);
+
+  if (loadingEvents || loadingSystems || loadingGoals) return <DashboardSkeleton />;
 
   const greeting = () => {
     const h = new Date().getHours();
