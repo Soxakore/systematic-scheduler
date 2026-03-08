@@ -520,15 +520,6 @@ export default function VisionBoardPage() {
 
               <div className="w-px h-5 bg-border" />
 
-              {/* Save drawing */}
-              <button
-                onClick={saveDrawingAsCard}
-                disabled={uploading}
-                className="h-6 px-2.5 rounded-md text-[10px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90 transition-colors flex items-center gap-1"
-              >
-                <FloppyDisk className="h-3 w-3" /> Save as card
-              </button>
-
               {/* Clear */}
               <button
                 onClick={clearDrawing}
@@ -540,7 +531,7 @@ export default function VisionBoardPage() {
           )}
 
           <span className="ml-auto text-[9px] text-muted-foreground">
-            {isDrawMode ? 'Draw on the canvas · Save as card when done' : 'Scroll to pan · Ctrl+scroll to zoom · Double-click to edit'}
+            {isDrawMode ? 'Draw freely · Auto-saved' : 'Scroll to pan · Ctrl+scroll to zoom · Double-click to edit'}
           </span>
         </div>
 
