@@ -230,6 +230,7 @@ function Sidebar({ onNewEvent, onClose, onSignOut }: { onNewEvent: () => void; o
 
 /* ── Main layout ───────────────────────────────────────────── */
 export default function AppLayout() {
+  const { data: profile } = useProfile();
   const [currentDate, setCurrentDate]         = useState(new Date());
   const [currentView, setCurrentView]         = useState('month');
   const [searchQuery, setSearchQuery]         = useState('');
