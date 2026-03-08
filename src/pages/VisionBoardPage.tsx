@@ -12,7 +12,7 @@ import {
 import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
 
-type ToolMode = 'select' | 'note' | 'pan' | 'draw' | 'eraser';
+type ToolMode = 'select' | 'note' | 'pan' | 'draw' | 'eraser' | 'connect';
 type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | null;
 const MIN_SIZE = 60;
 
