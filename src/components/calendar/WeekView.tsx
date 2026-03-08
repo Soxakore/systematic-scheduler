@@ -1,9 +1,10 @@
 import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useAppContext } from '@/components/AppLayout';
 import { useEvents, useCalendars, useUpdateEvent, useAllEventTags } from '@/hooks/useData';
+import { usePartnerEvents, hexToRgba } from '@/hooks/usePartnerEvents';
 import { startOfWeek, endOfWeek, addDays, format, isSameDay, isToday, differenceInMinutes, startOfDay, isBefore, isAfter, max, min } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { GearSix } from '@phosphor-icons/react';
+import { GearSix, Users } from '@phosphor-icons/react';
 import { useAutoScroll } from '@/hooks/useCalendarDrag';
 import type { CalendarEvent } from '@/types';
 
@@ -26,6 +27,7 @@ export default function WeekView() {
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
   const { data: events } = useEvents(weekStart, weekEnd);
+  const partnerEvents = usePartnerEvents(weekStart, weekEnd);
   const days = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
   useEffect(() => {
@@ -417,6 +419,45 @@ export default function WeekView() {
                     </div>
                   );
                 })}
+
+                {/* Partner events (semi-transparent) */}
+                {partnerEvents
+                  .filter(pe => {
+                    const s = new Date(pe.start_time);
+                    const end = new Date(pe.end_time);
+                    return isSameDay(s, day) && !pe.is_all_day && isSameDay(s, end);
+                  })
+                  .map(event => {
+                    const s = new Date(event.start_time);
+                    const e = new Date(event.end_time);
+                    const startMin = s.getHours() * 60 + s.getMinutes();
+                    const duration = differenceInMinutes(e, s);
+                    const top = (startMin / 60) * HOUR_HEIGHT;
+                    const height = Math.max((duration / 60) * HOUR_HEIGHT, 20);
+                    const baseColor = calMap.get(event.calendar_id) || '#3B82F6';
+
+                    return (
+                      <div
+                        key={`partner-${event.id}`}
+                        className="absolute left-0.5 right-1 rounded px-1.5 py-0.5 text-[11px] leading-tight overflow-hidden cursor-default z-[5] border border-dashed"
+                        style={{
+                          top,
+                          height,
+                          backgroundColor: hexToRgba(baseColor, 0.12),
+                          borderColor: hexToRgba(baseColor, 0.4),
+                        }}
+                      >
+                        <div className="font-medium truncate text-foreground/70">
+                          <Users className="inline h-2.5 w-2.5 mr-0.5 opacity-60 shrink-0" weight="bold" />{event.title}
+                        </div>
+                        {height > 30 && (
+                          <div className="opacity-50 truncate text-foreground/60">
+                            {format(s, 'h:mm a')} – {format(e, 'h:mm a')}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
               </div>
             );
           })}

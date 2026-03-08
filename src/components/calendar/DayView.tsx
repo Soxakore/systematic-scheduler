@@ -1,9 +1,10 @@
 import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useAppContext } from '@/components/AppLayout';
 import { useEvents, useCalendars, useUpdateEvent, useAllEventTags } from '@/hooks/useData';
+import { usePartnerEvents, hexToRgba } from '@/hooks/usePartnerEvents';
 import { startOfDay, endOfDay, format, isToday, differenceInMinutes } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { GearSix } from '@phosphor-icons/react';
+import { GearSix, Users } from '@phosphor-icons/react';
 import { useAutoScroll } from '@/hooks/useCalendarDrag';
 
 const HOUR_HEIGHT = 60;
@@ -25,6 +26,7 @@ export default function DayView() {
   const dayStart = startOfDay(currentDate);
   const dayEnd = endOfDay(currentDate);
   const { data: events } = useEvents(dayStart, dayEnd);
+  const partnerEvents = usePartnerEvents(dayStart, dayEnd);
 
   useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = 8 * HOUR_HEIGHT;
@@ -244,6 +246,43 @@ export default function DayView() {
                   )}
                   {height > 54 && event.location && (
                     <div className="text-xs opacity-70 truncate">{event.location}</div>
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Partner (shared calendar) events */}
+            {partnerEvents.filter(pe => !pe.is_all_day).map(event => {
+              const s = new Date(event.start_time);
+              const e = new Date(event.end_time);
+              const startMin = s.getHours() * 60 + s.getMinutes();
+              const duration = differenceInMinutes(e, s);
+              const top = (startMin / 60) * HOUR_HEIGHT;
+              const height = Math.max((duration / 60) * HOUR_HEIGHT, 24);
+              const baseColor = calMap.get(event.calendar_id) || '#3B82F6';
+
+              return (
+                <div
+                  key={`partner-${event.id}`}
+                  className="absolute left-1 right-4 rounded-md px-2 py-1 text-sm overflow-hidden cursor-default z-[5] border border-dashed"
+                  style={{
+                    top,
+                    height,
+                    backgroundColor: hexToRgba(baseColor, 0.12),
+                    borderColor: hexToRgba(baseColor, 0.4),
+                  }}
+                  onMouseDown={e => e.stopPropagation()}
+                >
+                  <div className="font-medium truncate text-foreground/70">
+                    <Users className="inline h-2.5 w-2.5 mr-0.5 opacity-60 shrink-0" weight="bold" />{event.title}
+                  </div>
+                  {height > 36 && (
+                    <div className="text-xs text-foreground/60">
+                      {format(s, 'h:mm a')} – {format(e, 'h:mm a')}
+                    </div>
+                  )}
+                  {height > 54 && event.location && (
+                    <div className="text-xs text-foreground/50 truncate">{event.location}</div>
                   )}
                 </div>
               );

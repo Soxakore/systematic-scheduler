@@ -1,9 +1,10 @@
 import { useMemo } from 'react';
 import { useAppContext } from '@/components/AppLayout';
 import { useEvents, useCalendars, useAllEventTags } from '@/hooks/useData';
+import { usePartnerEvents, hexToRgba } from '@/hooks/usePartnerEvents';
 import { startOfMonth, endOfMonth, startOfWeek, endOfWeek, eachDayOfInterval, format, isSameMonth, isSameDay, isToday } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Plus, GearSix } from '@phosphor-icons/react';
+import { Plus, GearSix, Users } from '@phosphor-icons/react';
 
 export default function MonthView() {
   const { currentDate, setCurrentDate, setCurrentView, setShowEventDialog, setSelectedDate, setEditingEventId, searchQuery, selectedTagIds } = useAppContext();
@@ -16,6 +17,7 @@ export default function MonthView() {
   const calendarEnd = endOfWeek(monthEnd, { weekStartsOn: 0 });
 
   const { data: events } = useEvents(calendarStart, calendarEnd);
+  const partnerEvents = usePartnerEvents(calendarStart, calendarEnd);
   const days = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const filteredEvents = useMemo(() => {
@@ -55,6 +57,11 @@ export default function MonthView() {
             const s = new Date(e.start_time);
             return isSameDay(s, day);
           });
+          const dayPartnerEvents = partnerEvents.filter(e => {
+            const s = new Date(e.start_time);
+            return isSameDay(s, day);
+          });
+          const allDayEvents = [...dayEvents, ...dayPartnerEvents];
 
           return (
             <div
@@ -92,22 +99,37 @@ export default function MonthView() {
                 </button>
               </div>
               <div className="space-y-0.5 mt-0.5">
-                {dayEvents.slice(0, 3).map(event => (
-                  <button
-                    key={event.id}
-                    className="w-full text-left text-[11px] leading-tight px-1 py-0.5 rounded truncate text-primary-foreground"
-                    style={{ backgroundColor: calMap.get(event.calendar_id)?.color || '#3B82F6' }}
-                    onClick={e => {
-                      e.stopPropagation();
-                      setEditingEventId(event.id);
-                      setShowEventDialog(true);
-                    }}
-                  >
-                    {event.is_system_generated && <GearSix className="inline h-2 w-2 mr-0.5 opacity-70 shrink-0" weight="bold" />}{event.title}
-                  </button>
-                ))}
-                {dayEvents.length > 3 && (
-                  <span className="text-[10px] text-muted-foreground px-1">+{dayEvents.length - 3} more</span>
+                {allDayEvents.slice(0, 3).map(event => {
+                  const isPartner = 'isPartner' in event && event.isPartner;
+                  const baseColor = calMap.get(event.calendar_id)?.color || '#3B82F6';
+                  return (
+                    <button
+                      key={event.id}
+                      className={cn(
+                        'w-full text-left text-[11px] leading-tight px-1 py-0.5 rounded truncate',
+                        isPartner
+                          ? 'border border-dashed text-foreground/80'
+                          : 'text-primary-foreground'
+                      )}
+                      style={{
+                        backgroundColor: isPartner ? hexToRgba(baseColor, 0.15) : baseColor,
+                        borderColor: isPartner ? hexToRgba(baseColor, 0.5) : undefined,
+                      }}
+                      onClick={e => {
+                        e.stopPropagation();
+                        if (!isPartner) {
+                          setEditingEventId(event.id);
+                          setShowEventDialog(true);
+                        }
+                      }}
+                    >
+                      {isPartner && <Users className="inline h-2 w-2 mr-0.5 opacity-60 shrink-0" weight="bold" />}
+                      {event.is_system_generated && <GearSix className="inline h-2 w-2 mr-0.5 opacity-70 shrink-0" weight="bold" />}{event.title}
+                    </button>
+                  );
+                })}
+                {allDayEvents.length > 3 && (
+                  <span className="text-[10px] text-muted-foreground px-1">+{allDayEvents.length - 3} more</span>
                 )}
               </div>
             </div>
