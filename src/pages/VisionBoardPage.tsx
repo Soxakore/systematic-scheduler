@@ -568,6 +568,51 @@ export default function VisionBoardPage() {
               style={{ position: 'absolute', top: 0, left: 0, width: CANVAS_W, height: CANVAS_H, pointerEvents: 'none' }}
             />
 
+            {/* SVG connection arrows */}
+            <svg style={{ position: 'absolute', top: 0, left: 0, width: CANVAS_W, height: CANVAS_H, pointerEvents: 'none', zIndex: 5 }}>
+              <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="hsl(var(--primary))" />
+                </marker>
+              </defs>
+              {/* Existing connections */}
+              {connections?.map(conn => {
+                const from = getItemCenter(conn.from_item_id);
+                const to = getItemCenter(conn.to_item_id);
+                return (
+                  <g key={conn.id}>
+                    <line
+                      x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+                      stroke="hsl(var(--primary))" strokeWidth={2} markerEnd="url(#arrowhead)" opacity={0.6}
+                    />
+                    {/* Invisible wider line for easier click target */}
+                    {toolMode === 'select' && (
+                      <line
+                        x1={from.x} y1={from.y} x2={to.x} y2={to.y}
+                        stroke="transparent" strokeWidth={14}
+                        style={{ pointerEvents: 'stroke', cursor: 'pointer' }}
+                        onClick={() => {
+                          if (confirm('Remove this connection?')) {
+                            deleteConnection.mutateAsync(conn.id);
+                            toast.success('Connection removed');
+                          }
+                        }}
+                      />
+                    )}
+                  </g>
+                );
+              })}
+              {/* Preview line while connecting */}
+              {toolMode === 'connect' && connectFromId && connectMousePos && (
+                <line
+                  x1={getItemCenter(connectFromId).x} y1={getItemCenter(connectFromId).y}
+                  x2={connectMousePos.x} y2={connectMousePos.y}
+                  stroke="hsl(var(--primary))" strokeWidth={2} strokeDasharray="6 4" opacity={0.5}
+                  markerEnd="url(#arrowhead)"
+                />
+              )}
+            </svg>
+
             {/* Cards */}
             {isLoading ? (
               <div className="absolute top-1/3 left-1/2 -translate-x-1/2 text-sm text-muted-foreground animate-pulse">Loading…</div>
