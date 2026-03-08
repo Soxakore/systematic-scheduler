@@ -103,6 +103,43 @@ export default function VisionBoardPage() {
 
   const snap = useCallback((v: number) => snapEnabled ? Math.round(v / GRID_SIZE) * GRID_SIZE : v, [snapEnabled]);
 
+  /* ── Canvas undo/redo helpers ─────────────────────── */
+  const saveCanvasSnapshot = useCallback(() => {
+    const c = drawCanvasRef.current;
+    const ctx = c?.getContext('2d');
+    if (!ctx || !c) return;
+    undoStack.current.push(ctx.getImageData(0, 0, c.width, c.height));
+    if (undoStack.current.length > 50) undoStack.current.shift();
+    redoStack.current = [];
+    setCanUndo(true);
+    setCanRedo(false);
+  }, []);
+
+  const undo = useCallback(() => {
+    const c = drawCanvasRef.current;
+    const ctx = c?.getContext('2d');
+    if (!ctx || !c || !undoStack.current.length) return;
+    // Save current state to redo
+    redoStack.current.push(ctx.getImageData(0, 0, c.width, c.height));
+    const prev = undoStack.current.pop()!;
+    ctx.putImageData(prev, 0, 0);
+    setCanUndo(undoStack.current.length > 0);
+    setCanRedo(true);
+    persistDrawing();
+  }, []);
+
+  const redo = useCallback(() => {
+    const c = drawCanvasRef.current;
+    const ctx = c?.getContext('2d');
+    if (!ctx || !c || !redoStack.current.length) return;
+    undoStack.current.push(ctx.getImageData(0, 0, c.width, c.height));
+    const next = redoStack.current.pop()!;
+    ctx.putImageData(next, 0, 0);
+    setCanUndo(true);
+    setCanRedo(redoStack.current.length > 0);
+    persistDrawing();
+  }, []);
+
   /* ── Init canvas + load saved drawing ─────────────── */
   useEffect(() => {
     const c = drawCanvasRef.current;
