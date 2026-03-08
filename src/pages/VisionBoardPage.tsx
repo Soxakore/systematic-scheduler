@@ -640,6 +640,23 @@ export default function VisionBoardPage() {
                       </button>
                     </div>
                   )}
+
+                  {/* Resize handles */}
+                  {!isDrawMode && !isEditing && toolMode === 'select' && (
+                    <>
+                      {RESIZE_HANDLES.map(({ handle, className: cls, cursor }) => (
+                        <div
+                          key={handle}
+                          className={cn(
+                            'absolute w-3 h-3 rounded-full bg-primary border-2 border-background opacity-0 group-hover:opacity-100 transition-opacity z-20',
+                            cls,
+                          )}
+                          style={{ cursor }}
+                          onMouseDown={e => handleResizeStart(e, item, handle)}
+                        />
+                      ))}
+                    </>
+                  )}
                 </div>
               );
             })}
