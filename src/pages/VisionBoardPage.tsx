@@ -174,6 +174,23 @@ export default function VisionBoardPage() {
     setIsDrawing(false);
     const ctx = drawCanvasRef.current?.getContext('2d');
     if (ctx) ctx.globalCompositeOperation = 'source-over';
+    // Auto-save drawing to storage
+    persistDrawing();
+  };
+
+  const persistDrawingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const persistDrawing = () => {
+    if (persistDrawingTimeout.current) clearTimeout(persistDrawingTimeout.current);
+    persistDrawingTimeout.current = setTimeout(async () => {
+      const canvas = drawCanvasRef.current;
+      if (!canvas || !user) return;
+      try {
+        const blob = await new Promise<Blob>((resolve) => canvas.toBlob(b => resolve(b!), 'image/png'));
+        const path = `${user.id}/canvas-drawing.png`;
+        // Upsert: try upload, if exists then update
+        await supabase.storage.from('vision-images').upload(path, blob, { contentType: 'image/png', upsert: true });
+      } catch {}
+    }, 1000); // debounce 1s
   };
 
   const clearDrawing = () => {
