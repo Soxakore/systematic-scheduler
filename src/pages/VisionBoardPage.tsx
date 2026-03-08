@@ -90,6 +90,7 @@ export default function VisionBoardPage() {
 
   // Color context menu
   const [colorMenu, setColorMenu] = useState<{ itemId: string; x: number; y: number } | null>(null);
+  const [drawToolsExpanded, setDrawToolsExpanded] = useState(false);
 
   const viewportRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement>(null);
