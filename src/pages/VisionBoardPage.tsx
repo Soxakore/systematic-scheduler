@@ -322,6 +322,10 @@ export default function VisionBoardPage() {
 
   /* ── Mouse handling ───────────────────────────────── */
   const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    // Close flyouts when clicking on the canvas
+    setDrawToolsExpanded(false);
+    setMediaToolsExpanded(false);
+
     if (isDrawMode) {
       handleDrawStart(e.clientX, e.clientY);
       return;
