@@ -25,7 +25,7 @@ export default function TermsPage() {
 
         <h2>2. Description of Service</h2>
         <p>
-          System Calendar is a personal productivity platform that provides calendar management, habit tracking, goal setting, journaling, vision boards, focus timers, weekly reviews, morning briefings, and analytics tools. The Service is designed for individual use to help users organize and optimize their daily routines.
+          DayBlock is a personal productivity platform that provides calendar management, habit tracking, goal setting, journaling, vision boards, focus timers, weekly reviews, morning briefings, and analytics tools. The Service is designed for individual use to help users organize and optimize their daily routines.
         </p>
 
         <h2>3. User Accounts</h2>
