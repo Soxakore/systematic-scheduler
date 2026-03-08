@@ -1047,7 +1047,28 @@ img{max-width:100%;border-radius:6px;margin-top:8px}</style></head><body>
             </div>
           )}
 
-          <span className="ml-auto text-[9px] text-muted-foreground">{statusText}</span>
+          <div className="ml-auto flex items-center gap-1">
+            <button
+              onClick={exportAsPDF}
+              disabled={exporting}
+              className="h-7 px-2.5 rounded-md text-[10px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors flex items-center gap-1 disabled:opacity-50"
+              title="Export as PDF"
+            >
+              <FilePdf className="h-3.5 w-3.5" />
+              PDF
+            </button>
+            <button
+              onClick={exportAsWord}
+              disabled={exporting}
+              className="h-7 px-2.5 rounded-md text-[10px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors flex items-center gap-1 disabled:opacity-50"
+              title="Export as Word"
+            >
+              <FileDoc className="h-3.5 w-3.5" />
+              Word
+            </button>
+            {exporting && <span className="text-[10px] text-primary animate-pulse">Exporting…</span>}
+            <span className="text-[9px] text-muted-foreground ml-2">{statusText}</span>
+          </div>
         </div>
 
         <div className="flex-1 flex overflow-hidden">
