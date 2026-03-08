@@ -563,7 +563,7 @@ export default function VisionBoardPage() {
                         isDragging ? 'shadow-2xl scale-[1.02]' : 'shadow-md hover:shadow-xl',
                         item.is_achieved && 'opacity-50 grayscale',
                       )}
-                      style={{ height: item.height || 200 }}
+                      style={{ height: size.h }}
                       draggable={false}
                     />
                   )}
