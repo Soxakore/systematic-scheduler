@@ -17,7 +17,7 @@ import type { CalendarEvent } from '@/types';
 const TAG_COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#6B7280'];
 
 export default function EventDialog() {
-  const { showEventDialog, setShowEventDialog, selectedDate, editingEventId, setEditingEventId } = useAppContext();
+  const { showEventDialog, setShowEventDialog, selectedDate, selectedEndDate, setSelectedEndDate, editingEventId, setEditingEventId } = useAppContext();
   const { data: calendars } = useCalendars();
   const { data: allEvents } = useEvents();
   const { data: tags } = useTags();
