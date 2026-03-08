@@ -197,6 +197,16 @@ export default function VisionBoardPage() {
     }
   }, [isDrawMode, toolMode, pan, handleDrawStart]);
 
+  /* ── Resize start ──────────────────────────────────── */
+  const handleResizeStart = useCallback((e: React.MouseEvent, item: any, handle: ResizeHandle) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setResizingId(item.id);
+    setResizeHandle(handle);
+    resizeStart.current = { x: e.clientX, y: e.clientY };
+    resizeItemStart.current = { x: item.position_x, y: item.position_y, w: item.width || 240, h: item.height || 200 };
+  }, []);
+
   const handleMouseMove = useCallback((e: React.MouseEvent) => {
     if (isDrawing && isDrawMode) {
       handleDrawMoveRaw(e.clientX, e.clientY);
@@ -209,6 +219,18 @@ export default function VisionBoardPage() {
       });
       return;
     }
+    if (resizingId && resizeHandle) {
+      const dx = (e.clientX - resizeStart.current.x) / zoom;
+      const dy = (e.clientY - resizeStart.current.y) / zoom;
+      const s = resizeItemStart.current;
+      let nx = s.x, ny = s.y, nw = s.w, nh = s.h;
+      if (resizeHandle.includes('e')) nw = Math.max(MIN_SIZE, s.w + dx);
+      if (resizeHandle.includes('w')) { nw = Math.max(MIN_SIZE, s.w - dx); nx = s.x + s.w - nw; }
+      if (resizeHandle.includes('s')) nh = Math.max(MIN_SIZE, s.h + dy);
+      if (resizeHandle.includes('n')) { nh = Math.max(MIN_SIZE, s.h - dy); ny = s.y + s.h - nh; }
+      setResizeSizes(prev => ({ ...prev, [resizingId]: { x: nx, y: ny, w: nw, h: nh } }));
+      return;
+    }
     if (!draggingId) return;
     const dx = (e.clientX - dragStart.current.x) / zoom;
     const dy = (e.clientY - dragStart.current.y) / zoom;
@@ -216,11 +238,22 @@ export default function VisionBoardPage() {
       ...prev,
       [draggingId]: { x: Math.max(0, dragItemStart.current.x + dx), y: Math.max(0, dragItemStart.current.y + dy) },
     }));
-  }, [isDrawing, isDrawMode, isPanning, draggingId, zoom, handleDrawMoveRaw]);
+  }, [isDrawing, isDrawMode, isPanning, draggingId, resizingId, resizeHandle, zoom, handleDrawMoveRaw]);
 
   const handleMouseUp = useCallback(async () => {
     if (isDrawing) { handleDrawEnd(); return; }
     if (isPanning) { setIsPanning(false); return; }
+    if (resizingId) {
+      const sz = resizeSizes[resizingId];
+      if (sz) {
+        await updateItem.mutateAsync({ id: resizingId, width: Math.round(sz.w), height: Math.round(sz.h), position_x: Math.round(sz.x), position_y: Math.round(sz.y) });
+      }
+      const rid = resizingId;
+      setResizingId(null);
+      setResizeHandle(null);
+      setResizeSizes(prev => { const n = { ...prev }; delete n[rid]; return n; });
+      return;
+    }
     if (!draggingId) return;
     const pos = dragPositions[draggingId];
     if (pos) {
@@ -229,7 +262,7 @@ export default function VisionBoardPage() {
     const id = draggingId;
     setDraggingId(null);
     setDragPositions(prev => { const n = { ...prev }; delete n[id]; return n; });
-  }, [isDrawing, isPanning, draggingId, dragPositions, updateItem, handleDrawEnd]);
+  }, [isDrawing, isPanning, draggingId, resizingId, dragPositions, resizeSizes, updateItem, handleDrawEnd]);
 
   /* ── Canvas click → create note ───────────────────── */
   const handleCanvasClick = async (e: React.MouseEvent) => {
