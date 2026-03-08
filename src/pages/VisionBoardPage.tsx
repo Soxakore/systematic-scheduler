@@ -647,7 +647,7 @@ export default function VisionBoardPage() {
             color: '#3b82f6', icon: 'star',
             position_x: 40 + Math.random() * 400, position_y: 40 + Math.random() * 300,
             width: 260, height: 80, image_url: data.publicUrl,
-            is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+            is_achieved: false, achieved_at: null, sort_order: items?.length || 0, board_id: activeBoardId,
           });
           toast.success('Voice note saved');
         } catch (err: any) { toast.error('Failed to save: ' + err.message); }
