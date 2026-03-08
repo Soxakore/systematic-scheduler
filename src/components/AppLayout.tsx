@@ -309,6 +309,13 @@ export default function AppLayout() {
             >
               <List className="h-5 w-5" weight="bold" />
             </button>
+            <button
+              className="hidden md:flex text-muted-foreground hover:text-foreground p-1.5 rounded-md"
+              onClick={() => setSidebarCollapsed(prev => !prev)}
+              aria-label="Toggle sidebar"
+            >
+              <List className="h-5 w-5" weight="bold" />
+            </button>
 
             <div className="flex-1 max-w-sm">
               <input
