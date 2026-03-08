@@ -14,7 +14,9 @@ export default function HabitsPage() {
   // Fetch events for the last 14 days for streak calculation
   const today = new Date();
   const fourteenDaysAgo = subDays(today, 13);
-  const { data: recentEvents } = useEvents(startOfDay(fourteenDaysAgo), endOfDay(today));
+  const { data: recentEvents, isLoading: loadingEvents } = useEvents(startOfDay(fourteenDaysAgo), endOfDay(today));
+
+  if (loadingSystems || loadingEvents) return <HabitsSkeleton />;
   const todayEvents = recentEvents?.filter(e => isSameDay(new Date(e.start_time), today)) || [];
   const systemEvents = todayEvents.filter(e => e.is_system_generated);
 

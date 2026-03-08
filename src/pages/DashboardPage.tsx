@@ -4,13 +4,16 @@ import FocusTimer from '@/components/FocusTimer';
 import { Link } from 'react-router-dom';
 import { Target, Clock, ArrowRight, CalendarBlank, Lightning, TrendUp, Fire, Brain } from '@phosphor-icons/react';
 import { format, startOfDay, endOfDay, parseISO } from 'date-fns';
+import { DashboardSkeleton } from '@/components/PageSkeleton';
 
 export default function DashboardPage() {
   const todayStart = startOfDay(new Date());
   const todayEnd   = endOfDay(new Date());
-  const { data: todayEvents } = useEvents(todayStart, todayEnd);
-  const { data: systems }     = useSystems();
-  const { data: goals }       = useGoals();
+  const { data: todayEvents, isLoading: loadingEvents } = useEvents(todayStart, todayEnd);
+  const { data: systems, isLoading: loadingSystems }     = useSystems();
+  const { data: goals, isLoading: loadingGoals }       = useGoals();
+
+  if (loadingEvents || loadingSystems || loadingGoals) return <DashboardSkeleton />;
 
   const systemEvents  = todayEvents?.filter(e => e.is_system_generated) || [];
   const totalEvents   = todayEvents?.length || 0;
