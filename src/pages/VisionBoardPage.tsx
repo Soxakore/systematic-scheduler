@@ -11,7 +11,7 @@ import {
   Stack, Eye, EyeSlash, MagnetStraight,
   ArrowCounterClockwise, ArrowClockwise, Palette,
   VideoCamera, Microphone, Record, Stop, Play, Pause,
-  Export, FilePdf, FileDoc,
+  Export, FilePdf, FileDoc, Plus, PencilSimple, TrashSimple, CaretDown, DotsSixVertical,
 } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
