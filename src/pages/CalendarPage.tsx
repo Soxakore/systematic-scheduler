@@ -105,18 +105,35 @@ export default function CalendarPage() {
           </Popover>
         </div>
 
-        <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
-          {views.map(v => (
-            <Button
-              key={v.value}
-              variant={currentView === v.value ? 'default' : 'ghost'}
-              size="sm"
-              className="text-xs h-7 px-3"
-              onClick={() => setCurrentView(v.value)}
-            >
-              {v.label}
-            </Button>
-          ))}
+        <div className="flex items-center gap-1.5">
+          <TooltipProvider delayDuration={300}>
+            <Tooltip>
+              <TooltipTrigger asChild>
+                <Button variant="ghost" size="sm" className="h-7 w-7 p-0 text-muted-foreground">
+                  <Keyboard className="h-3.5 w-3.5" />
+                </Button>
+              </TooltipTrigger>
+              <TooltipContent side="bottom" className="text-xs space-y-1">
+                <p><kbd className="px-1 py-0.5 rounded bg-muted text-muted-foreground font-mono text-[10px]">←</kbd> Previous</p>
+                <p><kbd className="px-1 py-0.5 rounded bg-muted text-muted-foreground font-mono text-[10px]">→</kbd> Next</p>
+                <p><kbd className="px-1 py-0.5 rounded bg-muted text-muted-foreground font-mono text-[10px]">T</kbd> Today</p>
+              </TooltipContent>
+            </Tooltip>
+          </TooltipProvider>
+
+          <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
+            {views.map(v => (
+              <Button
+                key={v.value}
+                variant={currentView === v.value ? 'default' : 'ghost'}
+                size="sm"
+                className="text-xs h-7 px-3"
+                onClick={() => setCurrentView(v.value)}
+              >
+                {v.label}
+              </Button>
+            ))}
+          </div>
         </div>
       </div>
 
