@@ -5,9 +5,10 @@ import { Progress } from '@/components/ui/progress';
 import { Fire, CheckCircle, Lightning, CalendarDots } from '@phosphor-icons/react';
 import { startOfDay, endOfDay, subDays, format, isSameDay } from 'date-fns';
 import { cn } from '@/lib/utils';
+import { HabitsSkeleton } from '@/components/PageSkeleton';
 
 export default function HabitsPage() {
-  const { data: systems } = useSystems();
+  const { data: systems, isLoading: loadingSystems } = useSystems();
   const activeSystems = systems?.filter(s => s.is_active) || [];
 
   // Fetch events for the last 14 days for streak calculation
