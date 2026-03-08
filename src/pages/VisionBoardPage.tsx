@@ -466,132 +466,115 @@ export default function VisionBoardPage() {
                   Select <strong>Note</strong> and click anywhere. Drop images. Use <strong>Draw</strong> to sketch freely.
                 </p>
               </div>
-            ) : (
-              !isDrawMode && items?.map(item => {
-                const pos = getItemPos(item);
-                const cat = CATEGORIES.find(c => c.value === item.category) || CATEGORIES[8];
-                const CatIcon = CATEGORY_ICONS[item.category || 'general'] || Star;
-                const isEditing = editingId === item.id;
-                const isDragging = draggingId === item.id;
+            ) : null}
 
-                return (
-                  <div
-                    key={item.id}
-                    data-card
-                    className={cn('absolute group', isDragging ? 'z-50 cursor-grabbing' : 'z-10 cursor-grab')}
-                    style={{ left: pos.x, top: pos.y, width: item.width || 240 }}
-                    onMouseDown={e => handleCardMouseDown(e, item)}
-                    onDoubleClick={() => startEditing(item)}
-                  >
-                    <div className={cn(
-                      'bg-card rounded-xl overflow-hidden border transition-all duration-150',
-                      isDragging ? 'shadow-2xl scale-[1.03] rotate-[0.5deg] border-primary/30' : 'shadow-sm hover:shadow-lg border-border',
-                      item.is_achieved && 'opacity-60',
-                    )}>
-                      {item.image_url && (
-                        <div className="relative">
-                          <img src={item.image_url} alt={item.title} className="w-full h-36 object-cover" draggable={false} />
-                          {item.is_achieved && (
-                            <div className="absolute inset-0 bg-emerald-500/20 flex items-center justify-center">
-                              <Trophy className="h-7 w-7 text-emerald-400" weight="fill" />
-                            </div>
-                          )}
-                        </div>
-                      )}
-                      <div className="p-3">
-                        <div className="flex items-center gap-1.5 mb-1.5">
-                          <CatIcon className="h-3 w-3" style={{ color: cat.color }} weight="duotone" />
-                          <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: cat.color }}>{cat.label}</span>
-                          {item.is_achieved && (
-                            <span className="ml-auto text-[9px] font-semibold text-emerald-500 flex items-center gap-0.5">
-                              <Check className="h-3 w-3" weight="bold" /> Done
-                            </span>
-                          )}
-                        </div>
-
-                        {isEditing ? (
-                          <div className="space-y-1.5" onClick={e => e.stopPropagation()}>
-                            <textarea
-                              ref={el => { titleInputRefs.current[item.id] = el; }}
-                              value={editTitle}
-                              onChange={e => setEditTitle(e.target.value)}
-                              placeholder="Title…"
-                              className="w-full bg-transparent text-sm font-semibold text-foreground resize-none outline-none border-b border-primary/30 pb-1"
-                              rows={1}
-                              onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEditing(); } }}
-                              autoFocus
-                            />
-                            <textarea
-                              value={editDesc} onChange={e => setEditDesc(e.target.value)}
-                              placeholder="Write your thoughts…"
-                              className="w-full bg-transparent text-xs text-muted-foreground resize-none outline-none leading-relaxed"
-                              rows={3}
-                            />
-                            <div className="flex justify-end gap-1 pt-1">
-                              <button onClick={() => setEditingId(null)} className="h-6 px-2 rounded text-[10px] text-muted-foreground hover:bg-secondary">Cancel</button>
-                              <button onClick={saveEditing} className="h-6 px-2 rounded text-[10px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90">Save</button>
-                            </div>
-                          </div>
-                        ) : (
-                          <>
-                            <h3 className={cn(
-                              'text-sm font-semibold text-foreground leading-snug',
-                              item.is_achieved && 'line-through text-muted-foreground',
-                              !item.title && 'text-muted-foreground italic',
-                            )}>
-                              {item.title || 'Untitled – double click to edit'}
-                            </h3>
-                            {item.description && <p className="text-xs text-muted-foreground leading-relaxed mt-1 line-clamp-4">{item.description}</p>}
-                          </>
-                        )}
-
-                        {!isEditing && (
-                          <div className="flex items-center gap-1 mt-2 pt-1.5 border-t border-border/50 opacity-0 group-hover:opacity-100 transition-opacity">
-                            {!item.is_achieved ? (
-                              <button
-                                className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
-                                onClick={e => { e.stopPropagation(); updateItem.mutateAsync({ id: item.id, is_achieved: true, achieved_at: new Date().toISOString() }); toast.success('Achieved! 🎉'); }}
-                              >
-                                <Check className="h-3 w-3" weight="bold" /> Done
-                              </button>
-                            ) : (
-                              <button
-                                className="px-1.5 py-0.5 rounded text-[9px] text-muted-foreground hover:bg-secondary transition-colors"
-                                onClick={e => { e.stopPropagation(); updateItem.mutateAsync({ id: item.id, is_achieved: false, achieved_at: null }); }}
-                              >Undo</button>
-                            )}
-                            <button
-                              className="ml-auto p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                              onClick={e => { e.stopPropagation(); deleteItem.mutateAsync(item.id); toast.success('Removed'); }}
-                            >
-                              <Trash className="h-3 w-3" />
-                            </button>
-                          </div>
-                        )}
-                      </div>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-
-            {/* Show cards even in draw mode, just non-interactive */}
-            {isDrawMode && items?.map(item => {
+            {/* Render items — freeform, no card chrome */}
+            {items?.map(item => {
               const pos = getItemPos(item);
-              const cat = CATEGORIES.find(c => c.value === item.category) || CATEGORIES[8];
-              const CatIcon = CATEGORY_ICONS[item.category || 'general'] || Star;
+              const isEditing = editingId === item.id;
+              const isDragging = draggingId === item.id;
+              const hasImage = !!item.image_url;
+
               return (
-                <div key={item.id} className="absolute pointer-events-none opacity-40" style={{ left: pos.x, top: pos.y, width: item.width || 240 }}>
-                  <div className="bg-card rounded-xl overflow-hidden border border-border shadow-sm">
-                    {item.image_url && <img src={item.image_url} alt="" className="w-full h-36 object-cover" />}
-                    <div className="p-3">
-                      <div className="flex items-center gap-1.5 mb-1">
-                        <CatIcon className="h-3 w-3" style={{ color: cat.color }} weight="duotone" />
-                        <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: cat.color }}>{cat.label}</span>
-                      </div>
-                      <h3 className="text-sm font-semibold text-foreground leading-snug">{item.title || 'Untitled'}</h3>
+                <div
+                  key={item.id}
+                  data-card
+                  className={cn(
+                    'absolute group',
+                    isDragging ? 'z-50 cursor-grabbing' : 'z-10',
+                    isDrawMode ? 'pointer-events-none opacity-50' : 'cursor-grab',
+                  )}
+                  style={{ left: pos.x, top: pos.y, width: item.width || 240 }}
+                  onMouseDown={e => handleCardMouseDown(e, item)}
+                  onDoubleClick={() => !isDrawMode && startEditing(item)}
+                >
+                  {/* Image items — raw image, no wrapper */}
+                  {hasImage && (
+                    <img
+                      src={item.image_url!}
+                      alt={item.title}
+                      className={cn(
+                        'w-full rounded-lg object-cover select-none transition-shadow duration-150',
+                        isDragging ? 'shadow-2xl scale-[1.02]' : 'shadow-md hover:shadow-xl',
+                        item.is_achieved && 'opacity-50 grayscale',
+                      )}
+                      style={{ height: item.height || 200 }}
+                      draggable={false}
+                    />
+                  )}
+
+                  {/* Text-only items — minimal sticky-note style */}
+                  {!hasImage && (
+                    <div
+                      className={cn(
+                        'rounded-lg p-3 select-none transition-shadow duration-150',
+                        isDragging ? 'shadow-2xl scale-[1.02]' : 'shadow-sm hover:shadow-lg',
+                        item.is_achieved && 'opacity-50',
+                      )}
+                      style={{ backgroundColor: (item.color || '#64748b') + '18', borderLeft: `3px solid ${item.color || '#64748b'}` }}
+                    >
+                      {isEditing ? (
+                        <div className="space-y-1.5" onClick={e => e.stopPropagation()}>
+                          <textarea
+                            ref={el => { titleInputRefs.current[item.id] = el; }}
+                            value={editTitle}
+                            onChange={e => setEditTitle(e.target.value)}
+                            placeholder="Title…"
+                            className="w-full bg-transparent text-sm font-semibold text-foreground resize-none outline-none"
+                            rows={1}
+                            onKeyDown={e => { if (e.key === 'Enter' && !e.shiftKey) { e.preventDefault(); saveEditing(); } }}
+                            autoFocus
+                          />
+                          <textarea
+                            value={editDesc} onChange={e => setEditDesc(e.target.value)}
+                            placeholder="Write your thoughts…"
+                            className="w-full bg-transparent text-xs text-muted-foreground resize-none outline-none leading-relaxed"
+                            rows={3}
+                          />
+                          <div className="flex justify-end gap-1 pt-1">
+                            <button onClick={() => setEditingId(null)} className="h-6 px-2 rounded text-[10px] text-muted-foreground hover:bg-secondary">Cancel</button>
+                            <button onClick={saveEditing} className="h-6 px-2 rounded text-[10px] font-semibold bg-primary text-primary-foreground hover:bg-primary/90">Save</button>
+                          </div>
+                        </div>
+                      ) : (
+                        <>
+                          <h3 className={cn(
+                            'text-sm font-semibold text-foreground leading-snug',
+                            item.is_achieved && 'line-through text-muted-foreground',
+                            !item.title && 'text-muted-foreground italic',
+                          )}>
+                            {item.title || 'Untitled – double click to edit'}
+                          </h3>
+                          {item.description && <p className="text-xs text-muted-foreground leading-relaxed mt-1">{item.description}</p>}
+                        </>
+                      )}
                     </div>
-                  </div>
+                  )}
+
+                  {/* Hover actions — minimal, floating */}
+                  {!isEditing && !isDrawMode && (
+                    <div className="absolute -top-3 -right-3 flex items-center gap-0.5 opacity-0 group-hover:opacity-100 transition-opacity">
+                      {!item.is_achieved ? (
+                        <button
+                          className="h-6 w-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md hover:bg-emerald-600 transition-colors"
+                          onClick={e => { e.stopPropagation(); updateItem.mutateAsync({ id: item.id, is_achieved: true, achieved_at: new Date().toISOString() }); toast.success('Achieved! 🎉'); }}
+                        >
+                          <Check className="h-3 w-3" weight="bold" />
+                        </button>
+                      ) : (
+                        <button
+                          className="h-6 px-2 rounded-full bg-secondary text-[9px] text-muted-foreground shadow-md hover:bg-muted transition-colors"
+                          onClick={e => { e.stopPropagation(); updateItem.mutateAsync({ id: item.id, is_achieved: false, achieved_at: null }); }}
+                        >Undo</button>
+                      )}
+                      <button
+                        className="h-6 w-6 rounded-full bg-destructive/90 text-white flex items-center justify-center shadow-md hover:bg-destructive transition-colors"
+                        onClick={e => { e.stopPropagation(); deleteItem.mutateAsync(item.id); toast.success('Removed'); }}
+                      >
+                        <Trash className="h-3 w-3" />
+                      </button>
+                    </div>
+                  )}
                 </div>
               );
             })}
