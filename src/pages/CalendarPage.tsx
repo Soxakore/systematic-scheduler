@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { useAppContext } from '@/components/AppLayout';
 import MonthView from '@/components/calendar/MonthView';
 import WeekView from '@/components/calendar/WeekView';
@@ -6,10 +7,12 @@ import AgendaView from '@/components/calendar/AgendaView';
 import EventDialog from '@/components/EventDialog';
 import { useIsMobile } from '@/hooks/use-mobile';
 import { Button } from '@/components/ui/button';
-import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { Calendar } from '@/components/ui/calendar';
+import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
+import { ChevronLeft, ChevronRight, CalendarIcon } from 'lucide-react';
 import { addMonths, addWeeks, addDays, format, startOfWeek, endOfWeek } from 'date-fns';
+import { cn } from '@/lib/utils';
 import type { ViewType } from '@/types';
-
 export default function CalendarPage() {
   const { currentView, setCurrentView, currentDate, setCurrentDate } = useAppContext();
   const isMobile = useIsMobile();
