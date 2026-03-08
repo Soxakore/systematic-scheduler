@@ -11,9 +11,12 @@ import {
   Stack, Eye, EyeSlash, MagnetStraight,
   ArrowCounterClockwise, ArrowClockwise, Palette,
   VideoCamera, Microphone, Record, Stop, Play, Pause,
+  Export, FilePdf, FileDoc,
 } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
+import { toPng } from 'html-to-image';
+import jsPDF from 'jspdf';
 
 type ToolMode = 'select' | 'note' | 'pan' | 'draw' | 'eraser' | 'connect' | 'text' | 'shape-rect' | 'shape-circle' | 'shape-line';
 type ResizeHandle = 'n' | 's' | 'e' | 'w' | 'ne' | 'nw' | 'se' | 'sw' | null;
