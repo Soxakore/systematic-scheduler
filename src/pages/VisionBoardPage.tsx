@@ -7,6 +7,7 @@ import {
   Note, ImageSquare, PaintBrush, Eraser,
   Trash, SquaresFour, Star, Hand, Cursor,
   Check, Trophy, MagnifyingGlassPlus, MagnifyingGlassMinus,
+  ArrowRight,
 } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
