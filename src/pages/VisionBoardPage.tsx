@@ -43,13 +43,27 @@ const isShapeTool = (t: ToolMode) => t === 'shape-rect' || t === 'shape-circle' 
 
 export default function VisionBoardPage() {
   const { user } = useAuth();
-  const { data: items, isLoading } = useVisionBoardItems();
+
+  // Board management
+  const { data: boards } = useVisionBoards();
+  const createBoard = useCreateVisionBoard();
+  const updateBoard = useUpdateVisionBoard();
+  const deleteBoard = useDeleteVisionBoard();
+  const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
+  const [boardMenuOpen, setBoardMenuOpen] = useState(false);
+  const [renamingBoardId, setRenamingBoardId] = useState<string | null>(null);
+  const [renamingBoardName, setRenamingBoardName] = useState('');
+
+  const { data: items, isLoading } = useVisionBoardItems(activeBoardId);
   const createItem = useCreateVisionBoardItem();
   const updateItem = useUpdateVisionBoardItem();
   const deleteItem = useDeleteVisionBoardItem();
-  const { data: connections } = useVisionBoardConnections();
+  const { data: connections } = useVisionBoardConnections(activeBoardId);
   const createConnection = useCreateVisionBoardConnection();
   const deleteConnection = useDeleteVisionBoardConnection();
+
+  const activeBoard = boards?.find(b => b.id === activeBoardId);
+  const activeBoardName = activeBoard?.name || 'Default Board';
 
   const [toolMode, setToolMode] = useState<ToolMode>('select');
   const [editingId, setEditingId] = useState<string | null>(null);
