@@ -24,6 +24,7 @@ import GoalsPage from "@/pages/GoalsPage";
 import MorningBriefingPage from "@/pages/MorningBriefingPage";
 import JournalPage from "@/pages/JournalPage";
 import VisionBoardPage from "@/pages/VisionBoardPage";
+import SharingPage from "@/pages/SharingPage";
 import EventDialog from "@/components/EventDialog";
 import NotFound from "./pages/NotFound";
 
