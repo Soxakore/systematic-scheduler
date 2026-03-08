@@ -62,6 +62,10 @@ export default function VisionBoardPage() {
   const [drawColor, setDrawColor] = useState('#1e293b');
   const [brushSize, setBrushSize] = useState(4);
 
+  // Connecting
+  const [connectFromId, setConnectFromId] = useState<string | null>(null);
+  const [connectMousePos, setConnectMousePos] = useState<{ x: number; y: number } | null>(null);
+
   const viewportRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement>(null);
   const canvasReady = useRef(false);
