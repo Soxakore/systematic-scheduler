@@ -23,6 +23,17 @@ const GRID_SIZE = 20;
 const CANVAS_W = 4000;
 const CANVAS_H = 3000;
 const DRAW_COLORS = ['#1e293b', '#ef4444', '#3b82f6', '#22c55e', '#eab308', '#8b5cf6', '#ec4899', '#f8fafc'];
+
+const getMediaType = (url: string | null): 'image' | 'video' | 'audio' | null => {
+  if (!url) return null;
+  const ext = url.split('?')[0].split('.').pop()?.toLowerCase();
+  if (['mp4', 'webm', 'mov', 'ogg'].includes(ext || '')) return 'video';
+  if (['mp3', 'wav', 'webm-audio', 'm4a', 'ogg-audio'].includes(ext || '')) return 'audio';
+  // webm could be audio or video - check path for hints
+  if (ext === 'webm' && url.includes('voice-')) return 'audio';
+  if (['jpg', 'jpeg', 'png', 'gif', 'webp', 'svg', 'bmp'].includes(ext || '')) return 'image';
+  return 'image';
+};
 const BRUSH_SIZES = [2, 4, 8, 14];
 
 const isShapeTool = (t: ToolMode) => t === 'shape-rect' || t === 'shape-circle' || t === 'shape-line';
