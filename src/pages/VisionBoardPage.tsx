@@ -116,10 +116,12 @@ export default function VisionBoardPage() {
   const recordingTimerRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
   const viewportRef = useRef<HTMLDivElement>(null);
+  const canvasContentRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement>(null);
   const canvasReady = useRef(false);
   const titleInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
   const persistTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [exporting, setExporting] = useState(false);
 
   const totalCount = items?.length || 0;
   const achievedCount = items?.filter(i => i.is_achieved).length || 0;
