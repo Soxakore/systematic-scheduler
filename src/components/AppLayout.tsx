@@ -35,6 +35,8 @@ interface AppContextValue {
   setShowEventDialog: (v: boolean) => void;
   selectedDate: Date | null;
   setSelectedDate: (d: Date | null) => void;
+  selectedEndDate: Date | null;
+  setSelectedEndDate: (d: Date | null) => void;
   editingEventId: string | null;
   setEditingEventId: (id: string | null) => void;
   selectedTagIds: string[];
@@ -236,6 +238,7 @@ export default function AppLayout() {
   const [searchQuery, setSearchQuery]         = useState('');
   const [showEventDialog, setShowEventDialog] = useState(false);
   const [selectedDate, setSelectedDate]       = useState<Date | null>(null);
+  const [selectedEndDate, setSelectedEndDate] = useState<Date | null>(null);
   const [editingEventId, setEditingEventId]   = useState<string | null>(null);
   const [selectedTagIds, setSelectedTagIds]   = useState<string[]>([]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
@@ -255,6 +258,7 @@ export default function AppLayout() {
 
   const handleNewEvent = () => {
     setSelectedDate(null);
+    setSelectedEndDate(null);
     setEditingEventId(null);
     setShowEventDialog(true);
   };
@@ -271,6 +275,7 @@ export default function AppLayout() {
       searchQuery, setSearchQuery,
       showEventDialog, setShowEventDialog,
       selectedDate, setSelectedDate,
+      selectedEndDate, setSelectedEndDate,
       editingEventId, setEditingEventId,
       selectedTagIds, setSelectedTagIds,
     }}>

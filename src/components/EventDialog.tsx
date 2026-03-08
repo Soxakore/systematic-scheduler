@@ -17,7 +17,7 @@ import type { CalendarEvent } from '@/types';
 const TAG_COLORS = ['#EF4444', '#F59E0B', '#10B981', '#3B82F6', '#8B5CF6', '#EC4899', '#6B7280'];
 
 export default function EventDialog() {
-  const { showEventDialog, setShowEventDialog, selectedDate, editingEventId, setEditingEventId } = useAppContext();
+  const { showEventDialog, setShowEventDialog, selectedDate, selectedEndDate, setSelectedEndDate, editingEventId, setEditingEventId } = useAppContext();
   const { data: calendars } = useCalendars();
   const { data: allEvents } = useEvents();
   const { data: tags } = useTags();
@@ -65,7 +65,7 @@ export default function EventDialog() {
       const d = selectedDate;
       setStartDate(d.toISOString().split('T')[0]);
       setStartTime(d.getHours().toString().padStart(2, '0') + ':' + d.getMinutes().toString().padStart(2, '0'));
-      const end = new Date(d.getTime() + 60 * 60 * 1000);
+      const end = selectedEndDate || new Date(d.getTime() + 60 * 60 * 1000);
       setEndDate(end.toISOString().split('T')[0]);
       setEndTime(end.getHours().toString().padStart(2, '0') + ':' + end.getMinutes().toString().padStart(2, '0'));
       setIsAllDay(false);
@@ -74,7 +74,7 @@ export default function EventDialog() {
       setReminderMinutes('');
       setSelectedTagIds([]);
     }
-  }, [editingEvent, selectedDate, calendars]);
+  }, [editingEvent, selectedDate, selectedEndDate, calendars]);
 
   // Sync existing tag ids when loaded
   useEffect(() => {
@@ -158,6 +158,7 @@ export default function EventDialog() {
   const handleClose = () => {
     setShowEventDialog(false);
     setEditingEventId(null);
+    setSelectedEndDate(null);
     setSelectedTagIds([]);
   };
 
