@@ -1,7 +1,11 @@
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { ArrowRight, Check, Star } from '@phosphor-icons/react';
+import { motion } from 'framer-motion';
 import HeroLoginSection from '@/components/landing/HeroLoginSection';
+import CursorSparkle from '@/components/landing/CursorSparkle';
+import FloatingOrbs from '@/components/landing/FloatingOrbs';
+import GlowCard from '@/components/landing/GlowCard';
 
 import icoLightning from '@/assets/icons/icon-lightning.svg';
 import icoSystems from '@/assets/icons/icon-systems.svg';
@@ -19,6 +23,15 @@ import icoAnalytics from '@/assets/icons/icon-analytics.svg';
 import icoMorning from '@/assets/icons/icon-morning.svg';
 import icoReview from '@/assets/icons/icon-review.svg';
 import icoVision from '@/assets/icons/icon-vision.svg';
+
+const fadeUp = {
+  hidden: { opacity: 0, y: 30 },
+  visible: (i: number) => ({
+    opacity: 1,
+    y: 0,
+    transition: { delay: i * 0.08, duration: 0.5, ease: [0.16, 1, 0.3, 1] as [number, number, number, number] },
+  }),
+};
 
 const FEATURES = [
   { badge: icoDashboard, title: 'Command Center', desc: 'See your entire day at a glance — events, habits, goals, and priorities unified in one dashboard.' },
@@ -47,7 +60,10 @@ const TESTIMONIALS = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-black text-white overflow-x-hidden">
+    <div className="min-h-screen bg-black text-white overflow-x-hidden relative">
+      <CursorSparkle />
+      <FloatingOrbs />
+
       {/* NAV */}
       <nav className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-black/70 border-b border-white/[0.06]">
         <div className="max-w-6xl mx-auto flex items-center justify-between px-6 h-16">
@@ -80,66 +96,123 @@ export default function LandingPage() {
       </section>
 
       {/* FEATURES */}
-      <section id="features" className="py-24 px-6">
+      <section id="features" className="py-24 px-6 relative">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.6 }}
+          >
             <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">
               Everything you need.<br /><span className="text-white/40">Nothing you don't.</span>
             </h2>
             <p className="text-white/40 max-w-lg mx-auto">Nine powerful modules that work together seamlessly — so you can focus on what matters.</p>
-          </div>
+          </motion.div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map((f, i) => (
-              <div key={i} className="group relative p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.05] transition-all duration-300">
-                <img src={f.badge} alt="" width={48} height={48} className="rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300" />
-                <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
-                <p className="text-sm text-white/40 leading-relaxed">{f.desc}</p>
-              </div>
+              <motion.div
+                key={i}
+                custom={i}
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: '-50px' }}
+              >
+                <GlowCard className="rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300">
+                  <div className="p-6">
+                    <img src={f.badge} alt="" width={48} height={48} className="rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300" />
+                    <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
+                    <p className="text-sm text-white/40 leading-relaxed">{f.desc}</p>
+                  </div>
+                </GlowCard>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* HOW IT WORKS */}
-      <section className="py-24 px-6 bg-white/[0.015]">
+      <section className="py-24 px-6 bg-white/[0.015] relative">
         <div className="max-w-4xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-center mb-16">How it works</h2>
+          <motion.h2
+            className="text-3xl sm:text-4xl font-bold tracking-tight text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            How it works
+          </motion.h2>
           <div className="grid sm:grid-cols-3 gap-8">
             {[
               { step: '01', badge: icoSparkle, title: 'Set Up Your Systems', desc: 'Define the areas of your life — career, health, finance, learning — and create repeatable systems for each.' },
               { step: '02', badge: icoFire, title: 'Build Daily Rituals', desc: 'Use morning briefings, journals, and habit tracking to stay consistent every single day.' },
               { step: '03', badge: icoTrophy, title: 'Review & Evolve', desc: 'Weekly reviews and analytics reveal your patterns, so you continuously optimize and grow.' },
             ].map((s, i) => (
-              <div key={i} className="text-center">
+              <motion.div
+                key={i}
+                className="text-center"
+                initial={{ opacity: 0, y: 30 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.15, duration: 0.5 }}
+              >
                 <span className="text-6xl font-bold text-white/[0.06] block mb-4">{s.step}</span>
-                <img src={s.badge} alt="" width={56} height={56} className="rounded-2xl mx-auto mb-4" />
+                <motion.img
+                  src={s.badge}
+                  alt=""
+                  width={56}
+                  height={56}
+                  className="rounded-2xl mx-auto mb-4"
+                  whileHover={{ scale: 1.15, rotate: 5 }}
+                  transition={{ type: 'spring', stiffness: 300 }}
+                />
                 <h3 className="text-lg font-semibold mb-2">{s.title}</h3>
                 <p className="text-sm text-white/40 leading-relaxed">{s.desc}</p>
-              </div>
+              </motion.div>
             ))}
           </div>
         </div>
       </section>
 
       {/* TESTIMONIALS */}
-      <section className="py-24 px-6">
+      <section className="py-24 px-6 relative">
         <div className="max-w-5xl mx-auto">
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-center mb-4">Loved by builders</h2>
-          <p className="text-center text-white/40 mb-14">People who take their growth seriously.</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.5 }}
+          >
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-center mb-4">Loved by builders</h2>
+            <p className="text-center text-white/40 mb-14">People who take their growth seriously.</p>
+          </motion.div>
           <div className="grid sm:grid-cols-3 gap-5">
             {TESTIMONIALS.map((t, i) => (
-              <div key={i} className="p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06]">
-                <div className="flex gap-0.5 mb-4">
-                  {Array.from({ length: t.stars }).map((_, j) => (
-                    <Star key={j} className="h-4 w-4 text-amber-400" weight="fill" />
-                  ))}
-                </div>
-                <p className="text-sm text-white/60 leading-relaxed mb-5">"{t.quote}"</p>
-                <div>
-                  <p className="text-sm font-medium">{t.name}</p>
-                  <p className="text-xs text-white/30">{t.role}</p>
-                </div>
-              </div>
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 25 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.12, duration: 0.5 }}
+              >
+                <GlowCard className="rounded-2xl bg-white/[0.03] border border-white/[0.06]">
+                  <div className="p-6">
+                    <div className="flex gap-0.5 mb-4">
+                      {Array.from({ length: t.stars }).map((_, j) => (
+                        <Star key={j} className="h-4 w-4 text-amber-400" weight="fill" />
+                      ))}
+                    </div>
+                    <p className="text-sm text-white/60 leading-relaxed mb-5">"{t.quote}"</p>
+                    <div>
+                      <p className="text-sm font-medium">{t.name}</p>
+                      <p className="text-xs text-white/30">{t.role}</p>
+                    </div>
+                  </div>
+                </GlowCard>
+              </motion.div>
             ))}
           </div>
         </div>
@@ -148,8 +221,22 @@ export default function LandingPage() {
       {/* CTA */}
       <section className="relative py-28 px-6 bg-white/[0.015] overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-b from-[#0071e3]/5 via-transparent to-transparent pointer-events-none" />
-        <div className="relative max-w-2xl mx-auto text-center">
-          <img src={icoStar} alt="" width={56} height={56} className="rounded-2xl mx-auto mb-6" />
+        <motion.div
+          className="relative max-w-2xl mx-auto text-center"
+          initial={{ opacity: 0, scale: 0.95 }}
+          whileInView={{ opacity: 1, scale: 1 }}
+          viewport={{ once: true }}
+          transition={{ duration: 0.6 }}
+        >
+          <motion.img
+            src={icoStar}
+            alt=""
+            width={56}
+            height={56}
+            className="rounded-2xl mx-auto mb-6"
+            animate={{ rotate: [0, 10, -10, 0] }}
+            transition={{ duration: 4, repeat: Infinity, ease: 'easeInOut' }}
+          />
           <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-5">
             Ready to transform
             <br />
@@ -159,11 +246,11 @@ export default function LandingPage() {
             Stop juggling five different apps. One system, one dashboard, one place to become the best version of yourself.
           </p>
           <Link to="/signup">
-            <Button size="lg" className="bg-[#0071e3] hover:bg-[#0077ED] text-white rounded-full px-10 h-12 text-base font-medium gap-2">
+            <Button size="lg" className="bg-[#0071e3] hover:bg-[#0077ED] text-white rounded-full px-10 h-12 text-base font-medium gap-2 hover:shadow-[0_0_30px_rgba(0,113,227,0.4)] transition-shadow duration-300">
               Start your journey <ArrowRight className="h-4 w-4" weight="bold" />
             </Button>
           </Link>
-        </div>
+        </motion.div>
       </section>
 
       {/* FOOTER */}
