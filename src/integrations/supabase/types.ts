@@ -485,6 +485,7 @@ export type Database = {
       }
       profiles: {
         Row: {
+          avatar_url: string | null
           created_at: string
           default_view: string
           id: string
@@ -494,6 +495,7 @@ export type Database = {
           week_start_day: number
         }
         Insert: {
+          avatar_url?: string | null
           created_at?: string
           default_view?: string
           id: string
@@ -503,6 +505,7 @@ export type Database = {
           week_start_day?: number
         }
         Update: {
+          avatar_url?: string | null
           created_at?: string
           default_view?: string
           id?: string
