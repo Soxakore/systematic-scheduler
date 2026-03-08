@@ -607,7 +607,7 @@ export default function VisionBoardPage() {
           position_x: 40 + Math.random() * 400, position_y: 40 + Math.random() * 300,
           width: type === 'video' ? 320 : 260, height: type === 'video' ? 240 : 80,
           image_url: data.publicUrl,
-          is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+          is_achieved: false, achieved_at: null, sort_order: items?.length || 0, board_id: activeBoardId,
         });
       } catch (err: any) { toast.error('Upload failed: ' + err.message); }
       finally { setUploading(false); }
