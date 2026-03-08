@@ -57,6 +57,10 @@ export default function WeekView() {
     const d = new Date(day);
     d.setHours(hour, 0, 0, 0);
     setSelectedDate(d);
+    setSelectedEndDate(null);
+    setEditingEventId(null);
+    setShowEventDialog(true);
+  };
     setEditingEventId(null);
     setShowEventDialog(true);
   };
