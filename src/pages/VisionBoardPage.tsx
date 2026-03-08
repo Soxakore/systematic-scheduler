@@ -46,6 +46,13 @@ export default function VisionBoardPage() {
   const dragItemStart = useRef({ x: 0, y: 0 });
   const [dragPositions, setDragPositions] = useState<Record<string, { x: number; y: number }>>({});
 
+  // Resizing
+  const [resizingId, setResizingId] = useState<string | null>(null);
+  const [resizeHandle, setResizeHandle] = useState<ResizeHandle>(null);
+  const resizeStart = useRef({ x: 0, y: 0 });
+  const resizeItemStart = useRef({ x: 0, y: 0, w: 0, h: 0 });
+  const [resizeSizes, setResizeSizes] = useState<Record<string, { x: number; y: number; w: number; h: number }>>({});
+
   // Drawing
   const [isDrawing, setIsDrawing] = useState(false);
   const [drawColor, setDrawColor] = useState('#1e293b');
