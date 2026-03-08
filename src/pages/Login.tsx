@@ -48,8 +48,8 @@ export default function LoginPage() {
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="text-center space-y-2">
           <Link to="/welcome" className="flex items-center justify-center gap-2.5 mb-2 hover:opacity-80 transition-opacity">
-            <img src="/logo.png" alt="System Calendar" width={36} height={36} className="rounded-xl object-contain" />
-            <span className="text-2xl font-bold text-foreground">System Calendar</span>
+            <img src="/logo.png" alt="DayBlock" width={36} height={36} className="rounded-xl object-contain" />
+            <span className="text-2xl font-bold text-foreground">DayBlock</span>
           </Link>
           <CardTitle className="text-xl">Welcome back</CardTitle>
           <CardDescription>Sign in to your account</CardDescription>

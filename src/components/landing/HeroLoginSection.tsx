@@ -124,7 +124,7 @@ export default function HeroLoginSection() {
         <div className="w-full max-w-[420px] mx-auto lg:mx-0">
           <div className="rounded-2xl bg-white/[0.04] border border-white/[0.08] backdrop-blur-xl p-8">
             <div className="flex items-center gap-2.5 mb-6">
-              <img src="/logo.png" alt="System Calendar" width={32} height={32} className="rounded-lg object-contain" />
+              <img src="/logo.png" alt="DayBlock" width={32} height={32} className="rounded-lg object-contain" />
               <span className="text-lg font-semibold tracking-tight text-white">Sign in</span>
             </div>
 
