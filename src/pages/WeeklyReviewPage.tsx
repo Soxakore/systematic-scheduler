@@ -1,6 +1,11 @@
 import { useMemo } from 'react';
 import { Card } from '@/components/ui/card';
-import { Sparkle, CalendarBlank, Clock, Fire, Target, CheckCircle } from '@phosphor-icons/react';
+import { CheckCircle, Target } from '@phosphor-icons/react';
+import icoReview from '@/assets/icons/icon-review.svg';
+import icoCalendarBlank from '@/assets/icons/icon-calendar-blank.svg';
+import icoFire from '@/assets/icons/icon-fire.svg';
+import icoClockBadge from '@/assets/icons/icon-clock.svg';
+import icoTarget from '@/assets/icons/icon-target.svg';
 import { useEvents, useSystems, useGoals, useFocusSessions } from '@/hooks/useData';
 import { format, startOfWeek, endOfWeek, subWeeks, differenceInMinutes, parseISO } from 'date-fns';
 
@@ -38,9 +43,7 @@ export default function WeeklyReviewPage() {
   return (
     <div className="h-full overflow-y-auto scrollbar-thin p-4 max-w-2xl mx-auto">
       <h1 className="text-xl font-semibold text-foreground mb-2 flex items-center gap-2.5">
-        <div className="h-8 w-8 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-          <Sparkle className="h-4 w-4 text-primary" weight="duotone" />
-        </div>
+        <img src={icoReview} alt="" width={32} height={32} className="rounded-xl shrink-0" />
         Weekly Review
       </h1>
       <p className="text-sm text-muted-foreground mb-6">
@@ -49,30 +52,22 @@ export default function WeeklyReviewPage() {
 
       <div className="grid grid-cols-2 gap-3 mb-6">
         <Card className="p-4 text-center">
-          <div className="h-10 w-10 rounded-xl bg-primary/15 flex items-center justify-center mx-auto mb-2">
-            <CalendarBlank className="h-5 w-5 text-primary" weight="duotone" />
-          </div>
+          <img src={icoCalendarBlank} alt="" width={40} height={40} className="rounded-xl mx-auto mb-2" />
           <p className="text-2xl font-bold">{stats.totalEvents}</p>
           <p className="text-xs text-muted-foreground">Events</p>
         </Card>
         <Card className="p-4 text-center">
-          <div className="h-10 w-10 rounded-xl bg-orange-500/15 flex items-center justify-center mx-auto mb-2">
-            <Fire className="h-5 w-5 text-orange-500" weight="duotone" />
-          </div>
+          <img src={icoFire} alt="" width={40} height={40} className="rounded-xl mx-auto mb-2" />
           <p className="text-2xl font-bold">{stats.systemEvents}</p>
           <p className="text-xs text-muted-foreground">System Events</p>
         </Card>
         <Card className="p-4 text-center">
-          <div className="h-10 w-10 rounded-xl bg-green-500/15 flex items-center justify-center mx-auto mb-2">
-            <Clock className="h-5 w-5 text-green-500" weight="duotone" />
-          </div>
+          <img src={icoClockBadge} alt="" width={40} height={40} className="rounded-xl mx-auto mb-2" />
           <p className="text-2xl font-bold">{Math.round(stats.totalMinutes / 60)}h</p>
           <p className="text-xs text-muted-foreground">Scheduled</p>
         </Card>
         <Card className="p-4 text-center">
-          <div className="h-10 w-10 rounded-xl bg-purple-500/15 flex items-center justify-center mx-auto mb-2">
-            <Target className="h-5 w-5 text-purple-500" weight="duotone" />
-          </div>
+          <img src={icoTarget} alt="" width={40} height={40} className="rounded-xl mx-auto mb-2" />
           <p className="text-2xl font-bold">{Math.round(stats.focusMinutes / 60)}h</p>
           <p className="text-xs text-muted-foreground">Focus Time</p>
         </Card>

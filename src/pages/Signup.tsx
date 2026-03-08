@@ -6,7 +6,7 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
-import { CalendarDots } from '@phosphor-icons/react';
+import icoCalendar from '@/assets/icons/icon-calendar.svg';
 
 export default function SignupPage() {
   const [name, setName] = useState('');
@@ -37,10 +37,10 @@ export default function SignupPage() {
     <div className="min-h-screen flex items-center justify-center bg-background px-4">
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="text-center space-y-2">
-          <div className="flex items-center justify-center gap-2 mb-2">
-            <CalendarDots className="h-8 w-8 text-primary" />
+          <Link to="/welcome" className="flex items-center justify-center gap-2.5 mb-2 hover:opacity-80 transition-opacity">
+            <img src={icoCalendar} alt="" width={36} height={36} className="rounded-xl" />
             <span className="text-2xl font-bold text-foreground">System Calendar</span>
-          </div>
+          </Link>
           <CardTitle className="text-xl">Create your account</CardTitle>
           <CardDescription>Get started with System Calendar</CardDescription>
         </CardHeader>

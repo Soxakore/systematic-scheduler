@@ -3,7 +3,8 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { FileText, Plus, Trash, Clock } from '@phosphor-icons/react';
+import { Plus, Trash, Clock } from '@phosphor-icons/react';
+import icoFileText from '@/assets/icons/icon-file-text.svg';
 import { useEventTemplates, useCreateEventTemplate, useDeleteEventTemplate, useCalendars } from '@/hooks/useData';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -38,9 +39,7 @@ export default function TemplatesPage() {
     <div className="h-full overflow-y-auto scrollbar-thin p-4 max-w-2xl mx-auto">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold text-foreground flex items-center gap-2.5">
-          <div className="h-8 w-8 rounded-xl bg-primary/15 flex items-center justify-center shrink-0">
-            <FileText className="h-4 w-4 text-primary" weight="duotone" />
-          </div>
+          <img src={icoFileText} alt="" width={32} height={32} className="rounded-xl shrink-0" />
           Event Templates
         </h1>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -85,9 +84,7 @@ export default function TemplatesPage() {
         <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
       ) : !templates?.length ? (
         <Card className="p-8 text-center">
-          <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-3">
-            <FileText className="h-7 w-7 text-primary" weight="duotone" />
-          </div>
+          <img src={icoFileText} alt="" width={56} height={56} className="rounded-2xl mx-auto mb-3" />
           <p className="text-muted-foreground">No templates yet. Create one to quickly add recurring event types.</p>
         </Card>
       ) : (

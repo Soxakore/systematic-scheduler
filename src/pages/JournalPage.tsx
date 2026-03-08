@@ -6,7 +6,14 @@ import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
 import { Input } from '@/components/ui/input';
 import { toast } from 'sonner';
-import { CaretLeft, CaretRight, BookOpen, Plus, X, Smiley, SmileySad, SmileyMelting, SmileyMeh, SmileyWink, Lightning, Trophy, Lightbulb, Star, Heart } from '@phosphor-icons/react';
+import { CaretLeft, CaretRight, Plus, X, Smiley, SmileySad, SmileyMelting, SmileyMeh, SmileyWink } from '@phosphor-icons/react';
+import icoJournal from '@/assets/icons/icon-journal.svg';
+import icoLightning from '@/assets/icons/icon-lightning.svg';
+import icoStar from '@/assets/icons/icon-star.svg';
+import icoHeart from '@/assets/icons/icon-heart.svg';
+import icoTrophy from '@/assets/icons/icon-trophy.svg';
+import icoLightbulb from '@/assets/icons/icon-lightbulb.svg';
+import icoBook from '@/assets/icons/icon-book.svg';
 
 const MOODS = [
   { value: 1, icon: SmileySad,     color: 'text-red-400',    label: 'Rough' },
@@ -143,9 +150,7 @@ export default function JournalPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-xl font-semibold flex items-center gap-2.5">
-              <div className="h-8 w-8 rounded-xl bg-indigo-500/15 flex items-center justify-center shrink-0">
-                <BookOpen className="h-4 w-4 text-indigo-500" weight="duotone" />
-              </div>
+              <img src={icoJournal} alt="" width={32} height={32} className="rounded-xl shrink-0" />
               Daily Journal
             </h1>
             {journalStreak > 0 && (
@@ -208,9 +213,8 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-lg bg-yellow-500/15 flex items-center justify-center shrink-0">
-                    <Lightning className="h-4 w-4 text-yellow-500" weight="duotone" />
-                  </div> Energy Level
+                  <img src={icoLightning} alt="" width={28} height={28} className="rounded-lg shrink-0" />
+                  Energy Level
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -238,9 +242,8 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-lg bg-blue-500/15 flex items-center justify-center shrink-0">
-                    <Star className="h-4 w-4 text-blue-500" weight="duotone" />
-                  </div> Intentions for Today
+                  <img src={icoStar} alt="" width={28} height={28} className="rounded-lg shrink-0" />
+                  Intentions for Today
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -251,9 +254,8 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-lg bg-pink-500/15 flex items-center justify-center shrink-0">
-                    <Heart className="h-4 w-4 text-pink-500" weight="duotone" />
-                  </div> Gratitude
+                  <img src={icoHeart} alt="" width={28} height={28} className="rounded-lg shrink-0" />
+                  Gratitude
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -264,9 +266,8 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-lg bg-green-500/15 flex items-center justify-center shrink-0">
-                    <Trophy className="h-4 w-4 text-green-500" weight="duotone" />
-                  </div> Wins
+                  <img src={icoTrophy} alt="" width={28} height={28} className="rounded-lg shrink-0" />
+                  Wins
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -277,9 +278,8 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-lg bg-orange-500/15 flex items-center justify-center shrink-0">
-                    <Lightbulb className="h-4 w-4 text-orange-500" weight="duotone" />
-                  </div> Lessons &amp; Reflections
+                  <img src={icoLightbulb} alt="" width={28} height={28} className="rounded-lg shrink-0" />
+                  Lessons &amp; Reflections
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -290,9 +290,8 @@ export default function JournalPage() {
             <Card>
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium flex items-center gap-2">
-                  <div className="h-7 w-7 rounded-lg bg-indigo-500/15 flex items-center justify-center shrink-0">
-                    <BookOpen className="h-4 w-4 text-indigo-500" weight="duotone" />
-                  </div> Free Write
+                  <img src={icoBook} alt="" width={28} height={28} className="rounded-lg shrink-0" />
+                  Free Write
                 </CardTitle>
               </CardHeader>
               <CardContent>
