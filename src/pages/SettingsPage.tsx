@@ -119,13 +119,6 @@ export default function SettingsPage() {
         </CardContent>
       </Card>
 
-      <Card>
-        <CardContent className="pt-6">
-          <Button variant="outline" onClick={async () => { await signOut(); navigate('/login'); }}>
-            Sign out
-          </Button>
-        </CardContent>
-      </Card>
     </div>
   );
 }
