@@ -27,6 +27,8 @@ import VisionBoardPage from "@/pages/VisionBoardPage";
 import SharingPage from "@/pages/SharingPage";
 import EventDialog from "@/components/EventDialog";
 import LandingPage from "@/pages/LandingPage";
+import TermsPage from "@/pages/TermsPage";
+import CookiePolicyPage from "@/pages/CookiePolicyPage";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -53,6 +55,8 @@ function AppRoutes() {
       <Route path="/signup" element={<PublicRoute><SignupPage /></PublicRoute>} />
       <Route path="/forgot-password" element={<ForgotPasswordPage />} />
       <Route path="/reset-password" element={<ResetPasswordPage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/cookies" element={<CookiePolicyPage />} />
       <Route path="/" element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
         <Route index element={<CalendarPage />} />
         <Route path="systems" element={<SystemsPage />} />

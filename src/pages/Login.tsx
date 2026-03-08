@@ -88,6 +88,12 @@ export default function LoginPage() {
               <Link to="/signup" className="text-primary hover:underline">Create account</Link>
             </div>
           </form>
+          <p className="text-[11px] text-muted-foreground text-center mt-4">
+            By signing in, you agree to our{' '}
+            <Link to="/terms" className="underline hover:text-foreground">Terms of Service</Link>
+            {' '}and{' '}
+            <Link to="/cookies" className="underline hover:text-foreground">Cookie Policy</Link>.
+          </p>
         </CardContent>
       </Card>
     </div>
