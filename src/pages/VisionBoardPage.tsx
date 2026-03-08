@@ -239,6 +239,11 @@ export default function VisionBoardPage() {
       setResizeSizes(prev => ({ ...prev, [resizingId]: { x: nx, y: ny, w: nw, h: nh } }));
       return;
     }
+    // Track mouse for connect mode preview line
+    if (toolMode === 'connect' && connectFromId) {
+      const world = screenToWorld(e.clientX, e.clientY);
+      setConnectMousePos(world);
+    }
     if (!draggingId) return;
     const dx = (e.clientX - dragStart.current.x) / zoom;
     const dy = (e.clientY - dragStart.current.y) / zoom;
@@ -246,7 +251,7 @@ export default function VisionBoardPage() {
       ...prev,
       [draggingId]: { x: Math.max(0, dragItemStart.current.x + dx), y: Math.max(0, dragItemStart.current.y + dy) },
     }));
-  }, [isDrawing, isDrawMode, isPanning, draggingId, resizingId, resizeHandle, zoom, handleDrawMoveRaw]);
+  }, [isDrawing, isDrawMode, isPanning, draggingId, resizingId, resizeHandle, zoom, handleDrawMoveRaw, toolMode, connectFromId, screenToWorld]);
 
   const handleMouseUp = useCallback(async () => {
     if (isDrawing) { handleDrawEnd(); return; }
