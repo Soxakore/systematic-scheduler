@@ -14,7 +14,7 @@ function snapToGrid(minutes: number) {
 }
 
 export default function WeekView() {
-  const { currentDate, setShowEventDialog, setSelectedDate, setEditingEventId, searchQuery, selectedTagIds } = useAppContext();
+  const { currentDate, setShowEventDialog, setSelectedDate, setSelectedEndDate, setEditingEventId, searchQuery, selectedTagIds } = useAppContext();
   const { data: calendars } = useCalendars();
   const updateEvent = useUpdateEvent();
   const scrollRef = useRef<HTMLDivElement>(null);
