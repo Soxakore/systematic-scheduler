@@ -230,6 +230,7 @@ function Sidebar({ onNewEvent, onClose, onSignOut }: { onNewEvent: () => void; o
 
 /* ── Main layout ───────────────────────────────────────────── */
 export default function AppLayout() {
+  const { data: profile } = useProfile();
   const [currentDate, setCurrentDate]         = useState(new Date());
   const [currentView, setCurrentView]         = useState('month');
   const [searchQuery, setSearchQuery]         = useState('');
@@ -244,6 +245,13 @@ export default function AppLayout() {
 
   const location = useLocation();
   useEffect(() => { setMobileSidebarOpen(false); }, [location.pathname]);
+
+  // Sync default view from profile
+  useEffect(() => {
+    if (profile?.default_view) {
+      setCurrentView(profile.default_view);
+    }
+  }, [profile?.default_view]);
 
   const handleNewEvent = () => {
     setSelectedDate(null);
