@@ -1002,6 +1002,104 @@ img{max-width:100%;border-radius:6px;margin-top:8px}</style></head><body>
         {/* Top bar */}
         <div className="shrink-0 h-10 border-b border-border bg-background flex items-center px-4 gap-2">
           <h1 className="text-xs font-semibold text-foreground">Vision Board</h1>
+          
+          {/* Board switcher */}
+          <div className="relative">
+            <button
+              onClick={() => setBoardMenuOpen(prev => !prev)}
+              className="flex items-center gap-1 h-7 px-2 rounded-md text-[11px] font-medium text-foreground bg-secondary hover:bg-secondary/80 transition-colors"
+            >
+              {activeBoardName}
+              <CaretDown className="h-3 w-3 text-muted-foreground" />
+            </button>
+
+            {boardMenuOpen && (
+              <div className="absolute top-full left-0 mt-1 z-50 w-56 bg-background border border-border rounded-lg shadow-lg py-1">
+                {/* Default board (items with no board_id) */}
+                <button
+                  onClick={() => { setActiveBoardId(null); setBoardMenuOpen(false); }}
+                  className={cn(
+                    'w-full text-left px-3 py-1.5 text-[11px] font-medium transition-colors flex items-center justify-between',
+                    !activeBoardId ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-secondary'
+                  )}
+                >
+                  Default Board
+                  {!activeBoardId && <Check className="h-3 w-3" />}
+                </button>
+
+                {boards?.map((board, idx) => (
+                  <div key={board.id} className="flex items-center group">
+                    {renamingBoardId === board.id ? (
+                      <input
+                        autoFocus
+                        value={renamingBoardName}
+                        onChange={e => setRenamingBoardName(e.target.value)}
+                        onBlur={async () => {
+                          if (renamingBoardName.trim()) {
+                            await updateBoard.mutateAsync({ id: board.id, name: renamingBoardName.trim() });
+                          }
+                          setRenamingBoardId(null);
+                        }}
+                        onKeyDown={async e => {
+                          if (e.key === 'Enter') {
+                            if (renamingBoardName.trim()) {
+                              await updateBoard.mutateAsync({ id: board.id, name: renamingBoardName.trim() });
+                            }
+                            setRenamingBoardId(null);
+                          }
+                        }}
+                        className="flex-1 px-3 py-1.5 text-[11px] bg-transparent outline-none border-b border-primary"
+                      />
+                    ) : (
+                      <button
+                        onClick={() => { setActiveBoardId(board.id); setBoardMenuOpen(false); }}
+                        className={cn(
+                          'flex-1 text-left px-3 py-1.5 text-[11px] font-medium transition-colors flex items-center justify-between',
+                          activeBoardId === board.id ? 'bg-primary/10 text-primary' : 'text-foreground hover:bg-secondary'
+                        )}
+                      >
+                        {board.name}
+                        {activeBoardId === board.id && <Check className="h-3 w-3" />}
+                      </button>
+                    )}
+                    <button
+                      onClick={e => { e.stopPropagation(); setRenamingBoardId(board.id); setRenamingBoardName(board.name); }}
+                      className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-foreground opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <PencilSimple className="h-3 w-3" />
+                    </button>
+                    <button
+                      onClick={async e => {
+                        e.stopPropagation();
+                        if (confirm(`Delete "${board.name}" and all its items?`)) {
+                          if (activeBoardId === board.id) setActiveBoardId(null);
+                          await deleteBoard.mutateAsync(board.id);
+                        }
+                      }}
+                      className="h-6 w-6 flex items-center justify-center text-muted-foreground hover:text-destructive opacity-0 group-hover:opacity-100 transition-opacity"
+                    >
+                      <TrashSimple className="h-3 w-3" />
+                    </button>
+                  </div>
+                ))}
+
+                <div className="border-t border-border mt-1 pt-1">
+                  <button
+                    onClick={async () => {
+                      const board = await createBoard.mutateAsync({ name: `Board ${(boards?.length || 0) + 1}`, sort_order: (boards?.length || 0) });
+                      setActiveBoardId(board.id);
+                      setBoardMenuOpen(false);
+                    }}
+                    className="w-full text-left px-3 py-1.5 text-[11px] font-medium text-primary hover:bg-primary/5 transition-colors flex items-center gap-1.5"
+                  >
+                    <Plus className="h-3 w-3" />
+                    New Board
+                  </button>
+                </div>
+              </div>
+            )}
+          </div>
+
           {totalCount > 0 && <span className="text-[10px] text-muted-foreground">{achievedCount}/{totalCount} achieved</span>}
           {uploading && <span className="text-[10px] text-primary animate-pulse">Uploading…</span>}
           {snapEnabled && <span className="text-[9px] font-medium text-primary bg-primary/10 px-1.5 py-0.5 rounded">Grid Snap ON</span>}
