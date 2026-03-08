@@ -1112,8 +1112,15 @@ export default function VisionBoardPage() {
                         <video
                           src={item.image_url!}
                           controls
-                          className="w-full h-full object-contain"
-                          onMouseDown={e => e.stopPropagation()}
+                          className="w-full h-full object-contain pointer-events-auto"
+                          onMouseDown={e => {
+                            // Allow controls interaction but don't block card drag on the surrounding area
+                            const rect = (e.target as HTMLElement).getBoundingClientRect();
+                            const bottomBarHeight = 40;
+                            if (e.clientY > rect.bottom - bottomBarHeight) {
+                              e.stopPropagation();
+                            }
+                          }}
                         />
                       </div>
                     )}
