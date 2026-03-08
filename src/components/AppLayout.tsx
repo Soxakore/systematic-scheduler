@@ -291,7 +291,7 @@ export default function AppLayout() {
                 transition={{ type: 'spring', damping: 28, stiffness: 300 }}
                 className="relative z-50 w-56 h-full"
               >
-                <Sidebar onNewEvent={handleNewEvent} onClose={() => setMobileSidebarOpen(false)} />
+                <Sidebar onNewEvent={handleNewEvent} onClose={() => setMobileSidebarOpen(false)} onSignOut={handleSignOut} />
               </motion.div>
             </div>
           )}
