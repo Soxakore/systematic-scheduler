@@ -533,8 +533,10 @@ export default function VisionBoardPage() {
             {/* Render items — freeform, no card chrome */}
             {items?.map(item => {
               const pos = getItemPos(item);
+              const size = getItemSize(item);
               const isEditing = editingId === item.id;
               const isDragging = draggingId === item.id;
+              const isResizing = resizingId === item.id;
               const hasImage = !!item.image_url;
 
               return (
@@ -543,10 +545,11 @@ export default function VisionBoardPage() {
                   data-card
                   className={cn(
                     'absolute group',
-                    isDragging ? 'z-50 cursor-grabbing' : 'z-10',
+                    (isDragging || isResizing) ? 'z-50' : 'z-10',
+                    isDragging ? 'cursor-grabbing' : '',
                     isDrawMode ? 'pointer-events-none opacity-50' : 'cursor-grab',
                   )}
-                  style={{ left: pos.x, top: pos.y, width: item.width || 240 }}
+                  style={{ left: pos.x, top: pos.y, width: size.w }}
                   onMouseDown={e => handleCardMouseDown(e, item)}
                   onDoubleClick={() => !isDrawMode && startEditing(item)}
                 >
