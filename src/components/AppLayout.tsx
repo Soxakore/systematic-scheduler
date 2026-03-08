@@ -42,6 +42,7 @@ const NAV = [
   { to: '/habits',    icon: CheckSquare,     label: 'Habits'    },
   { to: '/journal',   icon: NotePencil,      label: 'Journal'   },
   { to: '/analytics', icon: ChartLineUp,     label: 'Analytics' },
+  { to: '/sharing',   icon: Users,           label: 'Sharing'   },
   { to: '/settings',  icon: GearSix,         label: 'Settings'  },
 ];
 

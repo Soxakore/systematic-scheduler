@@ -66,6 +66,7 @@ function AppRoutes() {
         <Route path="briefing" element={<Navigate to="/morning" replace />} />
         <Route path="journal" element={<JournalPage />} />
         <Route path="vision" element={<VisionBoardPage />} />
+        <Route path="sharing" element={<SharingPage />} />
         <Route path="settings" element={<SettingsPage />} />
       </Route>
       <Route path="*" element={<NotFound />} />
