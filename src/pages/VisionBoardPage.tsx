@@ -27,6 +27,9 @@ export default function VisionBoardPage() {
   const createItem = useCreateVisionBoardItem();
   const updateItem = useUpdateVisionBoardItem();
   const deleteItem = useDeleteVisionBoardItem();
+  const { data: connections } = useVisionBoardConnections();
+  const createConnection = useCreateVisionBoardConnection();
+  const deleteConnection = useDeleteVisionBoardConnection();
 
   const [toolMode, setToolMode] = useState<ToolMode>('select');
   const [editingId, setEditingId] = useState<string | null>(null);
