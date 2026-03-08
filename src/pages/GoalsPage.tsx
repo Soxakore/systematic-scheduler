@@ -65,7 +65,7 @@ export default function GoalsPage() {
       </div>
 
       {isLoading ? (
-        <p className="text-sm text-muted-foreground text-center py-8">Loading…</p>
+        <GoalsSkeleton />
       ) : activeGoals.length === 0 && completedGoals.length === 0 ? (
         <Card className="p-8 text-center">
           <div className="h-14 w-14 rounded-2xl bg-primary/15 flex items-center justify-center mx-auto mb-3">
