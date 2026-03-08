@@ -1,7 +1,7 @@
 import { createContext, useContext, useState, useEffect } from 'react';
 import { Link, Outlet, useLocation } from 'react-router-dom';
 import PageTransition from './PageTransition';
-import { List, X, Plus, CalendarDots } from '@phosphor-icons/react';
+import { List, X, Plus, CalendarDots, Sun, Moon } from '@phosphor-icons/react';
 import { useTheme } from '@/hooks/useTheme';
 import { cn } from '@/lib/utils';
 import { useProfile } from '@/hooks/useData';
