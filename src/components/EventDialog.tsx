@@ -158,6 +158,7 @@ export default function EventDialog() {
   const handleClose = () => {
     setShowEventDialog(false);
     setEditingEventId(null);
+    setSelectedEndDate(null);
     setSelectedTagIds([]);
   };
 
