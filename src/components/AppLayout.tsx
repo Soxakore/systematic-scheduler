@@ -275,6 +275,7 @@ export default function AppLayout() {
       searchQuery, setSearchQuery,
       showEventDialog, setShowEventDialog,
       selectedDate, setSelectedDate,
+      selectedEndDate, setSelectedEndDate,
       editingEventId, setEditingEventId,
       selectedTagIds, setSelectedTagIds,
     }}>
