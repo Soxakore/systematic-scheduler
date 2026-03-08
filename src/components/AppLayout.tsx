@@ -246,6 +246,13 @@ export default function AppLayout() {
   const location = useLocation();
   useEffect(() => { setMobileSidebarOpen(false); }, [location.pathname]);
 
+  // Sync default view from profile
+  useEffect(() => {
+    if (profile?.default_view) {
+      setCurrentView(profile.default_view);
+    }
+  }, [profile?.default_view]);
+
   const handleNewEvent = () => {
     setSelectedDate(null);
     setEditingEventId(null);
