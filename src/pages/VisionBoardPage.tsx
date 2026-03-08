@@ -1,5 +1,5 @@
 import { useState, useRef, useCallback, useEffect, useMemo } from 'react';
-import { useVisionBoardItems, useCreateVisionBoardItem, useUpdateVisionBoardItem, useDeleteVisionBoardItem, useVisionBoardConnections, useCreateVisionBoardConnection, useDeleteVisionBoardConnection } from '@/hooks/useData';
+import { useVisionBoards, useCreateVisionBoard, useUpdateVisionBoard, useDeleteVisionBoard, useVisionBoardItems, useCreateVisionBoardItem, useUpdateVisionBoardItem, useDeleteVisionBoardItem, useVisionBoardConnections, useCreateVisionBoardConnection, useDeleteVisionBoardConnection } from '@/hooks/useData';
 import { useAuth } from '@/hooks/useAuth';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
