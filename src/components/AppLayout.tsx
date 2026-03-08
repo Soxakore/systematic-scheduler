@@ -238,6 +238,7 @@ export default function AppLayout() {
   const [editingEventId, setEditingEventId]   = useState<string | null>(null);
   const [selectedTagIds, setSelectedTagIds]   = useState<string[]>([]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const { signOut } = useAuth();
   const navigate = useNavigate();
 
@@ -268,7 +269,7 @@ export default function AppLayout() {
       <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
 
         {/* Desktop sidebar */}
-        <div className="hidden md:flex shrink-0">
+        <div className={cn('hidden md:flex shrink-0 transition-all duration-300', sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-56')}>
           <Sidebar onNewEvent={handleNewEvent} onSignOut={handleSignOut} />
         </div>
 
@@ -305,6 +306,13 @@ export default function AppLayout() {
             <button
               className="md:hidden text-muted-foreground hover:text-foreground p-1.5 rounded-md"
               onClick={() => setMobileSidebarOpen(true)}
+            >
+              <List className="h-5 w-5" weight="bold" />
+            </button>
+            <button
+              className="hidden md:flex text-muted-foreground hover:text-foreground p-1.5 rounded-md"
+              onClick={() => setSidebarCollapsed(prev => !prev)}
+              aria-label="Toggle sidebar"
             >
               <List className="h-5 w-5" weight="bold" />
             </button>
