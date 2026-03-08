@@ -156,6 +156,7 @@ export default function DayView() {
                     const d = new Date(currentDate);
                     d.setHours(h, 0, 0, 0);
                     setSelectedDate(d);
+                    setSelectedEndDate(null);
                     setEditingEventId(null);
                     setShowEventDialog(true);
                   }
