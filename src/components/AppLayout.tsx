@@ -269,7 +269,7 @@ export default function AppLayout() {
 
         {/* Desktop sidebar */}
         <div className="hidden md:flex shrink-0">
-          <Sidebar onNewEvent={handleNewEvent} />
+          <Sidebar onNewEvent={handleNewEvent} onSignOut={handleSignOut} />
         </div>
 
         {/* Mobile sidebar overlay */}
