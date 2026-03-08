@@ -24,7 +24,7 @@ export default function CookiePolicyPage() {
         </p>
 
         <h2>2. How We Use Cookies</h2>
-        <p>System Calendar uses cookies and similar technologies for the following purposes:</p>
+        <p>DayBlock uses cookies and similar technologies for the following purposes:</p>
 
         <h3>Essential Cookies (Required)</h3>
         <p>These cookies are necessary for the Service to function and cannot be disabled.</p>
