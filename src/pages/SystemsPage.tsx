@@ -9,6 +9,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Plus, PencilSimple, Trash, Lightning, ProhibitInset, Sparkle } from '@phosphor-icons/react';
+import ConfirmDialog from '@/components/ConfirmDialog';
 import { Link } from 'react-router-dom';
 import type { System } from '@/types';
 
@@ -196,9 +197,16 @@ export default function SystemsPage() {
                   <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(system)}>
                     <PencilSimple className="h-4 w-4" weight="bold" />
                   </Button>
-                  <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleDelete(system.id)}>
-                    <Trash className="h-4 w-4" weight="bold" />
-                  </Button>
+                  <ConfirmDialog
+                    trigger={
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <Trash className="h-4 w-4" weight="bold" />
+                      </Button>
+                    }
+                    title="Delete system?"
+                    description="This will permanently delete this system. Generated events will remain on your calendar."
+                    onConfirm={() => handleDelete(system.id)}
+                  />
                 </div>
               </div>
             </Card>

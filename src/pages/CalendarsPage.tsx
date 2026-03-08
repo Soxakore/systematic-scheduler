@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/u
 import { Card } from '@/components/ui/card';
 import { toast } from 'sonner';
 import { Plus, PencilSimple, Trash, CalendarBlank } from '@phosphor-icons/react';
+import ConfirmDialog from '@/components/ConfirmDialog';
 
 const COLORS = ['#3B82F6', '#EF4444', '#10B981', '#F59E0B', '#8B5CF6', '#EC4899', '#06B6D4', '#6B7280'];
 
@@ -61,13 +62,20 @@ export default function CalendarsPage() {
             <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => openEdit(cal)}>
               <PencilSimple className="h-3.5 w-3.5" weight="bold" />
             </Button>
-            <Button variant="ghost" size="icon" className="h-8 w-8" onClick={async () => {
-              if ((calendars?.length || 0) <= 1) { toast.error("Can't delete last calendar"); return; }
-              await deleteCalendar.mutateAsync(cal.id);
-              toast.success('Deleted');
-            }}>
-              <Trash className="h-3.5 w-3.5" weight="bold" />
-            </Button>
+            <ConfirmDialog
+              trigger={
+                <Button variant="ghost" size="icon" className="h-8 w-8">
+                  <Trash className="h-3.5 w-3.5" weight="bold" />
+                </Button>
+              }
+              title="Delete calendar?"
+              description="This will permanently delete this calendar and all its events."
+              onConfirm={async () => {
+                if ((calendars?.length || 0) <= 1) { toast.error("Can't delete last calendar"); return; }
+                await deleteCalendar.mutateAsync(cal.id);
+                toast.success('Deleted');
+              }}
+            />
           </Card>
         ))}
       </div>
