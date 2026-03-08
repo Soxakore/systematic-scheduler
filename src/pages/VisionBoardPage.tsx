@@ -527,7 +527,9 @@ export default function VisionBoardPage() {
           )}
 
           <span className="ml-auto text-[9px] text-muted-foreground">
-            {isDrawMode ? 'Draw freely · Auto-saved' : 'Scroll to pan · Ctrl+scroll to zoom'}
+            {toolMode === 'connect'
+              ? (connectFromId ? 'Click another item to connect · Click same to cancel' : 'Click an item to start connecting')
+              : isDrawMode ? 'Draw freely · Auto-saved' : 'Scroll to pan · Ctrl+scroll to zoom'}
           </span>
         </div>
 
