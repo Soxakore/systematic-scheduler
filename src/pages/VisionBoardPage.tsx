@@ -1115,7 +1115,7 @@ export default function VisionBoardPage() {
                     
                     {/* No media — text/note card */}
 
-                    {!hasImage && (
+                    {!hasMedia && (
                       <div
                         className={cn(
                           'rounded-lg p-3 select-none transition-shadow duration-150',
