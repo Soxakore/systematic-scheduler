@@ -1093,6 +1093,7 @@ img{max-width:100%;border-radius:6px;margin-top:8px}</style></head><body>
           >
             {/* World layer */}
             <div
+              ref={canvasContentRef}
               style={{
                 transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
                 transformOrigin: '0 0',
