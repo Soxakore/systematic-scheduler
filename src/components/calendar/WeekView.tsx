@@ -1,10 +1,11 @@
 import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useAppContext } from '@/components/AppLayout';
 import { useEvents, useCalendars, useUpdateEvent, useAllEventTags } from '@/hooks/useData';
-import { startOfWeek, endOfWeek, addDays, format, isSameDay, isToday, differenceInMinutes } from 'date-fns';
+import { startOfWeek, endOfWeek, addDays, format, isSameDay, isToday, differenceInMinutes, startOfDay, isBefore, isAfter, max, min } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { GearSix } from '@phosphor-icons/react';
 import { useAutoScroll } from '@/hooks/useCalendarDrag';
+import type { CalendarEvent } from '@/types';
 
 const HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -54,6 +55,44 @@ export default function WeekView() {
     calendars?.forEach(c => m.set(c.id, c.color));
     return m;
   }, [calendars]);
+
+  // ── Multi-day / all-day banner events ──
+  const bannerRows = useMemo(() => {
+    if (!filteredEvents.length) return [];
+    
+    const multiDayEvents = filteredEvents.filter(e => {
+      const s = new Date(e.start_time);
+      const end = new Date(e.end_time);
+      return e.is_all_day || !isSameDay(s, end);
+    });
+
+    // For each event, compute startCol/endCol (0-6) clipped to the week
+    type BannerItem = { event: CalendarEvent; startCol: number; endCol: number };
+    const items: BannerItem[] = multiDayEvents.map(e => {
+      const s = startOfDay(new Date(e.start_time));
+      const end = startOfDay(new Date(e.end_time));
+      const clippedStart = max([s, weekStart]);
+      const clippedEnd = min([end, days[6]]);
+      const startCol = Math.round((clippedStart.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24));
+      const endCol = Math.round((clippedEnd.getTime() - weekStart.getTime()) / (1000 * 60 * 60 * 24));
+      return { event: e, startCol: Math.max(0, startCol), endCol: Math.min(6, endCol) };
+    }).filter(item => item.startCol <= 6 && item.endCol >= 0);
+
+    // Pack into rows (greedy)
+    const rows: BannerItem[][] = [];
+    for (const item of items) {
+      let placed = false;
+      for (const row of rows) {
+        if (!row.some(r => r.startCol <= item.endCol && r.endCol >= item.startCol)) {
+          row.push(item);
+          placed = true;
+          break;
+        }
+      }
+      if (!placed) rows.push([item]);
+    }
+    return rows;
+  }, [filteredEvents, weekStart, days]);
 
   const handleCellClick = (day: Date, hour: number) => {
     const d = new Date(day);
@@ -190,22 +229,61 @@ export default function WeekView() {
   return (
     <div className="h-full flex flex-col">
       {/* Day headers */}
-      <div className="flex border-b shrink-0">
-        <div className="w-14 shrink-0" />
-        {days.map(day => (
-          <div key={day.toISOString()} className={cn(
-            'flex-1 text-center py-2 border-l',
-            isToday(day) && 'cal-today-bg'
-          )}>
-            <div className="text-xs text-muted-foreground">{format(day, 'EEE')}</div>
-            <div className={cn(
-              'text-sm font-medium w-7 h-7 mx-auto flex items-center justify-center rounded-full',
-              isToday(day) && 'bg-primary text-primary-foreground'
+      <div className="border-b shrink-0">
+        <div className="flex">
+          <div className="w-14 shrink-0" />
+          {days.map(day => (
+            <div key={day.toISOString()} className={cn(
+              'flex-1 text-center py-2 border-l',
+              isToday(day) && 'cal-today-bg'
             )}>
-              {format(day, 'd')}
+              <div className="text-xs text-muted-foreground">{format(day, 'EEE')}</div>
+              <div className={cn(
+                'text-sm font-medium w-7 h-7 mx-auto flex items-center justify-center rounded-full',
+                isToday(day) && 'bg-primary text-primary-foreground'
+              )}>
+                {format(day, 'd')}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {/* Multi-day / all-day banners */}
+        {bannerRows.length > 0 && (
+          <div className="flex">
+            <div className="w-14 shrink-0" />
+            <div className="flex-1 relative" style={{ minHeight: bannerRows.length * 24 }}>
+              {bannerRows.map((row, rowIndex) =>
+                row.map(({ event, startCol, endCol }) => {
+                  const leftPct = (startCol / 7) * 100;
+                  const widthPct = ((endCol - startCol + 1) / 7) * 100;
+                  const color = calMap.get(event.calendar_id) || '#3B82F6';
+                  return (
+                    <div
+                      key={event.id}
+                      className="absolute rounded text-[11px] font-medium truncate px-1.5 leading-[20px] cursor-pointer text-primary-foreground shadow-sm z-10"
+                      style={{
+                        top: rowIndex * 24 + 2,
+                        left: `${leftPct}%`,
+                        width: `calc(${widthPct}% - 4px)`,
+                        marginLeft: 2,
+                        height: 20,
+                        backgroundColor: color,
+                      }}
+                      onClick={() => {
+                        setEditingEventId(event.id);
+                        setShowEventDialog(true);
+                      }}
+                    >
+                      {event.is_system_generated && <GearSix className="inline h-2.5 w-2.5 mr-0.5 opacity-70" weight="bold" />}
+                      {event.title}
+                    </div>
+                  );
+                })
+              )}
             </div>
           </div>
-        ))}
+        )}
       </div>
 
       {/* Time grid */}
@@ -231,7 +309,8 @@ export default function WeekView() {
           {days.map((day, dayIndex) => {
             const dayEvents = filteredEvents.filter(e => {
               const s = new Date(e.start_time);
-              return isSameDay(s, day) && !e.is_all_day;
+              const end = new Date(e.end_time);
+              return isSameDay(s, day) && !e.is_all_day && isSameDay(s, end);
             });
 
             // Drag-to-create preview for this column
