@@ -96,21 +96,38 @@ export default function LandingPage() {
       </section>
 
       {/* FEATURES */}
-      <section id="features" className="py-24 px-6">
+      <section id="features" className="py-24 px-6 relative">
         <div className="max-w-6xl mx-auto">
-          <div className="text-center mb-16">
+          <motion.div
+            className="text-center mb-16"
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true, margin: '-100px' }}
+            transition={{ duration: 0.6 }}
+          >
             <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-4">
               Everything you need.<br /><span className="text-white/40">Nothing you don't.</span>
             </h2>
             <p className="text-white/40 max-w-lg mx-auto">Nine powerful modules that work together seamlessly — so you can focus on what matters.</p>
-          </div>
+          </motion.div>
           <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4">
             {FEATURES.map((f, i) => (
-              <div key={i} className="group relative p-6 rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.12] hover:bg-white/[0.05] transition-all duration-300">
-                <img src={f.badge} alt="" width={48} height={48} className="rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300" />
-                <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
-                <p className="text-sm text-white/40 leading-relaxed">{f.desc}</p>
-              </div>
+              <motion.div
+                key={i}
+                custom={i}
+                variants={fadeUp}
+                initial="hidden"
+                whileInView="visible"
+                viewport={{ once: true, margin: '-50px' }}
+              >
+                <GlowCard className="rounded-2xl bg-white/[0.03] border border-white/[0.06] hover:border-white/[0.12] transition-all duration-300">
+                  <div className="p-6">
+                    <img src={f.badge} alt="" width={48} height={48} className="rounded-2xl mb-4 group-hover:scale-110 transition-transform duration-300" />
+                    <h3 className="text-lg font-semibold mb-2">{f.title}</h3>
+                    <p className="text-sm text-white/40 leading-relaxed">{f.desc}</p>
+                  </div>
+                </GlowCard>
+              </motion.div>
             ))}
           </div>
         </div>
