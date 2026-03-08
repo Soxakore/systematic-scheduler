@@ -238,6 +238,8 @@ export default function AppLayout() {
   const [editingEventId, setEditingEventId]   = useState<string | null>(null);
   const [selectedTagIds, setSelectedTagIds]   = useState<string[]>([]);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
+  const { signOut } = useAuth();
+  const navigate = useNavigate();
 
   const location = useLocation();
   useEffect(() => { setMobileSidebarOpen(false); }, [location.pathname]);
@@ -246,6 +248,11 @@ export default function AppLayout() {
     setSelectedDate(null);
     setEditingEventId(null);
     setShowEventDialog(true);
+  };
+
+  const handleSignOut = async () => {
+    await signOut();
+    navigate('/welcome');
   };
 
   return (
