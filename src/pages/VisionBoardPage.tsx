@@ -344,6 +344,7 @@ export default function VisionBoardPage() {
     // Close flyouts when clicking on the canvas
     setDrawToolsExpanded(false);
     setMediaToolsExpanded(false);
+    setBoardMenuOpen(false);
 
     if (isDrawMode) {
       handleDrawStart(e.clientX, e.clientY);
