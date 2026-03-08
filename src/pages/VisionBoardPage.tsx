@@ -9,6 +9,7 @@ import {
   Check, Trophy, MagnifyingGlassPlus, MagnifyingGlassMinus,
   ArrowRight, TextT, Rectangle, Circle, LineSegment,
   Stack, Eye, EyeSlash, MagnetStraight,
+  ArrowCounterClockwise, ArrowClockwise, Palette,
 } from '@phosphor-icons/react';
 import { cn } from '@/lib/utils';
 import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
