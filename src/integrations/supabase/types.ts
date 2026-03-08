@@ -14,6 +14,47 @@ export type Database = {
   }
   public: {
     Tables: {
+      calendar_shares: {
+        Row: {
+          calendar_id: string
+          created_at: string
+          id: string
+          owner_id: string
+          permission: string
+          shared_with_email: string
+          shared_with_id: string | null
+          status: string
+        }
+        Insert: {
+          calendar_id: string
+          created_at?: string
+          id?: string
+          owner_id: string
+          permission?: string
+          shared_with_email: string
+          shared_with_id?: string | null
+          status?: string
+        }
+        Update: {
+          calendar_id?: string
+          created_at?: string
+          id?: string
+          owner_id?: string
+          permission?: string
+          shared_with_email?: string
+          shared_with_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "calendar_shares_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "calendars"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       calendars: {
         Row: {
           color: string
@@ -108,6 +149,65 @@ export type Database = {
             columns: ["event_id"]
             isOneToOne: false
             referencedRelation: "events"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      event_suggestions: {
+        Row: {
+          calendar_id: string | null
+          created_at: string
+          description: string | null
+          end_time: string
+          from_user_id: string
+          id: string
+          is_all_day: boolean
+          location: string | null
+          message: string | null
+          start_time: string
+          status: string
+          title: string
+          to_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          calendar_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time: string
+          from_user_id: string
+          id?: string
+          is_all_day?: boolean
+          location?: string | null
+          message?: string | null
+          start_time: string
+          status?: string
+          title: string
+          to_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          calendar_id?: string | null
+          created_at?: string
+          description?: string | null
+          end_time?: string
+          from_user_id?: string
+          id?: string
+          is_all_day?: boolean
+          location?: string | null
+          message?: string | null
+          start_time?: string
+          status?: string
+          title?: string
+          to_user_id?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "event_suggestions_calendar_id_fkey"
+            columns: ["calendar_id"]
+            isOneToOne: false
+            referencedRelation: "calendars"
             referencedColumns: ["id"]
           },
         ]
