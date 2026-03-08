@@ -205,7 +205,8 @@ export default function VisionBoardPage() {
   const handleDrawStart = useCallback((clientX: number, clientY: number) => {
     const c = drawCanvasRef.current;
     const ctx = c?.getContext('2d');
-    if (!ctx) return;
+    if (!ctx || !c) return;
+    saveCanvasSnapshot();
     setIsDrawing(true);
     const { x, y } = screenToWorld(clientX, clientY);
     ctx.beginPath();
@@ -220,7 +221,7 @@ export default function VisionBoardPage() {
       ctx.strokeStyle = drawColor;
       ctx.lineWidth = brushSize;
     }
-  }, [screenToWorld, toolMode, drawColor, brushSize]);
+  }, [screenToWorld, toolMode, drawColor, brushSize, saveCanvasSnapshot]);
 
   const handleDrawMoveRaw = useCallback((clientX: number, clientY: number) => {
     const ctx = drawCanvasRef.current?.getContext('2d');
