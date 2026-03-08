@@ -269,7 +269,7 @@ export default function AppLayout() {
       <div className="flex h-screen w-screen overflow-hidden bg-background text-foreground">
 
         {/* Desktop sidebar */}
-        <div className="hidden md:flex shrink-0">
+        <div className={cn('hidden md:flex shrink-0 transition-all duration-300', sidebarCollapsed ? 'w-0 overflow-hidden' : 'w-56')}>
           <Sidebar onNewEvent={handleNewEvent} onSignOut={handleSignOut} />
         </div>
 
