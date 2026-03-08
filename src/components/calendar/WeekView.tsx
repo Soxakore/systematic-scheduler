@@ -309,7 +309,8 @@ export default function WeekView() {
           {days.map((day, dayIndex) => {
             const dayEvents = filteredEvents.filter(e => {
               const s = new Date(e.start_time);
-              return isSameDay(s, day) && !e.is_all_day;
+              const end = new Date(e.end_time);
+              return isSameDay(s, day) && !e.is_all_day && isSameDay(s, end);
             });
 
             // Drag-to-create preview for this column
