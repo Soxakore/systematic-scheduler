@@ -4,6 +4,7 @@ import { useEvents, useCalendars, useUpdateEvent, useAllEventTags } from '@/hook
 import { startOfDay, endOfDay, format, isToday, differenceInMinutes } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { GearSix } from '@phosphor-icons/react';
+import { useAutoScroll } from '@/hooks/useCalendarDrag';
 
 const HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -19,6 +20,7 @@ export default function DayView() {
   const updateEvent = useUpdateEvent();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { data: eventTagsMap } = useAllEventTags();
+  const { updateAutoScroll, stopAutoScroll } = useAutoScroll(scrollRef);
 
   const dayStart = startOfDay(currentDate);
   const dayEnd = endOfDay(currentDate);
@@ -77,11 +79,13 @@ export default function DayView() {
     const handleMove = (me: MouseEvent) => {
       const cur = getMinutesFromY(me.clientY);
       setDragCreate(prev => prev ? { ...prev, currentMinutes: cur } : null);
+      updateAutoScroll(me.clientY);
     };
 
     const handleUp = () => {
       document.removeEventListener('mousemove', handleMove);
       document.removeEventListener('mouseup', handleUp);
+      stopAutoScroll();
       const state = dragCreateRef.current;
       if (!state) return;
 
@@ -107,7 +111,7 @@ export default function DayView() {
 
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [currentDate, getMinutesFromY, setSelectedDate, setEditingEventId, setShowEventDialog]);
+  }, [currentDate, getMinutesFromY, setSelectedDate, setSelectedEndDate, setEditingEventId, setShowEventDialog, updateAutoScroll, stopAutoScroll]);
 
   // Drag preview calculation
   const dragPreview = dragCreate
@@ -121,6 +125,8 @@ export default function DayView() {
       })()
     : null;
 
+  const isDragging = dragCreate !== null;
+
   return (
     <div className="h-full flex flex-col">
       <div className="py-3 px-4 border-b text-center shrink-0">
@@ -133,7 +139,14 @@ export default function DayView() {
         </div>
       </div>
 
-      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-thin">
+      <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-thin relative">
+        {/* Auto-scroll edge indicators */}
+        {isDragging && (
+          <>
+            <div className="sticky top-0 left-0 right-0 h-8 z-30 pointer-events-none bg-gradient-to-b from-primary/10 to-transparent" />
+            <div className="sticky bottom-0 left-0 right-0 h-8 z-30 pointer-events-none bg-gradient-to-t from-primary/10 to-transparent" style={{ marginTop: -8 }} />
+          </>
+        )}
         <div className="flex" style={{ height: 24 * HOUR_HEIGHT }}>
           <div className="w-16 shrink-0 relative">
             {HOURS.map(h => (
@@ -164,15 +177,31 @@ export default function DayView() {
               />
             ))}
 
+            {/* 15-min snap lines (visible during drag) */}
+            {isDragging && HOURS.map(h => (
+              [1, 2, 3].map(q => (
+                <div
+                  key={`${h}-${q}`}
+                  className="absolute w-full border-t border-dashed border-muted-foreground/15 pointer-events-none"
+                  style={{ top: h * HOUR_HEIGHT + (q * HOUR_HEIGHT / 4) }}
+                />
+              ))
+            ))}
+
             {/* Drag-to-create preview */}
             {dragPreview && (
               <div
-                className="absolute left-1 right-4 rounded-md border-2 border-primary bg-primary/15 z-20 pointer-events-none flex items-start px-2 py-0.5"
+                className="absolute left-1 right-4 rounded-md border-2 border-primary bg-primary/15 z-20 pointer-events-none flex flex-col justify-between px-2 py-0.5"
                 style={{ top: dragPreview.top, height: dragPreview.height }}
               >
-                <span className="text-xs font-medium text-primary">
-                  {format(new Date(0, 0, 0, 0, dragPreview.startMin), 'h:mm a')} – {format(new Date(0, 0, 0, 0, dragPreview.endMin), 'h:mm a')}
+                <span className="text-xs font-medium text-primary leading-tight">
+                  {format(new Date(0, 0, 0, 0, dragPreview.startMin), 'h:mm a')}
                 </span>
+                {dragPreview.height > 28 && (
+                  <span className="text-xs font-medium text-primary leading-tight">
+                    {format(new Date(0, 0, 0, 0, dragPreview.endMin), 'h:mm a')}
+                  </span>
+                )}
               </div>
             )}
 

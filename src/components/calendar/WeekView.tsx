@@ -4,6 +4,7 @@ import { useEvents, useCalendars, useUpdateEvent, useAllEventTags } from '@/hook
 import { startOfWeek, endOfWeek, addDays, format, isSameDay, isToday, differenceInMinutes } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { GearSix } from '@phosphor-icons/react';
+import { useAutoScroll } from '@/hooks/useCalendarDrag';
 
 const HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
@@ -19,6 +20,7 @@ export default function WeekView() {
   const updateEvent = useUpdateEvent();
   const scrollRef = useRef<HTMLDivElement>(null);
   const { data: eventTagsMap } = useAllEventTags();
+  const { updateAutoScroll, stopAutoScroll } = useAutoScroll(scrollRef);
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 0 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 0 });
@@ -80,7 +82,6 @@ export default function WeekView() {
   }, []);
 
   const handleGridMouseDown = useCallback((e: React.MouseEvent, dayIndex: number) => {
-    // Only left-click on empty area
     if (e.button !== 0) return;
     const minutes = getMinutesFromY(e.clientY);
     setDragCreate({ dayIndex, startMinutes: minutes, currentMinutes: minutes });
@@ -88,18 +89,19 @@ export default function WeekView() {
     const handleMove = (me: MouseEvent) => {
       const cur = getMinutesFromY(me.clientY);
       setDragCreate(prev => prev ? { ...prev, currentMinutes: cur } : null);
+      updateAutoScroll(me.clientY);
     };
 
-    const handleUp = (ue: MouseEvent) => {
+    const handleUp = () => {
       document.removeEventListener('mousemove', handleMove);
       document.removeEventListener('mouseup', handleUp);
+      stopAutoScroll();
       const state = dragCreateRef.current;
       if (!state) return;
 
       const minMin = Math.min(state.startMinutes, state.currentMinutes);
       const maxMin = Math.max(state.startMinutes, state.currentMinutes);
 
-      // If drag distance is tiny, treat as click (handled by hour cell onClick)
       if (maxMin - minMin < SNAP_MINUTES) {
         setDragCreate(null);
         return;
@@ -120,7 +122,7 @@ export default function WeekView() {
 
     document.addEventListener('mousemove', handleMove);
     document.addEventListener('mouseup', handleUp);
-  }, [days, getMinutesFromY, setSelectedDate, setEditingEventId, setShowEventDialog]);
+  }, [days, getMinutesFromY, setSelectedDate, setSelectedEndDate, setEditingEventId, setShowEventDialog, updateAutoScroll, stopAutoScroll]);
 
   // ── Event drag (reposition) ──
   const dragRef = useRef<{ eventId: string; startY: number; startTop: number; dayIndex: number } | null>(null);
@@ -129,11 +131,14 @@ export default function WeekView() {
     e.stopPropagation();
     dragRef.current = { eventId, startY: e.clientY, startTop: top, dayIndex };
 
-    const handleMove = (_me: MouseEvent) => {};
+    const handleMove = (me: MouseEvent) => {
+      updateAutoScroll(me.clientY);
+    };
 
     const handleUp = async (ue: MouseEvent) => {
       document.removeEventListener('mousemove', handleMove);
       document.removeEventListener('mouseup', handleUp);
+      stopAutoScroll();
       if (!dragRef.current || !scrollRef.current) return;
 
       const rect = scrollRef.current.getBoundingClientRect();
@@ -179,6 +184,9 @@ export default function WeekView() {
   const nowMinutes = now.getHours() * 60 + now.getMinutes();
   const nowTop = (nowMinutes / 60) * HOUR_HEIGHT;
 
+  // Whether any drag is active (for showing snap lines)
+  const isDragging = dragCreate !== null;
+
   return (
     <div className="h-full flex flex-col">
       {/* Day headers */}
@@ -202,6 +210,13 @@ export default function WeekView() {
 
       {/* Time grid */}
       <div ref={scrollRef} className="flex-1 overflow-y-auto scrollbar-thin relative">
+        {/* Auto-scroll edge indicators */}
+        {isDragging && (
+          <>
+            <div className="sticky top-0 left-0 right-0 h-8 z-30 pointer-events-none bg-gradient-to-b from-primary/10 to-transparent" />
+            <div className="sticky bottom-0 left-0 right-0 h-8 z-30 pointer-events-none bg-gradient-to-t from-primary/10 to-transparent" style={{ marginTop: -8 }} />
+          </>
+        )}
         <div className="flex" style={{ height: 24 * HOUR_HEIGHT }}>
           {/* Time labels */}
           <div className="w-14 shrink-0 relative">
@@ -249,15 +264,31 @@ export default function WeekView() {
                   />
                 ))}
 
+                {/* 15-min snap lines (visible during drag) */}
+                {isDragging && HOURS.map(h => (
+                  [1, 2, 3].map(q => (
+                    <div
+                      key={`${h}-${q}`}
+                      className="absolute w-full border-t border-dashed border-muted-foreground/15 pointer-events-none"
+                      style={{ top: h * HOUR_HEIGHT + (q * HOUR_HEIGHT / 4) }}
+                    />
+                  ))
+                ))}
+
                 {/* Drag-to-create preview */}
                 {dragPreview && (
                   <div
-                    className="absolute left-0.5 right-1 rounded border-2 border-primary bg-primary/15 z-20 pointer-events-none flex items-start px-1.5 py-0.5"
+                    className="absolute left-0.5 right-1 rounded border-2 border-primary bg-primary/15 z-20 pointer-events-none flex flex-col justify-between px-1.5 py-0.5"
                     style={{ top: dragPreview.top, height: dragPreview.height }}
                   >
-                    <span className="text-[10px] font-medium text-primary">
-                      {format(new Date(0, 0, 0, 0, dragPreview.startMin), 'h:mm a')} – {format(new Date(0, 0, 0, 0, dragPreview.endMin), 'h:mm a')}
+                    <span className="text-[10px] font-medium text-primary leading-tight">
+                      {format(new Date(0, 0, 0, 0, dragPreview.startMin), 'h:mm a')}
                     </span>
+                    {dragPreview.height > 28 && (
+                      <span className="text-[10px] font-medium text-primary leading-tight">
+                        {format(new Date(0, 0, 0, 0, dragPreview.endMin), 'h:mm a')}
+                      </span>
+                    )}
                   </div>
                 )}
 
