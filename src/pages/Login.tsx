@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { lovable } from '@/integrations/lovable/index';
-import icoCalendar from '@/assets/icons/icon-calendar.svg';
+
 
 export default function LoginPage() {
   const [email, setEmail] = useState('');
@@ -48,7 +48,7 @@ export default function LoginPage() {
       <Card className="w-full max-w-md animate-fade-in">
         <CardHeader className="text-center space-y-2">
           <Link to="/welcome" className="flex items-center justify-center gap-2.5 mb-2 hover:opacity-80 transition-opacity">
-            <img src={icoCalendar} alt="" width={36} height={36} className="rounded-xl" />
+            <img src="/logo.png" alt="System Calendar" width={36} height={36} className="rounded-xl object-contain" />
             <span className="text-2xl font-bold text-foreground">System Calendar</span>
           </Link>
           <CardTitle className="text-xl">Welcome back</CardTitle>

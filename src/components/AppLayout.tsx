@@ -121,10 +121,8 @@ function Sidebar({ onNewEvent, onClose, onSignOut }: { onNewEvent: () => void; o
       {/* Logo */}
       <div className="flex items-center justify-between h-14 px-4 shrink-0" style={{ borderBottom: '1px solid hsl(var(--border))' }}>
         <div className="flex items-center gap-2.5">
-          <div className="w-7 h-7 rounded-[8px] bg-primary flex items-center justify-center">
-            <CalendarDots className="h-3.5 w-3.5 text-white" weight="bold" />
-          </div>
-          <span className="text-[15px] font-semibold text-foreground" style={{ letterSpacing: '-0.02em' }}>Scheduler</span>
+          <img src="/logo.png" alt="System Calendar" className="w-7 h-7 rounded-[8px] object-contain" />
+          <span className="text-[15px] font-semibold text-foreground" style={{ letterSpacing: '-0.02em' }}>System Calendar</span>
         </div>
         {onClose && (
           <button onClick={onClose} className="text-muted-foreground hover:text-foreground p-1 rounded-md">
