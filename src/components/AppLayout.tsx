@@ -3,6 +3,7 @@ import { Link, Outlet, useLocation, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import PageTransition from './PageTransition';
 import { List, X, Plus, CalendarDots, Sun, Moon, SignOut, Camera } from '@phosphor-icons/react';
+import GlobalSearch from './GlobalSearch';
 import { useTheme } from '@/hooks/useTheme';
 import { useAuth } from '@/hooks/useAuth';
 import { cn } from '@/lib/utils';
