@@ -159,4 +159,32 @@ export interface VisionBoardItem {
   updated_at: string;
 }
 
+export interface CalendarShare {
+  id: string;
+  calendar_id: string;
+  owner_id: string;
+  shared_with_email: string;
+  shared_with_id: string | null;
+  permission: 'view' | 'suggest';
+  status: 'pending' | 'accepted' | 'declined';
+  created_at: string;
+}
+
+export interface EventSuggestion {
+  id: string;
+  from_user_id: string;
+  to_user_id: string;
+  title: string;
+  description: string | null;
+  location: string | null;
+  start_time: string;
+  end_time: string;
+  is_all_day: boolean;
+  message: string | null;
+  status: 'pending' | 'accepted' | 'declined';
+  calendar_id: string | null;
+  created_at: string;
+  updated_at: string;
+}
+
 export type ViewType = 'month' | 'week' | 'day' | 'agenda';

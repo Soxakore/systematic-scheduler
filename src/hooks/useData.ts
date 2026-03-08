@@ -2,7 +2,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/hooks/useAuth';
 import type { Json } from '@/integrations/supabase/types';
-import type { Profile, Calendar, CalendarEvent, Tag, System, Goal, DailyScore, FocusSession, EventTemplate, EventChecklistItem, JournalEntry, VisionBoardItem } from '@/types';
+import type { Profile, Calendar, CalendarEvent, Tag, System, Goal, DailyScore, FocusSession, EventTemplate, EventChecklistItem, JournalEntry, VisionBoardItem, CalendarShare, EventSuggestion } from '@/types';
 
 // Profile
 export function useProfile() {
