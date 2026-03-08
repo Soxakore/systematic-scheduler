@@ -1,13 +1,14 @@
 import { useState, useEffect } from 'react';
 import { useProfile, useUpdateProfile } from '@/hooks/useData';
 import { useTheme } from '@/hooks/useTheme';
+import { useAuth } from '@/hooks/useAuth';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Sun, Moon } from '@phosphor-icons/react';
+import { Sun, Moon, Lock } from '@phosphor-icons/react';
 import { toast } from 'sonner';
 
 const TIMEZONES = [
@@ -20,11 +21,17 @@ export default function SettingsPage() {
   const { data: profile, isLoading } = useProfile();
   const updateProfile = useUpdateProfile();
   const { theme, toggleTheme } = useTheme();
+  const { updatePassword } = useAuth();
 
   const [name, setName] = useState('');
   const [timezone, setTimezone] = useState('');
   const [weekStart, setWeekStart] = useState('');
   const [defaultView, setDefaultView] = useState('');
+
+  // Password change state
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [passwordLoading, setPasswordLoading] = useState(false);
 
   useEffect(() => {
     if (profile) {
@@ -47,6 +54,27 @@ export default function SettingsPage() {
     } catch (err: any) {
       toast.error(err.message);
     }
+  };
+
+  const handlePasswordChange = async () => {
+    if (newPassword.length < 6) {
+      toast.error('Password must be at least 6 characters');
+      return;
+    }
+    if (newPassword !== confirmPassword) {
+      toast.error('Passwords do not match');
+      return;
+    }
+    setPasswordLoading(true);
+    const { error } = await updatePassword(newPassword);
+    if (error) {
+      toast.error(error.message);
+    } else {
+      toast.success('Password updated successfully');
+      setNewPassword('');
+      setConfirmPassword('');
+    }
+    setPasswordLoading(false);
   };
 
   if (isLoading) return <div className="p-4 text-muted-foreground">Loading…</div>;
@@ -103,6 +131,40 @@ export default function SettingsPage() {
 
       <Card className="mb-4">
         <CardHeader>
+          <CardTitle className="text-base flex items-center gap-2">
+            <Lock className="h-4 w-4" weight="bold" />
+            Change Password
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
+          <div className="space-y-1.5">
+            <Label htmlFor="new-password">New Password</Label>
+            <Input
+              id="new-password"
+              type="password"
+              value={newPassword}
+              onChange={e => setNewPassword(e.target.value)}
+              placeholder="At least 6 characters"
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label htmlFor="confirm-password">Confirm Password</Label>
+            <Input
+              id="confirm-password"
+              type="password"
+              value={confirmPassword}
+              onChange={e => setConfirmPassword(e.target.value)}
+              placeholder="Repeat new password"
+            />
+          </div>
+          <Button onClick={handlePasswordChange} disabled={passwordLoading || !newPassword}>
+            {passwordLoading ? 'Updating…' : 'Update Password'}
+          </Button>
+        </CardContent>
+      </Card>
+
+      <Card className="mb-4">
+        <CardHeader>
           <CardTitle className="text-base">Appearance</CardTitle>
         </CardHeader>
         <CardContent>
@@ -118,7 +180,6 @@ export default function SettingsPage() {
           </div>
         </CardContent>
       </Card>
-
     </div>
   );
 }
