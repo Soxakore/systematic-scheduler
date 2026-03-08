@@ -258,6 +258,7 @@ export default function AppLayout() {
 
   const handleNewEvent = () => {
     setSelectedDate(null);
+    setSelectedEndDate(null);
     setEditingEventId(null);
     setShowEventDialog(true);
   };
