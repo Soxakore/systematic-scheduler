@@ -737,6 +737,23 @@ export default function VisionBoardPage() {
                   </button>
                 </>
               )}
+              <div className="w-px h-5 bg-border" />
+              <button
+                onClick={undo}
+                disabled={!canUndo}
+                className={cn('h-6 w-6 rounded-md flex items-center justify-center transition-colors', canUndo ? 'text-muted-foreground hover:bg-secondary hover:text-foreground' : 'text-muted-foreground/30')}
+                title="Undo (Ctrl+Z)"
+              >
+                <ArrowCounterClockwise className="h-3.5 w-3.5" />
+              </button>
+              <button
+                onClick={redo}
+                disabled={!canRedo}
+                className={cn('h-6 w-6 rounded-md flex items-center justify-center transition-colors', canRedo ? 'text-muted-foreground hover:bg-secondary hover:text-foreground' : 'text-muted-foreground/30')}
+                title="Redo (Ctrl+Shift+Z)"
+              >
+                <ArrowClockwise className="h-3.5 w-3.5" />
+              </button>
             </div>
           )}
 
