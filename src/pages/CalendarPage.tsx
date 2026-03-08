@@ -39,6 +39,21 @@ export default function CalendarPage() {
 
   const navigateToday = () => setCurrentDate(new Date());
 
+  // Keyboard shortcuts: arrows for nav, T for today
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      const tag = (e.target as HTMLElement)?.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || (e.target as HTMLElement)?.isContentEditable) return;
+      if (pickerOpen) return;
+
+      if (e.key === 'ArrowLeft') { e.preventDefault(); navigatePrev(); }
+      else if (e.key === 'ArrowRight') { e.preventDefault(); navigateNext(); }
+      else if (e.key === 't' || e.key === 'T') { e.preventDefault(); navigateToday(); }
+    };
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [currentView, currentDate, pickerOpen]);
+
   const getDateLabel = () => {
     if (currentView === 'month') return format(currentDate, 'MMMM yyyy');
     if (currentView === 'week') {
