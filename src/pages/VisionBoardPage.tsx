@@ -13,21 +13,9 @@ import { CATEGORIES, CATEGORY_ICONS } from '@/components/vision/VisionCard';
 
 type ToolMode = 'select' | 'note' | 'pan' | 'draw' | 'eraser';
 
-interface CanvasItem {
-  id: string;
-  title: string;
-  description: string | null;
-  category: string | null;
-  color: string | null;
-  image_url: string | null;
-  position_x: number;
-  position_y: number;
-  width: number;
-  height: number;
-  is_achieved: boolean;
-}
-
-const DRAW_COLORS = ['#1a1a2e', '#ef4444', '#3b82f6', '#22c55e', '#eab308', '#8b5cf6', '#ec4899', '#ffffff'];
+const CANVAS_W = 4000;
+const CANVAS_H = 3000;
+const DRAW_COLORS = ['#1e293b', '#ef4444', '#3b82f6', '#22c55e', '#eab308', '#8b5cf6', '#ec4899', '#f8fafc'];
 const BRUSH_SIZES = [2, 4, 8, 14];
 
 export default function VisionBoardPage() {
@@ -47,65 +35,64 @@ export default function VisionBoardPage() {
   const [zoom, setZoom] = useState(1);
   const [pan, setPan] = useState({ x: 0, y: 0 });
   const [isPanning, setIsPanning] = useState(false);
-  const [panStart, setPanStart] = useState({ x: 0, y: 0 });
-  const [panOrigin, setPanOrigin] = useState({ x: 0, y: 0 });
+  const panStart = useRef({ x: 0, y: 0 });
+  const panOrigin = useRef({ x: 0, y: 0 });
 
   // Item dragging
   const [draggingId, setDraggingId] = useState<string | null>(null);
-  const [dragStart, setDragStart] = useState({ x: 0, y: 0 });
-  const [dragItemStart, setDragItemStart] = useState({ x: 0, y: 0 });
+  const dragStart = useRef({ x: 0, y: 0 });
+  const dragItemStart = useRef({ x: 0, y: 0 });
   const [dragPositions, setDragPositions] = useState<Record<string, { x: number; y: number }>>({});
 
-  // Drawing state
+  // Drawing
   const [isDrawing, setIsDrawing] = useState(false);
-  const [drawColor, setDrawColor] = useState('#1a1a2e');
+  const [drawColor, setDrawColor] = useState('#1e293b');
   const [brushSize, setBrushSize] = useState(4);
-  const [showDrawOptions, setShowDrawOptions] = useState(false);
 
-  const canvasRef = useRef<HTMLDivElement>(null);
+  const viewportRef = useRef<HTMLDivElement>(null);
   const drawCanvasRef = useRef<HTMLCanvasElement>(null);
+  const canvasReady = useRef(false);
   const titleInputRefs = useRef<Record<string, HTMLTextAreaElement | null>>({});
+  const persistTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const totalCount = items?.length || 0;
   const achievedCount = items?.filter(i => i.is_achieved).length || 0;
-
   const isDrawMode = toolMode === 'draw' || toolMode === 'eraser';
 
-  /* ── Setup drawing canvas & load persisted drawing ── */
+  /* ── Init canvas + load saved drawing ─────────────── */
   useEffect(() => {
-    const canvas = drawCanvasRef.current;
-    if (!canvas || !user) return;
-    canvas.width = 4000;
-    canvas.height = 3000;
-    const ctx = canvas.getContext('2d');
-    if (!ctx) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const c = drawCanvasRef.current;
+    if (!c || !user || canvasReady.current) return;
+    c.width = CANVAS_W;
+    c.height = CANVAS_H;
+    canvasReady.current = true;
 
-    // Load persisted drawing
-    const loadDrawing = async () => {
+    // Load persisted drawing from storage
+    (async () => {
       try {
+        const { data: list } = await supabase.storage.from('vision-images').list(user.id, { search: 'canvas-drawing.png' });
+        if (!list?.length) return;
         const { data } = supabase.storage.from('vision-images').getPublicUrl(`${user.id}/canvas-drawing.png`);
-        if (!data?.publicUrl) return;
         const img = new Image();
         img.crossOrigin = 'anonymous';
-        img.onload = () => ctx.drawImage(img, 0, 0);
-        img.src = data.publicUrl + '?t=' + Date.now(); // cache-bust
+        img.onload = () => {
+          const ctx = c.getContext('2d');
+          if (ctx) ctx.drawImage(img, 0, 0);
+        };
+        img.src = data.publicUrl + '?t=' + Date.now();
       } catch {}
-    };
-    loadDrawing();
+    })();
   }, [user]);
 
   /* ── Zoom via wheel / pinch ───────────────────────── */
   useEffect(() => {
-    const el = canvasRef.current;
+    const el = viewportRef.current;
     if (!el) return;
     const handleWheel = (e: WheelEvent) => {
+      e.preventDefault();
       if (e.ctrlKey || e.metaKey) {
-        e.preventDefault();
-        const delta = -e.deltaY * 0.002;
-        setZoom(prev => Math.min(3, Math.max(0.2, prev + delta)));
+        setZoom(prev => Math.min(3, Math.max(0.2, prev - e.deltaY * 0.002)));
       } else {
-        e.preventDefault();
         setPan(prev => ({ x: prev.x - e.deltaX, y: prev.y - e.deltaY }));
       }
     };
@@ -113,9 +100,9 @@ export default function VisionBoardPage() {
     return () => el.removeEventListener('wheel', handleWheel);
   }, []);
 
-  /* ── Screen coords → canvas coords ───────────────── */
-  const screenToCanvas = useCallback((clientX: number, clientY: number) => {
-    const rect = canvasRef.current?.getBoundingClientRect();
+  /* ── Convert screen → world coords ───────────────── */
+  const screenToWorld = useCallback((clientX: number, clientY: number) => {
+    const rect = viewportRef.current?.getBoundingClientRect();
     if (!rect) return { x: 0, y: 0 };
     return {
       x: (clientX - rect.left - pan.x) / zoom,
@@ -123,112 +110,130 @@ export default function VisionBoardPage() {
     };
   }, [pan, zoom]);
 
-  /* ── Drawing directly on canvas ───────────────────── */
-  const getDrawCoords = useCallback((e: React.MouseEvent) => {
-    const canvas = drawCanvasRef.current;
-    if (!canvas) return { x: 0, y: 0 };
-    const rect = canvas.getBoundingClientRect();
-    // Map screen coords to canvas pixel coords, accounting for CSS scaling
-    return {
-      x: (e.clientX - rect.left) * (canvas.width / rect.width),
-      y: (e.clientY - rect.top) * (canvas.height / rect.height),
-    };
-  }, []);
-
-  const handleDrawStart = (e: React.MouseEvent) => {
-    if (!isDrawMode) return;
-    const canvas = drawCanvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!ctx || !canvas) return;
-
+  /* ── Drawing ──────────────────────────────────────── */
+  const handleDrawStart = useCallback((clientX: number, clientY: number) => {
+    const c = drawCanvasRef.current;
+    const ctx = c?.getContext('2d');
+    if (!ctx) return;
     setIsDrawing(true);
-    const { x, y } = getDrawCoords(e);
+    const { x, y } = screenToWorld(clientX, clientY);
     ctx.beginPath();
     ctx.moveTo(x, y);
     ctx.lineCap = 'round';
     ctx.lineJoin = 'round';
-    ctx.lineWidth = brushSize;
-    ctx.strokeStyle = toolMode === 'eraser' ? 'rgba(0,0,0,0)' : drawColor;
     if (toolMode === 'eraser') {
       ctx.globalCompositeOperation = 'destination-out';
-      ctx.lineWidth = brushSize * 3;
+      ctx.lineWidth = brushSize * 4;
     } else {
       ctx.globalCompositeOperation = 'source-over';
+      ctx.strokeStyle = drawColor;
+      ctx.lineWidth = brushSize;
     }
-  };
+  }, [screenToWorld, toolMode, drawColor, brushSize]);
 
-  const handleDrawMove = (e: React.MouseEvent) => {
-    if (!isDrawing || !isDrawMode) return;
-    const canvas = drawCanvasRef.current;
-    const ctx = canvas?.getContext('2d');
+  const handleDrawMoveRaw = useCallback((clientX: number, clientY: number) => {
+    const ctx = drawCanvasRef.current?.getContext('2d');
     if (!ctx) return;
-
-    const { x, y } = getDrawCoords(e);
+    const { x, y } = screenToWorld(clientX, clientY);
     ctx.lineTo(x, y);
     ctx.stroke();
-  };
+  }, [screenToWorld]);
 
-  const handleDrawEnd = () => {
+  const persistDrawing = useCallback(() => {
+    if (persistTimeout.current) clearTimeout(persistTimeout.current);
+    persistTimeout.current = setTimeout(async () => {
+      const c = drawCanvasRef.current;
+      if (!c || !user) return;
+      try {
+        const blob = await new Promise<Blob | null>(r => c.toBlob(r, 'image/png'));
+        if (!blob) return;
+        await supabase.storage.from('vision-images').upload(
+          `${user.id}/canvas-drawing.png`, blob,
+          { contentType: 'image/png', upsert: true }
+        );
+      } catch {}
+    }, 1500);
+  }, [user]);
+
+  const handleDrawEnd = useCallback(() => {
     if (!isDrawing) return;
     setIsDrawing(false);
     const ctx = drawCanvasRef.current?.getContext('2d');
     if (ctx) ctx.globalCompositeOperation = 'source-over';
-    // Auto-save drawing to storage
     persistDrawing();
-  };
-
-  const persistDrawingTimeout = useRef<ReturnType<typeof setTimeout> | null>(null);
-  const persistDrawing = () => {
-    if (persistDrawingTimeout.current) clearTimeout(persistDrawingTimeout.current);
-    persistDrawingTimeout.current = setTimeout(async () => {
-      const canvas = drawCanvasRef.current;
-      if (!canvas || !user) return;
-      try {
-        const blob = await new Promise<Blob>((resolve) => canvas.toBlob(b => resolve(b!), 'image/png'));
-        const path = `${user.id}/canvas-drawing.png`;
-        // Upsert: try upload, if exists then update
-        await supabase.storage.from('vision-images').upload(path, blob, { contentType: 'image/png', upsert: true });
-      } catch {}
-    }, 1000); // debounce 1s
-  };
+  }, [isDrawing, persistDrawing]);
 
   const clearDrawing = async () => {
-    const canvas = drawCanvasRef.current;
-    const ctx = canvas?.getContext('2d');
-    if (!ctx || !canvas) return;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    // Also clear from storage
+    const c = drawCanvasRef.current;
+    const ctx = c?.getContext('2d');
+    if (!ctx || !c) return;
+    ctx.clearRect(0, 0, c.width, c.height);
     if (user) {
       try { await supabase.storage.from('vision-images').remove([`${user.id}/canvas-drawing.png`]); } catch {}
     }
     toast.success('Drawing cleared');
   };
 
-  /* ── Click on canvas to create a note ─────────────── */
+  /* ── Mouse handling ───────────────────────────────── */
+  const handleMouseDown = useCallback((e: React.MouseEvent) => {
+    if (isDrawMode) {
+      handleDrawStart(e.clientX, e.clientY);
+      return;
+    }
+    if (e.button === 1 || (toolMode === 'pan' && e.button === 0)) {
+      e.preventDefault();
+      setIsPanning(true);
+      panStart.current = { x: e.clientX, y: e.clientY };
+      panOrigin.current = { ...pan };
+    }
+  }, [isDrawMode, toolMode, pan, handleDrawStart]);
+
+  const handleMouseMove = useCallback((e: React.MouseEvent) => {
+    if (isDrawing && isDrawMode) {
+      handleDrawMoveRaw(e.clientX, e.clientY);
+      return;
+    }
+    if (isPanning) {
+      setPan({
+        x: panOrigin.current.x + (e.clientX - panStart.current.x),
+        y: panOrigin.current.y + (e.clientY - panStart.current.y),
+      });
+      return;
+    }
+    if (!draggingId) return;
+    const dx = (e.clientX - dragStart.current.x) / zoom;
+    const dy = (e.clientY - dragStart.current.y) / zoom;
+    setDragPositions(prev => ({
+      ...prev,
+      [draggingId]: { x: Math.max(0, dragItemStart.current.x + dx), y: Math.max(0, dragItemStart.current.y + dy) },
+    }));
+  }, [isDrawing, isDrawMode, isPanning, draggingId, zoom, handleDrawMoveRaw]);
+
+  const handleMouseUp = useCallback(async () => {
+    if (isDrawing) { handleDrawEnd(); return; }
+    if (isPanning) { setIsPanning(false); return; }
+    if (!draggingId) return;
+    const pos = dragPositions[draggingId];
+    if (pos) {
+      await updateItem.mutateAsync({ id: draggingId, position_x: Math.round(pos.x), position_y: Math.round(pos.y) });
+    }
+    const id = draggingId;
+    setDraggingId(null);
+    setDragPositions(prev => { const n = { ...prev }; delete n[id]; return n; });
+  }, [isDrawing, isPanning, draggingId, dragPositions, updateItem, handleDrawEnd]);
+
+  /* ── Canvas click → create note ───────────────────── */
   const handleCanvasClick = async (e: React.MouseEvent) => {
+    if (toolMode !== 'note' || !user) return;
     const target = e.target as HTMLElement;
-    if (!target.classList.contains('canvas-surface') && target.tagName !== 'CANVAS') return;
-    if (toolMode !== 'note') return;
-    if (!user) return;
-
-    const { x, y } = screenToCanvas(e.clientX, e.clientY);
-    const count = items?.length || 0;
+    if (target.closest('[data-card]')) return;
+    const { x, y } = screenToWorld(e.clientX, e.clientY);
     const newItem: any = await createItem.mutateAsync({
-      title: '',
-      description: '',
-      category: 'general',
-      color: '#64748b',
-      icon: 'star',
-      position_x: Math.round(x - 120),
-      position_y: Math.round(y - 20),
-      width: 240,
-      height: 160,
-      image_url: null,
-      is_achieved: false,
-      achieved_at: null,
-      sort_order: count,
+      title: '', description: '', category: 'general', color: '#64748b', icon: 'star',
+      position_x: Math.round(x - 120), position_y: Math.round(y - 20),
+      width: 240, height: 160, image_url: null,
+      is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
     });
-
     if (newItem?.id) {
       setEditingId(newItem.id);
       setEditTitle('');
@@ -237,14 +242,13 @@ export default function VisionBoardPage() {
     }
   };
 
-  /* ── File drop on canvas ──────────────────────────── */
+  /* ── File drop ────────────────────────────────────── */
   const handleDrop = async (e: React.DragEvent) => {
     e.preventDefault();
     if (!user) return;
-    const { x, y } = screenToCanvas(e.clientX, e.clientY);
+    const { x, y } = screenToWorld(e.clientX, e.clientY);
     const files = Array.from(e.dataTransfer.files).filter(f => f.type.startsWith('image/'));
     if (!files.length) return;
-
     for (let i = 0; i < files.length; i++) {
       const file = files[i];
       setUploading(true);
@@ -255,124 +259,66 @@ export default function VisionBoardPage() {
         if (error) throw error;
         const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
         await createItem.mutateAsync({
-          title: file.name.replace(/\.[^/.]+$/, ''),
-          description: '',
-          category: 'general',
-          color: '#64748b',
-          icon: 'star',
-          position_x: Math.round(x + i * 20 - 120),
-          position_y: Math.round(y + i * 20 - 20),
-          width: 260,
-          height: 220,
-          image_url: data.publicUrl,
-          is_achieved: false,
-          achieved_at: null,
-          sort_order: (items?.length || 0) + i,
+          title: file.name.replace(/\.[^/.]+$/, ''), description: '', category: 'general',
+          color: '#64748b', icon: 'star',
+          position_x: Math.round(x + i * 20 - 120), position_y: Math.round(y + i * 20 - 20),
+          width: 260, height: 220, image_url: data.publicUrl,
+          is_achieved: false, achieved_at: null, sort_order: (items?.length || 0) + i,
         });
-      } catch (err: any) {
-        toast.error('Upload failed: ' + err.message);
-      } finally {
-        setUploading(false);
-      }
+      } catch (err: any) { toast.error('Upload failed: ' + err.message); }
+      finally { setUploading(false); }
     }
     toast.success(`${files.length} image(s) added`);
   };
 
-  /* ── Pan ──────────────────────────────────────────── */
-  const handleCanvasMouseDown = (e: React.MouseEvent) => {
-    if (isDrawMode) {
-      handleDrawStart(e);
-      return;
-    }
-    if (e.button === 1 || (toolMode === 'pan' && e.button === 0)) {
-      e.preventDefault();
-      setIsPanning(true);
-      setPanStart({ x: e.clientX, y: e.clientY });
-      setPanOrigin({ ...pan });
-    }
-  };
-
-  /* ── Card dragging ────────────────────────────────── */
-  const handleCardMouseDown = (e: React.MouseEvent, item: CanvasItem) => {
+  /* ── Card drag ────────────────────────────────────── */
+  const handleCardMouseDown = (e: React.MouseEvent, item: any) => {
     if (toolMode !== 'select' || editingId === item.id) return;
     e.preventDefault();
     e.stopPropagation();
     setDraggingId(item.id);
-    setDragStart({ x: e.clientX, y: e.clientY });
-    setDragItemStart({ x: item.position_x, y: item.position_y });
+    dragStart.current = { x: e.clientX, y: e.clientY };
+    dragItemStart.current = { x: item.position_x, y: item.position_y };
   };
-
-  const handleMouseMove = useCallback((e: React.MouseEvent) => {
-    if (isDrawing && isDrawMode) {
-      handleDrawMove(e);
-      return;
-    }
-    if (isPanning) {
-      const dx = e.clientX - panStart.x;
-      const dy = e.clientY - panStart.y;
-      setPan({ x: panOrigin.x + dx, y: panOrigin.y + dy });
-      return;
-    }
-    if (!draggingId) return;
-    const dx = (e.clientX - dragStart.x) / zoom;
-    const dy = (e.clientY - dragStart.y) / zoom;
-    setDragPositions(prev => ({
-      ...prev,
-      [draggingId]: {
-        x: Math.max(0, dragItemStart.x + dx),
-        y: Math.max(0, dragItemStart.y + dy),
-      },
-    }));
-  }, [isDrawing, isDrawMode, isPanning, panStart, panOrigin, draggingId, dragStart, dragItemStart, zoom, pan, drawColor, brushSize, toolMode]);
-
-  const handleMouseUp = useCallback(async () => {
-    if (isDrawing) {
-      handleDrawEnd();
-      return;
-    }
-    if (isPanning) {
-      setIsPanning(false);
-      return;
-    }
-    if (!draggingId) return;
-    const pos = dragPositions[draggingId];
-    if (pos) {
-      await updateItem.mutateAsync({
-        id: draggingId,
-        position_x: Math.round(pos.x),
-        position_y: Math.round(pos.y),
-      });
-    }
-    setDraggingId(null);
-    setDragPositions(prev => {
-      const next = { ...prev };
-      delete next[draggingId];
-      return next;
-    });
-  }, [isDrawing, isPanning, draggingId, dragPositions, updateItem]);
 
   /* ── Inline editing ───────────────────────────────── */
-  const startEditing = (item: CanvasItem) => {
-    setEditingId(item.id);
-    setEditTitle(item.title || '');
-    setEditDesc(item.description || '');
-  };
-
+  const startEditing = (item: any) => { setEditingId(item.id); setEditTitle(item.title || ''); setEditDesc(item.description || ''); };
   const saveEditing = async () => {
     if (!editingId) return;
-    await updateItem.mutateAsync({
-      id: editingId,
-      title: editTitle.trim() || 'Untitled',
-      description: editDesc.trim(),
-    });
+    await updateItem.mutateAsync({ id: editingId, title: editTitle.trim() || 'Untitled', description: editDesc.trim() });
     setEditingId(null);
   };
 
-  const getItemPos = (item: CanvasItem) => dragPositions[item.id] || { x: item.position_x, y: item.position_y };
-
+  const getItemPos = (item: any) => dragPositions[item.id] || { x: item.position_x, y: item.position_y };
   const zoomIn = () => setZoom(prev => Math.min(3, prev + 0.15));
   const zoomOut = () => setZoom(prev => Math.max(0.2, prev - 0.15));
   const resetView = () => { setZoom(1); setPan({ x: 0, y: 0 }); };
+
+  /* ── Image upload from toolbar ────────────────────── */
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !user) return;
+    for (const file of files) {
+      setUploading(true);
+      try {
+        const ext = file.name.split('.').pop();
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error } = await supabase.storage.from('vision-images').upload(path, file);
+        if (error) throw error;
+        const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
+        await createItem.mutateAsync({
+          title: file.name.replace(/\.[^/.]+$/, ''), description: '', category: 'general',
+          color: '#64748b', icon: 'star',
+          position_x: 40 + Math.random() * 400, position_y: 40 + Math.random() * 300,
+          width: 260, height: 220, image_url: data.publicUrl,
+          is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+        });
+      } catch (err: any) { toast.error('Upload failed: ' + err.message); }
+      finally { setUploading(false); }
+    }
+    toast.success('Image(s) added');
+    e.target.value = '';
+  };
 
   const TOOLS: { id: ToolMode; icon: any; label: string }[] = [
     { id: 'select', icon: Cursor, label: 'Select' },
@@ -389,16 +335,10 @@ export default function VisionBoardPage() {
         {TOOLS.map(tool => (
           <button
             key={tool.id}
-            onClick={() => {
-              setToolMode(tool.id);
-              if (tool.id === 'draw') setShowDrawOptions(true);
-              else if (tool.id !== 'eraser') setShowDrawOptions(false);
-            }}
+            onClick={() => setToolMode(tool.id)}
             className={cn(
               'flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium transition-all gap-0.5',
-              toolMode === tool.id
-                ? 'bg-primary/10 text-primary'
-                : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
+              toolMode === tool.id ? 'bg-primary/10 text-primary' : 'text-muted-foreground hover:bg-secondary hover:text-foreground'
             )}
           >
             <tool.icon className="h-[18px] w-[18px]" weight={toolMode === tool.id ? 'fill' : 'regular'} />
@@ -408,56 +348,14 @@ export default function VisionBoardPage() {
 
         <div className="w-7 h-px bg-border my-1.5" />
 
-        {/* Image upload */}
         <label className="flex flex-col items-center justify-center w-11 h-[52px] rounded-xl text-[9px] font-medium text-muted-foreground hover:bg-secondary hover:text-foreground transition-all gap-0.5 cursor-pointer">
           <ImageSquare className="h-[18px] w-[18px]" />
           Image
-          <input
-            type="file"
-            accept="image/*"
-            multiple
-            className="hidden"
-            onChange={async (e) => {
-              const files = Array.from(e.target.files || []);
-              if (!files.length || !user) return;
-              for (const file of files) {
-                setUploading(true);
-                try {
-                  const ext = file.name.split('.').pop();
-                  const path = `${user.id}/${Date.now()}.${ext}`;
-                  const { error } = await supabase.storage.from('vision-images').upload(path, file);
-                  if (error) throw error;
-                  const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
-                  await createItem.mutateAsync({
-                    title: file.name.replace(/\.[^/.]+$/, ''),
-                    description: '',
-                    category: 'general',
-                    color: '#64748b',
-                    icon: 'star',
-                    position_x: 40 + Math.random() * 400,
-                    position_y: 40 + Math.random() * 300,
-                    width: 260,
-                    height: 220,
-                    image_url: data.publicUrl,
-                    is_achieved: false,
-                    achieved_at: null,
-                    sort_order: items?.length || 0,
-                  });
-                } catch (err: any) {
-                  toast.error('Upload failed: ' + err.message);
-                } finally {
-                  setUploading(false);
-                }
-              }
-              toast.success('Image(s) added');
-              e.target.value = '';
-            }}
-          />
+          <input type="file" accept="image/*" multiple className="hidden" onChange={handleImageUpload} />
         </label>
 
         <div className="mt-auto" />
 
-        {/* Zoom controls */}
         <div className="flex flex-col items-center gap-0.5 mb-2">
           <button onClick={zoomIn} className="w-8 h-8 rounded-lg flex items-center justify-center text-muted-foreground hover:bg-secondary hover:text-foreground transition-colors">
             <MagnifyingGlassPlus className="h-4 w-4" />
@@ -471,20 +369,16 @@ export default function VisionBoardPage() {
         </div>
       </div>
 
-      {/* ── Canvas ─────────────────────────────────────── */}
+      {/* ── Main area ──────────────────────────────────── */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top bar */}
         <div className="shrink-0 h-10 border-b border-border bg-background flex items-center px-4 gap-2">
           <h1 className="text-xs font-semibold text-foreground">Vision Board</h1>
-          {totalCount > 0 && (
-            <span className="text-[10px] text-muted-foreground">{achievedCount}/{totalCount} achieved</span>
-          )}
+          {totalCount > 0 && <span className="text-[10px] text-muted-foreground">{achievedCount}/{totalCount} achieved</span>}
           {uploading && <span className="text-[10px] text-primary animate-pulse">Uploading…</span>}
 
-          {/* Draw options bar — shown when draw/eraser active */}
           {isDrawMode && (
             <div className="ml-4 flex items-center gap-2 border-l border-border pl-4">
-              {/* Colors */}
               <div className="flex items-center gap-1">
                 {DRAW_COLORS.map(c => (
                   <button
@@ -498,105 +392,83 @@ export default function VisionBoardPage() {
                   />
                 ))}
               </div>
-
               <div className="w-px h-5 bg-border" />
-
-              {/* Brush sizes */}
               <div className="flex items-center gap-1">
                 {BRUSH_SIZES.map(s => (
                   <button
                     key={s}
                     onClick={() => setBrushSize(s)}
-                    className={cn(
-                      'flex items-center justify-center h-6 w-6 rounded-md transition-colors',
-                      brushSize === s ? 'bg-primary/20' : 'hover:bg-secondary'
-                    )}
+                    className={cn('flex items-center justify-center h-6 w-6 rounded-md transition-colors', brushSize === s ? 'bg-primary/20' : 'hover:bg-secondary')}
                   >
                     <div className="rounded-full bg-foreground" style={{ width: s, height: s }} />
                   </button>
                 ))}
               </div>
-
               <div className="w-px h-5 bg-border" />
-
-              {/* Clear */}
-              <button
-                onClick={clearDrawing}
-                className="h-6 px-2 rounded-md text-[10px] font-medium text-muted-foreground hover:bg-secondary transition-colors flex items-center gap-1"
-              >
+              <button onClick={clearDrawing} className="h-6 px-2 rounded-md text-[10px] font-medium text-muted-foreground hover:bg-secondary transition-colors flex items-center gap-1">
                 <Trash className="h-3 w-3" /> Clear
               </button>
             </div>
           )}
 
           <span className="ml-auto text-[9px] text-muted-foreground">
-            {isDrawMode ? 'Draw freely · Auto-saved' : 'Scroll to pan · Ctrl+scroll to zoom · Double-click to edit'}
+            {isDrawMode ? 'Draw freely · Auto-saved' : 'Scroll to pan · Ctrl+scroll to zoom'}
           </span>
         </div>
 
-        {/* Canvas area */}
+        {/* Viewport */}
         <div
-          ref={canvasRef}
+          ref={viewportRef}
           className={cn(
             'flex-1 overflow-hidden relative',
             toolMode === 'note' && 'cursor-crosshair',
             toolMode === 'pan' && (isPanning ? 'cursor-grabbing' : 'cursor-grab'),
             toolMode === 'select' && 'cursor-default',
-            toolMode === 'draw' && 'cursor-crosshair',
-            toolMode === 'eraser' && 'cursor-crosshair',
+            isDrawMode && 'cursor-crosshair',
           )}
           style={{ backgroundColor: 'hsl(var(--secondary) / 0.5)' }}
-          onClick={!isDrawMode ? handleCanvasClick : undefined}
-          onMouseDown={handleCanvasMouseDown}
+          onMouseDown={handleMouseDown}
           onMouseMove={handleMouseMove}
           onMouseUp={handleMouseUp}
-          onMouseLeave={() => { handleMouseUp(); handleDrawEnd(); }}
-          onDragOver={(e) => e.preventDefault()}
+          onMouseLeave={handleMouseUp}
+          onClick={handleCanvasClick}
+          onDragOver={e => e.preventDefault()}
           onDrop={handleDrop}
         >
-          {/* Transformed canvas layer */}
+          {/* World layer — everything transforms together */}
           <div
-            className="canvas-surface absolute inset-0 origin-top-left"
             style={{
               transform: `translate(${pan.x}px, ${pan.y}px) scale(${zoom})`,
+              transformOrigin: '0 0',
+              width: CANVAS_W,
+              height: CANVAS_H,
+              position: 'absolute',
               backgroundImage: 'radial-gradient(circle, hsl(var(--border) / 0.4) 1px, transparent 1px)',
               backgroundSize: '20px 20px',
-              width: 4000,
-              height: 3000,
             }}
           >
-            {/* Drawing canvas overlay */}
+            {/* Drawing canvas — same coordinate space as cards */}
             <canvas
               ref={drawCanvasRef}
-              className={cn(
-                'absolute inset-0',
-                isDrawMode ? 'pointer-events-auto z-40' : 'pointer-events-none z-5',
-              )}
-              style={{ width: 4000, height: 3000 }}
+              style={{ position: 'absolute', top: 0, left: 0, width: CANVAS_W, height: CANVAS_H, pointerEvents: 'none' }}
             />
 
+            {/* Cards */}
             {isLoading ? (
-              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 text-sm text-muted-foreground animate-pulse z-50">Loading…</div>
+              <div className="absolute top-1/3 left-1/2 -translate-x-1/2 text-sm text-muted-foreground animate-pulse">Loading…</div>
             ) : totalCount === 0 && !isDrawMode ? (
-              <div className="absolute top-1/4 left-1/2 -translate-x-1/2 text-center px-6 pointer-events-auto z-30">
+              <div className="absolute top-1/4 left-1/2 -translate-x-1/2 text-center px-6">
                 <div className="h-16 w-16 rounded-2xl bg-primary/10 border border-primary/20 flex items-center justify-center mx-auto mb-4">
                   <SquaresFour className="h-8 w-8 text-primary" weight="duotone" />
                 </div>
                 <h3 className="font-semibold text-foreground text-base mb-1.5">Your vision board</h3>
                 <p className="text-sm text-muted-foreground mb-5 max-w-xs mx-auto leading-relaxed">
-                  Select <strong>Note</strong> and click anywhere to write.
-                  <br />Drag & drop images onto the canvas.
-                  <br />Use <strong>Draw</strong> to sketch directly.
+                  Select <strong>Note</strong> and click anywhere. Drop images. Use <strong>Draw</strong> to sketch freely.
                 </p>
-                <div className="flex items-center justify-center gap-6 text-muted-foreground text-xs">
-                  <div className="flex items-center gap-1.5"><Note className="h-4 w-4" /> Click to note</div>
-                  <div className="flex items-center gap-1.5"><ImageSquare className="h-4 w-4" /> Drop images</div>
-                  <div className="flex items-center gap-1.5"><PaintBrush className="h-4 w-4" /> Draw</div>
-                </div>
               </div>
             ) : (
-              items?.map(item => {
-                const pos = getItemPos(item as CanvasItem);
+              !isDrawMode && items?.map(item => {
+                const pos = getItemPos(item);
                 const cat = CATEGORIES.find(c => c.value === item.category) || CATEGORIES[8];
                 const CatIcon = CATEGORY_ICONS[item.category || 'general'] || Star;
                 const isEditing = editingId === item.id;
@@ -605,15 +477,11 @@ export default function VisionBoardPage() {
                 return (
                   <div
                     key={item.id}
-                    className={cn(
-                      'absolute group z-10',
-                      isDragging && 'z-50 cursor-grabbing',
-                      !isDragging && toolMode === 'select' && 'cursor-grab',
-                      isDrawMode && 'pointer-events-none',
-                    )}
+                    data-card
+                    className={cn('absolute group', isDragging ? 'z-50 cursor-grabbing' : 'z-10 cursor-grab')}
                     style={{ left: pos.x, top: pos.y, width: item.width || 240 }}
-                    onMouseDown={(e) => handleCardMouseDown(e, item as CanvasItem)}
-                    onDoubleClick={() => startEditing(item as CanvasItem)}
+                    onMouseDown={e => handleCardMouseDown(e, item)}
+                    onDoubleClick={() => startEditing(item)}
                   >
                     <div className={cn(
                       'bg-card rounded-xl overflow-hidden border transition-all duration-150',
@@ -630,7 +498,6 @@ export default function VisionBoardPage() {
                           )}
                         </div>
                       )}
-
                       <div className="p-3">
                         <div className="flex items-center gap-1.5 mb-1.5">
                           <CatIcon className="h-3 w-3" style={{ color: cat.color }} weight="duotone" />
@@ -645,7 +512,7 @@ export default function VisionBoardPage() {
                         {isEditing ? (
                           <div className="space-y-1.5" onClick={e => e.stopPropagation()}>
                             <textarea
-                              ref={(el) => { titleInputRefs.current[item.id] = el; }}
+                              ref={el => { titleInputRefs.current[item.id] = el; }}
                               value={editTitle}
                               onChange={e => setEditTitle(e.target.value)}
                               placeholder="Title…"
@@ -655,8 +522,7 @@ export default function VisionBoardPage() {
                               autoFocus
                             />
                             <textarea
-                              value={editDesc}
-                              onChange={e => setEditDesc(e.target.value)}
+                              value={editDesc} onChange={e => setEditDesc(e.target.value)}
                               placeholder="Write your thoughts…"
                               className="w-full bg-transparent text-xs text-muted-foreground resize-none outline-none leading-relaxed"
                               rows={3}
@@ -675,9 +541,7 @@ export default function VisionBoardPage() {
                             )}>
                               {item.title || 'Untitled – double click to edit'}
                             </h3>
-                            {item.description && (
-                              <p className="text-xs text-muted-foreground leading-relaxed mt-1 line-clamp-4">{item.description}</p>
-                            )}
+                            {item.description && <p className="text-xs text-muted-foreground leading-relaxed mt-1 line-clamp-4">{item.description}</p>}
                           </>
                         )}
 
@@ -686,21 +550,19 @@ export default function VisionBoardPage() {
                             {!item.is_achieved ? (
                               <button
                                 className="flex items-center gap-1 px-1.5 py-0.5 rounded text-[9px] font-semibold text-emerald-600 dark:text-emerald-400 hover:bg-emerald-50 dark:hover:bg-emerald-900/20 transition-colors"
-                                onClick={(e) => { e.stopPropagation(); updateItem.mutateAsync({ id: item.id, is_achieved: true, achieved_at: new Date().toISOString() }); toast.success('Achieved! 🎉'); }}
+                                onClick={e => { e.stopPropagation(); updateItem.mutateAsync({ id: item.id, is_achieved: true, achieved_at: new Date().toISOString() }); toast.success('Achieved! 🎉'); }}
                               >
                                 <Check className="h-3 w-3" weight="bold" /> Done
                               </button>
                             ) : (
                               <button
                                 className="px-1.5 py-0.5 rounded text-[9px] text-muted-foreground hover:bg-secondary transition-colors"
-                                onClick={(e) => { e.stopPropagation(); updateItem.mutateAsync({ id: item.id, is_achieved: false, achieved_at: null }); }}
-                              >
-                                Undo
-                              </button>
+                                onClick={e => { e.stopPropagation(); updateItem.mutateAsync({ id: item.id, is_achieved: false, achieved_at: null }); }}
+                              >Undo</button>
                             )}
                             <button
                               className="ml-auto p-1 rounded text-muted-foreground hover:text-destructive hover:bg-destructive/10 transition-colors"
-                              onClick={(e) => { e.stopPropagation(); deleteItem.mutateAsync(item.id); toast.success('Removed'); }}
+                              onClick={e => { e.stopPropagation(); deleteItem.mutateAsync(item.id); toast.success('Removed'); }}
                             >
                               <Trash className="h-3 w-3" />
                             </button>
@@ -712,6 +574,27 @@ export default function VisionBoardPage() {
                 );
               })
             )}
+
+            {/* Show cards even in draw mode, just non-interactive */}
+            {isDrawMode && items?.map(item => {
+              const pos = getItemPos(item);
+              const cat = CATEGORIES.find(c => c.value === item.category) || CATEGORIES[8];
+              const CatIcon = CATEGORY_ICONS[item.category || 'general'] || Star;
+              return (
+                <div key={item.id} className="absolute pointer-events-none opacity-40" style={{ left: pos.x, top: pos.y, width: item.width || 240 }}>
+                  <div className="bg-card rounded-xl overflow-hidden border border-border shadow-sm">
+                    {item.image_url && <img src={item.image_url} alt="" className="w-full h-36 object-cover" />}
+                    <div className="p-3">
+                      <div className="flex items-center gap-1.5 mb-1">
+                        <CatIcon className="h-3 w-3" style={{ color: cat.color }} weight="duotone" />
+                        <span className="text-[9px] font-semibold uppercase tracking-wider" style={{ color: cat.color }}>{cat.label}</span>
+                      </div>
+                      <h3 className="text-sm font-semibold text-foreground leading-snug">{item.title || 'Untitled'}</h3>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
           </div>
         </div>
       </div>
