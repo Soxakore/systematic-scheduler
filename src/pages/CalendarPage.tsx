@@ -65,9 +65,28 @@ export default function CalendarPage() {
           <Button variant="ghost" size="sm" className="h-7 px-2.5 text-xs font-medium" onClick={navigateToday}>
             Today
           </Button>
-          <span className="text-sm font-semibold text-foreground ml-1 whitespace-nowrap">
-            {getDateLabel()}
-          </span>
+          <Popover open={pickerOpen} onOpenChange={setPickerOpen}>
+            <PopoverTrigger asChild>
+              <Button variant="ghost" size="sm" className="h-7 px-2 text-sm font-semibold text-foreground ml-1 whitespace-nowrap gap-1.5">
+                {getDateLabel()}
+                <CalendarIcon className="h-3.5 w-3.5 opacity-50" />
+              </Button>
+            </PopoverTrigger>
+            <PopoverContent className="w-auto p-0" align="start">
+              <Calendar
+                mode="single"
+                selected={currentDate}
+                onSelect={(date) => {
+                  if (date) {
+                    setCurrentDate(date);
+                    setPickerOpen(false);
+                  }
+                }}
+                initialFocus
+                className={cn("p-3 pointer-events-auto")}
+              />
+            </PopoverContent>
+          </Popover>
         </div>
 
         <div className="flex items-center gap-1 bg-muted rounded-lg p-0.5">
