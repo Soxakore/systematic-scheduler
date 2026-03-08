@@ -52,6 +52,7 @@ export default function VisionBoardPage() {
   const updateBoard = useUpdateVisionBoard();
   const deleteBoard = useDeleteVisionBoard();
   const [activeBoardId, setActiveBoardId] = useState<string | null>(null);
+  const [boardSortBy, setBoardSortBy] = useState<'name' | 'recent' | 'created'>('recent');
   const [boardMenuOpen, setBoardMenuOpen] = useState(false);
   const [renamingBoardId, setRenamingBoardId] = useState<string | null>(null);
   const [renamingBoardName, setRenamingBoardName] = useState('');
