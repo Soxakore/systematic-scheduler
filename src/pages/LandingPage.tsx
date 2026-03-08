@@ -145,23 +145,22 @@ export default function LandingPage() {
         </div>
       </section>
 
-      {/* PRICING */}
-      <section className="py-24 px-6 bg-white/[0.015]">
-        <div className="max-w-lg mx-auto text-center">
+      {/* CTA */}
+      <section className="relative py-28 px-6 bg-white/[0.015] overflow-hidden">
+        <div className="absolute inset-0 bg-gradient-to-b from-[#0071e3]/5 via-transparent to-transparent pointer-events-none" />
+        <div className="relative max-w-2xl mx-auto text-center">
           <img src={icoStar} alt="" width={56} height={56} className="rounded-2xl mx-auto mb-6" />
-          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4">Free. Forever.</h2>
-          <p className="text-white/40 mb-3 leading-relaxed">All features. Unlimited entries. No credit card. No catch.</p>
-          <div className="flex flex-col items-center gap-2 text-sm text-white/50 mb-8">
-            {['All 9 productivity modules', 'Unlimited journal entries', 'Full analytics dashboard', 'Dark mode by default'].map((item, i) => (
-              <span key={i} className="flex items-center gap-2">
-                <Check className="h-4 w-4 text-emerald-400" weight="bold" />
-                {item}
-              </span>
-            ))}
-          </div>
+          <h2 className="text-3xl sm:text-5xl font-bold tracking-tight mb-5">
+            Ready to transform
+            <br />
+            <span className="bg-gradient-to-r from-[#0071e3] to-[#5AC8FA] bg-clip-text text-transparent">your daily routine?</span>
+          </h2>
+          <p className="text-lg text-white/45 mb-10 leading-relaxed max-w-lg mx-auto">
+            Stop juggling five different apps. One system, one dashboard, one place to become the best version of yourself.
+          </p>
           <Link to="/signup">
-            <Button size="lg" className="bg-[#0071e3] hover:bg-[#0077ED] text-white rounded-full px-10 h-12 text-base font-medium">
-              Get started now
+            <Button size="lg" className="bg-[#0071e3] hover:bg-[#0077ED] text-white rounded-full px-10 h-12 text-base font-medium gap-2">
+              Start your journey <ArrowRight className="h-4 w-4" weight="bold" />
             </Button>
           </Link>
         </div>
