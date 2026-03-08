@@ -559,6 +559,85 @@ export default function VisionBoardPage() {
     toast.success('Image(s) added');
     e.target.value = '';
   };
+  /* ── Video/audio upload from toolbar ─────────────── */
+  const handleMediaUpload = async (e: React.ChangeEvent<HTMLInputElement>, type: 'video' | 'audio') => {
+    const files = Array.from(e.target.files || []);
+    if (!files.length || !user) return;
+    for (const file of files) {
+      setUploading(true);
+      try {
+        const ext = file.name.split('.').pop();
+        const path = `${user.id}/${Date.now()}.${ext}`;
+        const { error } = await supabase.storage.from('vision-images').upload(path, file);
+        if (error) throw error;
+        const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
+        await createItem.mutateAsync({
+          title: file.name.replace(/\.[^/.]+$/, ''), description: '', category: 'general',
+          color: type === 'video' ? '#8b5cf6' : '#3b82f6', icon: 'star',
+          position_x: 40 + Math.random() * 400, position_y: 40 + Math.random() * 300,
+          width: type === 'video' ? 320 : 260, height: type === 'video' ? 240 : 80,
+          image_url: data.publicUrl,
+          is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+        });
+      } catch (err: any) { toast.error('Upload failed: ' + err.message); }
+      finally { setUploading(false); }
+    }
+    toast.success(`${type === 'video' ? 'Video' : 'Audio'}(s) added`);
+    e.target.value = '';
+  };
+
+  /* ── Voice recording ────────────────────────────────── */
+  const startRecording = async () => {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+      const mediaRecorder = new MediaRecorder(stream, { mimeType: 'audio/webm' });
+      mediaRecorderRef.current = mediaRecorder;
+      audioChunksRef.current = [];
+
+      mediaRecorder.ondataavailable = (e) => {
+        if (e.data.size > 0) audioChunksRef.current.push(e.data);
+      };
+
+      mediaRecorder.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop());
+        if (recordingTimerRef.current) clearInterval(recordingTimerRef.current);
+        setRecordingTime(0);
+
+        const blob = new Blob(audioChunksRef.current, { type: 'audio/webm' });
+        if (!user || blob.size === 0) return;
+
+        setUploading(true);
+        try {
+          const path = `${user.id}/voice-${Date.now()}.webm`;
+          const { error } = await supabase.storage.from('vision-images').upload(path, blob, { contentType: 'audio/webm' });
+          if (error) throw error;
+          const { data } = supabase.storage.from('vision-images').getPublicUrl(path);
+          await createItem.mutateAsync({
+            title: `Voice note`, description: '', category: 'general',
+            color: '#3b82f6', icon: 'star',
+            position_x: 40 + Math.random() * 400, position_y: 40 + Math.random() * 300,
+            width: 260, height: 80, image_url: data.publicUrl,
+            is_achieved: false, achieved_at: null, sort_order: items?.length || 0,
+          });
+          toast.success('Voice note saved');
+        } catch (err: any) { toast.error('Failed to save: ' + err.message); }
+        finally { setUploading(false); }
+      };
+
+      mediaRecorder.start();
+      setIsRecording(true);
+      recordingTimerRef.current = setInterval(() => setRecordingTime(t => t + 1), 1000);
+    } catch {
+      toast.error('Microphone access denied');
+    }
+  };
+
+  const stopRecording = () => {
+    if (mediaRecorderRef.current && isRecording) {
+      mediaRecorderRef.current.stop();
+      setIsRecording(false);
+    }
+  };
 
   const switchTool = (id: ToolMode) => { setToolMode(id); setConnectFromId(null); setConnectMousePos(null); setShapeStart(null); setShapeEnd(null); };
 
