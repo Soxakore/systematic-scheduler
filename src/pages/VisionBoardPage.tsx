@@ -901,6 +901,12 @@ export default function VisionBoardPage() {
                     onMouseDown={e => { if (toolMode !== 'connect') handleCardMouseDown(e, item); }}
                     onDoubleClick={() => !isDrawMode && toolMode !== 'connect' && startEditing(item)}
                     onClick={e => { if (toolMode === 'connect') { e.stopPropagation(); handleConnectClick(item.id); } }}
+                    onContextMenu={e => {
+                      if (isDrawMode || hasImage) return;
+                      e.preventDefault();
+                      e.stopPropagation();
+                      setColorMenu({ itemId: item.id, x: e.clientX, y: e.clientY });
+                    }}
                   >
                     {hasImage && (
                       <img
