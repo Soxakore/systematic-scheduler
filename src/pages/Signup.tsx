@@ -8,7 +8,7 @@ import { Link, useNavigate } from 'react-router-dom';
 import { toast } from 'sonner';
 import { Separator } from '@/components/ui/separator';
 import { lovable } from '@/integrations/lovable/index';
-import icoCalendar from '@/assets/icons/icon-calendar.svg';
+
 
 export default function SignupPage() {
   const [name, setName] = useState('');
