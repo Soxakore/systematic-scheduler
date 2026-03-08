@@ -558,7 +558,6 @@ export default function VisionBoardPage() {
     { id: 'shape-line', icon: LineSegment, label: 'Line' },
   ];
 
-  const [drawToolsExpanded, setDrawToolsExpanded] = useState(false);
   const activeDrawTool = DRAW_TOOLS.find(t => t.id === toolMode);
   const drawToolActive = !!activeDrawTool;
 
