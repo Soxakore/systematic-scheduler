@@ -1,10 +1,11 @@
 import { useMemo, useRef, useEffect, useState, useCallback } from 'react';
 import { useAppContext } from '@/components/AppLayout';
 import { useEvents, useCalendars, useUpdateEvent, useAllEventTags } from '@/hooks/useData';
-import { startOfWeek, endOfWeek, addDays, format, isSameDay, isToday, differenceInMinutes } from 'date-fns';
+import { startOfWeek, endOfWeek, addDays, format, isSameDay, isToday, differenceInMinutes, startOfDay, isBefore, isAfter, max, min } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { GearSix } from '@phosphor-icons/react';
 import { useAutoScroll } from '@/hooks/useCalendarDrag';
+import type { CalendarEvent } from '@/types';
 
 const HOUR_HEIGHT = 60;
 const HOURS = Array.from({ length: 24 }, (_, i) => i);
