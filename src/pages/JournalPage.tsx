@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react';
-import { format, subDays, addDays } from 'date-fns';
-import { useJournalEntry, useJournalEntries, useUpsertJournalEntry } from '@/hooks/useData';
+import { useState, useEffect, useMemo } from 'react';
+import { format, subDays, addDays, startOfWeek, endOfWeek, startOfMonth, endOfMonth, startOfYear, endOfYear, addWeeks, subWeeks, addMonths, subMonths, addYears, subYears, eachDayOfInterval, isSameMonth } from 'date-fns';
+import { useJournalEntry, useJournalEntriesRange, useUpsertJournalEntry } from '@/hooks/useData';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
@@ -30,6 +30,8 @@ const ENERGY_LEVELS = [
   { value: 4, label: 'High', color: 'bg-lime-500' },
   { value: 5, label: 'Peak', color: 'bg-green-500' },
 ];
+
+type ViewMode = 'week' | 'month' | 'year';
 
 function ListEditor({ items, onChange, placeholder, icon: Icon }: {
   items: string[];
@@ -76,13 +78,193 @@ function ListEditor({ items, onChange, placeholder, icon: Icon }: {
   );
 }
 
+function JournalHistory({ onSelectDate }: { onSelectDate: (date: Date) => void }) {
+  const [viewMode, setViewMode] = useState<ViewMode>('week');
+  const [viewDate, setViewDate] = useState(new Date());
+
+  const range = useMemo(() => {
+    if (viewMode === 'week') {
+      return { start: startOfWeek(viewDate, { weekStartsOn: 1 }), end: endOfWeek(viewDate, { weekStartsOn: 1 }) };
+    } else if (viewMode === 'month') {
+      return { start: startOfMonth(viewDate), end: endOfMonth(viewDate) };
+    } else {
+      return { start: startOfYear(viewDate), end: endOfYear(viewDate) };
+    }
+  }, [viewMode, viewDate]);
+
+  const startStr = format(range.start, 'yyyy-MM-dd');
+  const endStr = format(range.end, 'yyyy-MM-dd');
+  const { data: entries } = useJournalEntriesRange(startStr, endStr);
+
+  const entriesMap = useMemo(() => {
+    const map = new Map<string, typeof entries extends (infer T)[] | undefined ? T : never>();
+    entries?.forEach(e => map.set(e.date, e));
+    return map;
+  }, [entries]);
+
+  const navigate = (dir: -1 | 1) => {
+    if (viewMode === 'week') setViewDate(dir === 1 ? addWeeks(viewDate, 1) : subWeeks(viewDate, 1));
+    else if (viewMode === 'month') setViewDate(dir === 1 ? addMonths(viewDate, 1) : subMonths(viewDate, 1));
+    else setViewDate(dir === 1 ? addYears(viewDate, 1) : subYears(viewDate, 1));
+  };
+
+  const rangeLabel = viewMode === 'week'
+    ? `${format(range.start, 'MMM d')} – ${format(range.end, 'MMM d, yyyy')}`
+    : viewMode === 'month'
+    ? format(viewDate, 'MMMM yyyy')
+    : format(viewDate, 'yyyy');
+
+  return (
+    <Card>
+      <CardHeader className="pb-3">
+        <div className="flex items-center justify-between">
+          <CardTitle className="text-sm font-medium">Entry History</CardTitle>
+          <div className="flex gap-1 bg-muted rounded-lg p-0.5">
+            {(['week', 'month', 'year'] as ViewMode[]).map(mode => (
+              <button
+                key={mode}
+                onClick={() => setViewMode(mode)}
+                className={`px-2.5 py-1 text-xs font-medium rounded-md transition-colors capitalize ${
+                  viewMode === mode ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'
+                }`}
+              >
+                {mode}
+              </button>
+            ))}
+          </div>
+        </div>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <div className="flex items-center justify-between">
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(-1)}>
+            <CaretLeft className="h-3.5 w-3.5" />
+          </Button>
+          <span className="text-xs font-medium text-muted-foreground">{rangeLabel}</span>
+          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => navigate(1)}>
+            <CaretRight className="h-3.5 w-3.5" />
+          </Button>
+        </div>
+
+        {viewMode === 'year' ? (
+          <YearGrid viewDate={viewDate} entriesMap={entriesMap} onSelectDate={onSelectDate} />
+        ) : (
+          <DayList
+            start={range.start}
+            end={range.end}
+            entriesMap={entriesMap}
+            onSelectDate={onSelectDate}
+            compact={viewMode === 'month'}
+          />
+        )}
+
+        {entries && (
+          <div className="text-xs text-muted-foreground text-center pt-1">
+            {entries.length} entr{entries.length === 1 ? 'y' : 'ies'} in this period
+          </div>
+        )}
+      </CardContent>
+    </Card>
+  );
+}
+
+function DayList({ start, end, entriesMap, onSelectDate, compact }: {
+  start: Date; end: Date;
+  entriesMap: Map<string, any>;
+  onSelectDate: (d: Date) => void;
+  compact?: boolean;
+}) {
+  const days = eachDayOfInterval({ start, end });
+
+  return (
+    <div className="space-y-1 max-h-[300px] overflow-y-auto">
+      {days.map(day => {
+        const dateStr = format(day, 'yyyy-MM-dd');
+        const entry = entriesMap.get(dateStr);
+        const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
+        const moodInfo = entry ? MOODS.find(m => m.value === entry.mood) : null;
+
+        return (
+          <button
+            key={dateStr}
+            onClick={() => onSelectDate(new Date(dateStr + 'T12:00:00'))}
+            className={`w-full flex items-center gap-2 px-2.5 py-1.5 rounded-md text-xs text-left transition-colors ${
+              entry ? 'hover:bg-primary/10' : 'hover:bg-muted opacity-50'
+            } ${isToday ? 'ring-1 ring-primary/30' : ''}`}
+          >
+            {moodInfo ? (
+              <moodInfo.icon className={`h-4 w-4 shrink-0 ${moodInfo.color}`} weight="fill" />
+            ) : (
+              <div className="h-4 w-4 shrink-0 rounded-full border border-dashed border-muted-foreground/30" />
+            )}
+            <span className="font-medium min-w-[70px]">
+              {compact ? format(day, 'MMM d') : format(day, 'EEE, MMM d')}
+            </span>
+            {entry && (
+              <div className="flex-1 flex items-center gap-2 justify-end">
+                <div className="flex gap-0.5">
+                  {Array.from({ length: 5 }).map((_, i) => (
+                    <div key={i} className={`w-1 h-2.5 rounded-sm ${i < (entry.energy || 0) ? 'bg-green-500' : 'bg-muted'}`} />
+                  ))}
+                </div>
+              </div>
+            )}
+          </button>
+        );
+      })}
+    </div>
+  );
+}
+
+function YearGrid({ viewDate, entriesMap, onSelectDate }: {
+  viewDate: Date;
+  entriesMap: Map<string, any>;
+  onSelectDate: (d: Date) => void;
+}) {
+  const yearStart = startOfYear(viewDate);
+  const months = Array.from({ length: 12 }, (_, i) => {
+    const monthStart = new Date(yearStart.getFullYear(), i, 1);
+    const monthEnd = endOfMonth(monthStart);
+    const days = eachDayOfInterval({ start: monthStart, end: monthEnd });
+    return { month: monthStart, days };
+  });
+
+  return (
+    <div className="grid grid-cols-3 gap-3">
+      {months.map(({ month, days }) => (
+        <div key={month.toISOString()} className="space-y-1">
+          <div className="text-[10px] font-medium text-muted-foreground">{format(month, 'MMM')}</div>
+          <div className="grid grid-cols-7 gap-[2px]">
+            {Array.from({ length: new Date(month.getFullYear(), month.getMonth(), 1).getDay() || 7 }).slice(1).map((_, i) => (
+              <div key={`pad-${i}`} className="w-2.5 h-2.5" />
+            ))}
+            {days.map(day => {
+              const dateStr = format(day, 'yyyy-MM-dd');
+              const entry = entriesMap.get(dateStr);
+              const moodColors = ['', 'bg-red-400', 'bg-orange-400', 'bg-yellow-400', 'bg-green-400', 'bg-primary'];
+              return (
+                <button
+                  key={dateStr}
+                  onClick={() => onSelectDate(new Date(dateStr + 'T12:00:00'))}
+                  className={`w-2.5 h-2.5 rounded-[2px] transition-colors ${
+                    entry ? (moodColors[entry.mood || 0] || 'bg-muted-foreground/40') : 'bg-muted'
+                  } hover:ring-1 hover:ring-primary/50`}
+                  title={`${format(day, 'MMM d')}${entry ? ` – ${MOODS.find(m => m.value === entry.mood)?.label || ''}` : ''}`}
+                />
+              );
+            })}
+          </div>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 export default function JournalPage() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
   const isToday = dateStr === format(new Date(), 'yyyy-MM-dd');
 
   const { data: entry, isLoading } = useJournalEntry(dateStr);
-  const { data: recentEntries } = useJournalEntries(30);
   const upsert = useUpsertJournalEntry();
 
   const [mood, setMood] = useState<number | null>(null);
@@ -127,20 +309,6 @@ export default function JournalPage() {
     toast.success('Journal saved');
   };
 
-  const journalStreak = (() => {
-    if (!recentEntries || recentEntries.length === 0) return 0;
-    let streak = 0;
-    let check = new Date();
-    for (let i = 0; i < 90; i++) {
-      const d = format(check, 'yyyy-MM-dd');
-      if (recentEntries.some(e => e.date === d)) {
-        streak++;
-      } else if (i > 0) break;
-      check = subDays(check, 1);
-    }
-    return streak;
-  })();
-
   const hour = new Date().getHours();
   const timeOfDay = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
 
@@ -148,17 +316,10 @@ export default function JournalPage() {
     <div className="h-full overflow-y-auto">
       <div className="max-w-2xl mx-auto p-4 space-y-5">
         <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-xl font-semibold flex items-center gap-2.5">
-              <img src={icoJournal} alt="" width={32} height={32} className="rounded-xl shrink-0" />
-              Daily Journal
-            </h1>
-            {journalStreak > 0 && (
-              <p className="text-sm text-muted-foreground mt-1">
-                {journalStreak} day streak
-              </p>
-            )}
-          </div>
+          <h1 className="text-xl font-semibold flex items-center gap-2.5">
+            <img src={icoJournal} alt="" width={32} height={32} className="rounded-xl shrink-0" />
+            Daily Journal
+          </h1>
           <div className="flex items-center gap-2">
             <Button variant="ghost" size="icon" onClick={() => setSelectedDate(subDays(selectedDate, 1))}>
               <CaretLeft className="h-4 w-4" />
@@ -308,41 +469,7 @@ export default function JournalPage() {
               {upsert.isPending ? 'Saving...' : entry ? 'Update Entry' : 'Save Entry'}
             </Button>
 
-            {recentEntries && recentEntries.length > 0 && (
-              <Card>
-                <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium">Recent Entries</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-2">
-                    {recentEntries.slice(0, 7).map(e => (
-                      <button
-                        key={e.id}
-                        onClick={() => setSelectedDate(new Date(e.date + 'T12:00:00'))}
-                        className={`w-full flex items-center gap-3 px-3 py-2 rounded-md text-sm text-left transition-colors ${
-                          e.date === dateStr ? 'bg-primary/10 text-primary' : 'hover:bg-muted'
-                        }`}
-                      >
-                        {(() => { const m = MOODS.find(m => m.value === e.mood); return m ? <m.icon className={`h-5 w-5 shrink-0 ${m.color}`} weight="fill" /> : <span className="h-5 w-5" />; })()}
-                        <div className="flex-1 min-w-0">
-                          <div className="font-medium">{format(new Date(e.date + 'T12:00:00'), 'EEE, MMM d')}</div>
-                          <div className="text-xs text-muted-foreground truncate">
-                            {e.wins.length > 0 ? `${e.wins.length} win${e.wins.length > 1 ? 's' : ''}` : ''}
-                            {e.gratitude.length > 0 ? ` · ${e.gratitude.length} grateful` : ''}
-                            {e.free_text ? ' · notes' : ''}
-                          </div>
-                        </div>
-                        <div className="flex gap-0.5">
-                          {Array.from({ length: 5 }).map((_, i) => (
-                            <div key={i} className={`w-1.5 h-3 rounded-sm ${i < (e.energy || 0) ? 'bg-green-500' : 'bg-muted'}`} />
-                          ))}
-                        </div>
-                      </button>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+            <JournalHistory onSelectDate={setSelectedDate} />
           </>
         )}
       </div>
