@@ -641,6 +641,19 @@ export function useJournalEntries(days: number = 30) {
   });
 }
 
+export function useJournalEntriesRange(startDate: string, endDate: string) {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ['journal_entries_range', user?.id, startDate, endDate],
+    queryFn: async () => {
+      const { data, error } = await supabase.from('journal_entries' as any).select('*').eq('user_id', user!.id).gte('date', startDate).lte('date', endDate).order('date', { ascending: false });
+      if (error) throw error;
+      return (data ?? []) as unknown as JournalEntry[];
+    },
+    enabled: !!user && !!startDate && !!endDate,
+  });
+}
+
 export function useUpsertJournalEntry() {
   const qc = useQueryClient();
   const { user } = useAuth();
